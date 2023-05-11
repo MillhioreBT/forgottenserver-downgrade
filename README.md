@@ -5,12 +5,7 @@ This downgrade is not download and run distribution, monsters and spells are pro
 You are welcome to submit a pull request though.
 
 This downgrade is up to Dec 21, 2021, commit: https://github.com/otland/forgottenserver/commit/17bf638815fa7c04d5b723baa8e0bfbdaad341f2
-
-## Other distributions:
-
-#### **[7.72](https://github.com/nekiro/TFS-1.4-Downgrades/tree/7.72)**
-
-#### **[8.0](https://github.com/nekiro/TFS-1.4-Downgrades/tree/8.0)**
+But currently it's being updated with tfs-master code.
 
 ## How to compile
 
@@ -19,7 +14,7 @@ This downgrade is up to Dec 21, 2021, commit: https://github.com/otland/forgotte
 ## Contributing
 
 Pull requests are welcome.
-Just make sure you are using english language.
+Just make sure you are using english/spanish language.
 
 ## Bugs
 
