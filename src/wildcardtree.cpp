@@ -1,12 +1,11 @@
 // Copyright 2023 The Forgotten Server Authors. All rights reserved.
 // Use of this source code is governed by the GPL-2.0 License that can be found in the LICENSE file.
 
-
 #include "otpch.h"
 
-#include <stack>
-
 #include "wildcardtree.h"
+
+#include <stack>
 
 WildcardTreeNode* WildcardTreeNode::getChild(char ch)
 {
@@ -34,8 +33,8 @@ WildcardTreeNode* WildcardTreeNode::addChild(char ch, bool breakpoint)
 			child->breakpoint = true;
 		}
 	} else {
-		auto pair = children.emplace(std::piecewise_construct,
-				std::forward_as_tuple(ch), std::forward_as_tuple(breakpoint));
+		auto pair =
+		    children.emplace(std::piecewise_construct, std::forward_as_tuple(ch), std::forward_as_tuple(breakpoint));
 		child = &pair.first->second;
 	}
 	return child;

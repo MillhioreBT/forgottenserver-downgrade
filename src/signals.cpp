@@ -1,41 +1,27 @@
-/**
- * The Forgotten Server - a free and open-source MMORPG server emulator
- * Copyright (C) 2019 Mark Samman <mark.samman@gmail.com>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- */
+// Copyright 2023 The Forgotten Server Authors. All rights reserved.
+// Use of this source code is governed by the GPL-2.0 License that can be found in the LICENSE file.
 
 #include "otpch.h"
-#include <csignal>
 
 #include "signals.h"
-#include "tasks.h"
-#include "game.h"
+
 #include "actions.h"
 #include "configmanager.h"
-#include "spells.h"
-#include "talkaction.h"
-#include "movement.h"
-#include "weapons.h"
-#include "raids.h"
-#include "quests.h"
+#include "databasetasks.h"
+#include "events.h"
+#include "game.h"
 #include "globalevent.h"
 #include "monster.h"
-#include "events.h"
+#include "movement.h"
+#include "quests.h"
+#include "raids.h"
 #include "scheduler.h"
-#include "databasetasks.h"
+#include "spells.h"
+#include "talkaction.h"
+#include "tasks.h"
+#include "weapons.h"
+
+#include <csignal>
 
 extern Scheduler g_scheduler;
 extern DatabaseTasks g_databaseTasks;
@@ -59,34 +45,34 @@ namespace {
 
 void sigbreakHandler()
 {
-	//Dispatcher thread
+	// Dispatcher thread
 	std::cout << "SIGBREAK received, shutting game server down..." << std::endl;
 	g_game.setGameState(GAME_STATE_SHUTDOWN);
 }
 
 void sigtermHandler()
 {
-	//Dispatcher thread
+	// Dispatcher thread
 	std::cout << "SIGTERM received, shutting game server down..." << std::endl;
 	g_game.setGameState(GAME_STATE_SHUTDOWN);
 }
 
 void sigusr1Handler()
 {
-	//Dispatcher thread
+	// Dispatcher thread
 	std::cout << "SIGUSR1 received, saving the game state..." << std::endl;
 	g_game.saveGameState();
 }
 
 void sighupHandler()
 {
-	//Dispatcher thread
+	// Dispatcher thread
 	std::cout << "SIGHUP received, reloading config files..." << std::endl;
 
 	g_actions->reload();
 	std::cout << "Reloaded actions." << std::endl;
 
-	g_config.reload();
+	g_config.load();
 	std::cout << "Reloaded config." << std::endl;
 
 	g_creatureEvents->reload();
@@ -138,7 +124,7 @@ void sighupHandler()
 
 void sigintHandler()
 {
-	//Dispatcher thread
+	// Dispatcher thread
 	std::cout << "SIGINT received, shutting game server down..." << std::endl;
 	g_game.setGameState(GAME_STATE_SHUTDOWN);
 }
@@ -148,22 +134,22 @@ void sigintHandler()
 // https://github.com/otland/forgottenserver/pull/2473
 void dispatchSignalHandler(int signal)
 {
-	switch(signal) {
-		case SIGINT: //Shuts the server down
+	switch (signal) {
+		case SIGINT: // Shuts the server down
 			g_dispatcher.addTask(sigintHandler);
 			break;
-		case SIGTERM: //Shuts the server down
+		case SIGTERM: // Shuts the server down
 			g_dispatcher.addTask(sigtermHandler);
 			break;
 #ifndef _WIN32
-		case SIGHUP: //Reload config/data
+		case SIGHUP: // Reload config/data
 			g_dispatcher.addTask(sighupHandler);
 			break;
-		case SIGUSR1: //Saves game state
+		case SIGUSR1: // Saves game state
 			g_dispatcher.addTask(sigusr1Handler);
 			break;
 #else
-		case SIGBREAK: //Shuts the server down
+		case SIGBREAK: // Shuts the server down
 			g_dispatcher.addTask(sigbreakHandler);
 			// hold the thread until other threads end
 			g_scheduler.join();
@@ -176,9 +162,9 @@ void dispatchSignalHandler(int signal)
 	}
 }
 
-}
+} // namespace
 
-Signals::Signals(boost::asio::io_service& service): set(service)
+Signals::Signals(boost::asio::io_service& service) : set(service)
 {
 	set.add(SIGINT);
 	set.add(SIGTERM);
@@ -199,7 +185,7 @@ void Signals::asyncWait()
 {
 	set.async_wait([this](const boost::system::error_code& err, int signal) {
 		if (err) {
-			std::cerr << "Signal handling error: "  << err.message() << std::endl;
+			std::cerr << "Signal handling error: " << err.message() << std::endl;
 			return;
 		}
 		dispatchSignalHandler(signal);

@@ -51,8 +51,7 @@ void Dispatcher::addTask(Task* task)
 	if (getState() == THREAD_STATE_RUNNING) {
 		do_signal = taskList.empty();
 		taskList.push_back(task);
-	}
-	else {
+	} else {
 		delete task;
 	}
 
@@ -69,7 +68,7 @@ void Dispatcher::shutdown()
 	Task* task = createTask([this]() {
 		setState(THREAD_STATE_TERMINATED);
 		taskSignal.notify_one();
-		});
+	});
 
 	std::lock_guard<std::mutex> lockClass(taskLock);
 	taskList.push_back(task);

@@ -39,10 +39,10 @@ public:
 	void threadMain() { io_context.run(); }
 
 private:
-	std::atomic<uint32_t> lastEventId{ 0 };
+	std::atomic<uint32_t> lastEventId{0};
 	std::unordered_map<uint32_t, boost::asio::steady_timer> eventIdTimerMap;
 	boost::asio::io_context io_context;
-	boost::asio::io_context::work work{ io_context };
+	boost::asio::io_context::work work{io_context};
 };
 
 extern Scheduler g_scheduler;

@@ -8,11 +8,11 @@ local slotBits = {
 	[CONST_SLOT_LEGS] = SLOTP_LEGS,
 	[CONST_SLOT_FEET] = SLOTP_FEET,
 	[CONST_SLOT_RING] = SLOTP_RING,
-	[CONST_SLOT_AMMO] = SLOTP_AMMO
+	[CONST_SLOT_AMMO] = SLOTP_AMMO,
 }
 
 function ItemType.usesSlot(self, slot)
-	return bit.band(self:getSlotPosition(), slotBits[slot] or 0) ~= 0
+	return (self:getSlotPosition() & (slotBits[slot] or 0)) ~= 0
 end
 
 function ItemType:isHelmet()
@@ -31,13 +31,13 @@ function ItemType:isBoots()
 	return self:usesSlot(CONST_SLOT_FEET)
 end
 
-local notWeapons = {WEAPON_NONE, WEAPON_SHIELD, WEAPON_AMMO}
+local notWeapons = { WEAPON_NONE, WEAPON_SHIELD, WEAPON_AMMO }
 function ItemType:isWeapon()
 	return not table.contains(notWeapons, self:getWeaponType())
 end
 
 function ItemType:isTwoHanded()
-	return bit.band(self:getSlotPosition(), SLOTP_TWO_HAND) ~= 0
+	return (self:getSlotPosition() & SLOTP_TWO_HAND) ~= 0
 end
 
 function ItemType:isBow()

@@ -1,13 +1,12 @@
 // Copyright 2023 The Forgotten Server Authors. All rights reserved.
 // Use of this source code is governed by the GPL-2.0 License that can be found in the LICENSE file.
 
-
 #include "otpch.h"
 
 #include "protocolold.h"
-#include "outputmessage.h"
 
 #include "game.h"
+#include "outputmessage.h"
 
 #include <fmt/format.h>
 
@@ -30,7 +29,7 @@ void ProtocolOld::onRecvFirstMessage(NetworkMessage& msg)
 		return;
 	}
 
-	/*uint16_t clientOS =*/ msg.get<uint16_t>();
+	/*uint16_t clientOS =*/msg.get<uint16_t>();
 	uint16_t version = msg.get<uint16_t>();
 	msg.skipBytes(12);
 
@@ -53,7 +52,7 @@ void ProtocolOld::onRecvFirstMessage(NetworkMessage& msg)
 	setXTEAKey(std::move(key));
 
 	if (version <= 822) {
-		disableChecksum();
+		setChecksumMode(CHECKSUM_DISABLED);
 	}
 
 	disconnectClient(fmt::format("Only clients with protocol {:s} allowed!", CLIENT_VERSION_STR));

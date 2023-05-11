@@ -1,15 +1,15 @@
 // Copyright 2023 The Forgotten Server Authors. All rights reserved.
 // Use of this source code is governed by the GPL-2.0 License that can be found in the LICENSE file.
 
-
 #ifndef FS_TOOLS_H
 #define FS_TOOLS_H
 
-#include <random>
-
-#include "position.h"
 #include "const.h"
 #include "enums.h"
+#include "position.h"
+
+#include <random>
+#include <string_view>
 
 void printXMLError(const std::string& where, const std::string& fileName, const pugi::xml_parse_result& result);
 
@@ -23,14 +23,18 @@ void toLowerCaseString(std::string& source);
 std::string asLowerCaseString(std::string source);
 std::string asUpperCaseString(std::string source);
 
+// checks that str1 is equivalent to str2 ignoring letter case
+bool caseInsensitiveEqual(std::string_view str1, std::string_view str2);
+
+// checks that str1 starts with str2 ignoring letter case
+bool caseInsensitiveStartsWith(std::string_view str, std::string_view prefix);
+
 using StringVector = std::vector<std::string>;
 using IntegerVector = std::vector<int32_t>;
 
 StringVector explodeString(const std::string& inString, const std::string& separator, int32_t limit = -1);
 IntegerVector vectorAtoi(const StringVector& stringVector);
-constexpr bool hasBitSet(uint32_t flag, uint32_t flags) {
-	return (flags & flag) != 0;
-}
+constexpr bool hasBitSet(uint32_t flag, uint32_t flags) { return (flags & flag) != 0; }
 
 std::mt19937& getRandomGenerator();
 int32_t uniform_random(int32_t minNumber, int32_t maxNumber);
@@ -45,7 +49,6 @@ std::string getFirstLine(const std::string& str);
 
 std::string formatDate(time_t time);
 std::string formatDateShort(time_t time);
-std::string convertIPToString(uint32_t ip);
 
 void trimString(std::string& str);
 

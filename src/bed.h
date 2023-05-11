@@ -1,7 +1,6 @@
 // Copyright 2023 The Forgotten Server Authors. All rights reserved.
 // Use of this source code is governed by the GPL-2.0 License that can be found in the LICENSE file.
 
-
 #ifndef FS_BED_H
 #define FS_BED_H
 
@@ -12,51 +11,39 @@ class Player;
 
 class BedItem final : public Item
 {
-	public:
-		explicit BedItem(uint16_t id);
+public:
+	explicit BedItem(uint16_t id);
 
-		BedItem* getBed() override {
-			return this;
-		}
-		const BedItem* getBed() const override {
-			return this;
-		}
+	BedItem* getBed() override { return this; }
+	const BedItem* getBed() const override { return this; }
 
-		Attr_ReadValue readAttr(AttrTypes_t attr, PropStream& propStream) override;
-		void serializeAttr(PropWriteStream& propWriteStream) const override;
+	Attr_ReadValue readAttr(AttrTypes_t attr, PropStream& propStream) override;
+	void serializeAttr(PropWriteStream& propWriteStream) const override;
 
-		bool canRemove() const override {
-			return house == nullptr;
-		}
+	bool canRemove() const override { return house == nullptr; }
 
-		uint32_t getSleeper() const {
-			return sleeperGUID;
-		}
+	uint32_t getSleeper() const { return sleeperGUID; }
 
-		House* getHouse() const {
-			return house;
-		}
-		void setHouse(House* h) {
-			house = h;
-		}
+	House* getHouse() const { return house; }
+	void setHouse(House* h) { house = h; }
 
-		bool canUse(Player* player);
+	bool canUse(Player* player);
 
-		bool trySleep(Player* player);
-		bool sleep(Player* player);
-		void wakeUp(Player* player);
+	bool trySleep(Player* player);
+	bool sleep(Player* player);
+	void wakeUp(Player* player);
 
-		BedItem* getNextBedItem() const;
+	BedItem* getNextBedItem() const;
 
-	private:
-		void updateAppearance(const Player* player);
-		void regeneratePlayer(Player* player) const;
-		void internalSetSleeper(const Player* player);
-		void internalRemoveSleeper();
+private:
+	void updateAppearance(const Player* player);
+	void regeneratePlayer(Player* player) const;
+	void internalSetSleeper(const Player* player);
+	void internalRemoveSleeper();
 
-		House* house = nullptr;
-		uint64_t sleepStart;
-		uint32_t sleeperGUID;
+	House* house = nullptr;
+	uint64_t sleepStart;
+	uint32_t sleeperGUID;
 };
 
 #endif

@@ -1,20 +1,16 @@
 // Copyright 2023 The Forgotten Server Authors. All rights reserved.
-// Use of this source code is governed by the GPL-2.0 License that can be found in the LICENSE file.
-
+// Use of this source code is governed by the GPL-2.0 License that can be found
+// in the LICENSE file.
 
 #include "otpch.h"
 
-#include <algorithm>
-#if __has_include("luajit/lua.hpp")
-#include <luajit/lua.hpp>
-#else
-#include <lua.hpp>
-#endif
-
 #include "configmanager.h"
+
 #include "game.h"
 #include "monster.h"
 #include "pugicast.h"
+
+#include <lua.hpp>
 
 #if LUA_VERSION_NUM >= 502
 #undef lua_strlen
@@ -72,12 +68,9 @@ bool getGlobalBoolean(lua_State* L, const char* identifier, const bool defaultVa
 	return val != 0;
 }
 
-}
+} // namespace
 
-ConfigManager::ConfigManager()
-{
-	string[CONFIG_FILE] = "config.lua";
-}
+ConfigManager::ConfigManager() { string[CONFIG_FILE] = "config.lua"; }
 
 namespace {
 
@@ -93,9 +86,10 @@ ExperienceStages loadLuaStages(lua_State* L)
 	lua_pushnil(L);
 	while (lua_next(L, -2) != 0) {
 		const auto tableIndex = lua_gettop(L);
-		auto minLevel = LuaScriptInterface::getField<uint32_t>(L, tableIndex, "minlevel");
-		auto maxLevel = LuaScriptInterface::getField<uint32_t>(L, tableIndex, "maxlevel");
-		auto multiplier = LuaScriptInterface::getField<float>(L, tableIndex, "multiplier");
+		auto minLevel = LuaScriptInterface::getField<uint32_t>(L, tableIndex, "minlevel", 1);
+		auto maxLevel =
+		    LuaScriptInterface::getField<uint32_t>(L, tableIndex, "maxlevel", std::numeric_limits<uint32_t>::max());
+		auto multiplier = LuaScriptInterface::getField<float>(L, tableIndex, "multiplier", 1);
 		stages.emplace_back(minLevel, maxLevel, multiplier);
 		lua_pop(L, 4);
 	}
@@ -116,17 +110,15 @@ ExperienceStages loadXMLStages()
 
 	ExperienceStages stages;
 	for (auto stageNode : doc.child("stages").children()) {
-		if (strcasecmp(stageNode.name(), "config") == 0) {
+		if (caseInsensitiveEqual(stageNode.name(), "config")) {
 			if (!stageNode.attribute("enabled").as_bool()) {
 				return {};
 			}
 		} else {
-			uint32_t minLevel, maxLevel, multiplier;
+			uint32_t minLevel = 1, maxLevel = std::numeric_limits<uint32_t>::max(), multiplier = 1;
 
 			if (auto minLevelAttribute = stageNode.attribute("minlevel")) {
 				minLevel = pugi::cast<uint32_t>(minLevelAttribute.value());
-			} else {
-				minLevel = 1;
 			}
 
 			if (auto maxLevelAttribute = stageNode.attribute("maxlevel")) {
@@ -135,8 +127,6 @@ ExperienceStages loadXMLStages()
 
 			if (auto multiplierAttribute = stageNode.attribute("multiplier")) {
 				multiplier = pugi::cast<uint32_t>(multiplierAttribute.value());
-			} else {
-				multiplier = 1;
 			}
 
 			stages.emplace_back(minLevel, maxLevel, multiplier);
@@ -147,7 +137,7 @@ ExperienceStages loadXMLStages()
 	return stages;
 }
 
-}
+} // namespace
 
 bool ConfigManager::load()
 {
@@ -164,13 +154,13 @@ bool ConfigManager::load()
 		return false;
 	}
 
-	//parse config
-	if (!loaded) { //info that must be loaded one time (unless we reset the modules involved)
+	// parse config
+	if (!loaded) { // info that must be loaded one time (unless we reset the modules involved)
 		boolean[BIND_ONLY_GLOBAL_ADDRESS] = getGlobalBoolean(L, "bindOnlyGlobalAddress", false);
 		boolean[OPTIMIZE_DATABASE] = getGlobalBoolean(L, "startupDatabaseOptimization", true);
 
-		if (string[IP_STRING] == "") {
-			string[IP_STRING] = getGlobalString(L, "ip", "127.0.0.1");
+		if (string[IP] == "") {
+			string[IP] = getGlobalString(L, "ip", "127.0.0.1");
 		}
 
 		string[MAP_NAME] = getGlobalString(L, "mapName", "forgotten");
@@ -182,23 +172,6 @@ bool ConfigManager::load()
 		string[MYSQL_DB] = getGlobalString(L, "mysqlDatabase", "forgottenserver");
 		string[MYSQL_SOCK] = getGlobalString(L, "mysqlSock", "");
 
-		std::string ipString = string[IP_STRING];
-		uint32_t ip = inet_addr(ipString.c_str());
-		if (ip == INADDR_NONE) {
-			hostent* hostname = gethostbyname(ipString.c_str());
-			if (hostname) {
-				ipString = std::string(inet_ntoa(**(in_addr**)hostname->h_addr_list));
-				ip = inet_addr(ipString.c_str());
-			}
-		}
-
-		if (ip == INADDR_NONE) {
-			std::cout << "[Error - ConfigManager::load] cannot resolve given ip address, make sure you typed correct IP or hostname." << std::endl;
-			lua_close(L);
-			return false;
-		}
-
-		integer[IP] = ip;
 		integer[SQL_PORT] = getGlobalNumber(L, "mysqlPort", 3306);
 
 		if (integer[GAME_PORT] == 0) {
@@ -210,6 +183,8 @@ bool ConfigManager::load()
 		}
 
 		integer[STATUS_PORT] = getGlobalNumber(L, "statusProtocolPort", 7171);
+
+		integer[MARKET_OFFER_DURATION] = getGlobalNumber(L, "marketOfferDuration", 30 * 24 * 60 * 60);
 	}
 
 	boolean[ALLOW_CHANGEOUTFIT] = getGlobalBoolean(L, "allowChangeOutfit", true);
@@ -219,12 +194,12 @@ bool ConfigManager::load()
 	boolean[REMOVE_WEAPON_AMMO] = getGlobalBoolean(L, "removeWeaponAmmunition", true);
 	boolean[REMOVE_WEAPON_CHARGES] = getGlobalBoolean(L, "removeWeaponCharges", true);
 	boolean[REMOVE_POTION_CHARGES] = getGlobalBoolean(L, "removeChargesFromPotions", true);
-	boolean[PZLOCK_SKULL_ATTACKER] = getGlobalBoolean(L, "pzLockSkullAttacker", false);
 	boolean[EXPERIENCE_FROM_PLAYERS] = getGlobalBoolean(L, "experienceByKillingPlayers", false);
 	boolean[FREE_PREMIUM] = getGlobalBoolean(L, "freePremium", false);
 	boolean[REPLACE_KICK_ON_LOGIN] = getGlobalBoolean(L, "replaceKickOnLogin", true);
 	boolean[ALLOW_CLONES] = getGlobalBoolean(L, "allowClones", false);
 	boolean[ALLOW_WALKTHROUGH] = getGlobalBoolean(L, "allowWalkthrough", true);
+	boolean[MARKET_PREMIUM] = getGlobalBoolean(L, "premiumToCreateMarketOffer", true);
 	boolean[EMOTE_SPELLS] = getGlobalBoolean(L, "emoteSpells", false);
 	boolean[STAMINA_SYSTEM] = getGlobalBoolean(L, "staminaSystem", true);
 	boolean[WARN_UNSAFE_SCRIPTS] = getGlobalBoolean(L, "warnUnsafeScripts", true);
@@ -242,12 +217,11 @@ bool ConfigManager::load()
 	boolean[FORCE_MONSTERTYPE_LOAD] = getGlobalBoolean(L, "forceMonsterTypesOnLoad", true);
 	boolean[DEFAULT_WORLD_LIGHT] = getGlobalBoolean(L, "defaultWorldLight", true);
 	boolean[HOUSE_OWNED_BY_ACCOUNT] = getGlobalBoolean(L, "houseOwnedByAccount", false);
-	boolean[LUA_ITEM_DESC] = getGlobalBoolean(L, "luaItemDesc", false);
 	boolean[CLEAN_PROTECTION_ZONES] = getGlobalBoolean(L, "cleanProtectionZones", false);
 	boolean[HOUSE_DOOR_SHOW_PRICE] = getGlobalBoolean(L, "houseDoorShowPrice", true);
 	boolean[ONLY_INVITED_CAN_MOVE_HOUSE_ITEMS] = getGlobalBoolean(L, "onlyInvitedCanMoveHouseItems", true);
 	boolean[REMOVE_ON_DESPAWN] = getGlobalBoolean(L, "removeOnDespawn", true);
-	boolean[PLAYER_CONSOLE_LOGS] = getGlobalBoolean(L, "showPlayerLogInConsole", true);
+	boolean[MONSTER_OVERSPAWN] = getGlobalBoolean(L, "monsterOverspawn", false);
 
 	string[DEFAULT_PRIORITY] = getGlobalString(L, "defaultPriority", "high");
 	string[SERVER_NAME] = getGlobalString(L, "serverName", "");
@@ -289,13 +263,19 @@ bool ConfigManager::load()
 	integer[VIP_FREE_LIMIT] = getGlobalNumber(L, "vipFreeLimit", 20);
 	integer[VIP_PREMIUM_LIMIT] = getGlobalNumber(L, "vipPremiumLimit", 100);
 	integer[DEPOT_FREE_LIMIT] = getGlobalNumber(L, "depotFreeLimit", 2000);
-	integer[DEPOT_PREMIUM_LIMIT] = getGlobalNumber(L, "depotPremiumLimit", 10000);
+	integer[DEPOT_PREMIUM_LIMIT] = getGlobalNumber(L, "depotPremiumLimit", 15000);
+	integer[QUEST_TRACKER_FREE_LIMIT] = getGlobalNumber(L, "questTrackerFreeLimit", 10);
+	integer[QUEST_TRACKER_PREMIUM_LIMIT] = getGlobalNumber(L, "questTrackerPremiumLimit", 15);
+	integer[STAMINA_REGEN_MINUTE] = getGlobalNumber(L, "timeToRegenMinuteStamina", 3 * 60);
+	integer[STAMINA_REGEN_PREMIUM] = getGlobalNumber(L, "timeToRegenMinutePremiumStamina", 6 * 60);
 
 	expStages = loadXMLStages();
 	if (expStages.empty()) {
 		expStages = loadLuaStages(L);
 	} else {
-		std::cout << "[Warning - ConfigManager::load] XML stages are deprecated, consider moving to config.lua." << std::endl;
+		std::cout << "[Warning - ConfigManager::load] XML stages are deprecated, "
+		             "consider moving to config.lua."
+		          << std::endl;
 	}
 	expStages.shrink_to_fit();
 
@@ -303,15 +283,6 @@ bool ConfigManager::load()
 	lua_close(L);
 
 	return true;
-}
-
-bool ConfigManager::reload()
-{
-	bool result = load();
-	if (transformToSHA1(getString(ConfigManager::MOTD)) != g_game.getMotdHash()) {
-		g_game.incrementMotdNum();
-	}
-	return result;
 }
 
 static std::string dummyStr;
@@ -345,8 +316,9 @@ bool ConfigManager::getBoolean(boolean_config_t what) const
 
 float ConfigManager::getExperienceStage(uint32_t level) const
 {
-	auto it = std::find_if(expStages.begin(), expStages.end(), [level](ExperienceStages::value_type stage) {
-		return level >= std::get<0>(stage) && level <= std::get<1>(stage);
+	auto it = std::find_if(expStages.begin(), expStages.end(), [level](auto&& stage) {
+		auto&& [minLevel, maxLevel, _] = stage;
+		return level >= minLevel && level <= maxLevel;
 	});
 
 	if (it == expStages.end()) {
@@ -356,7 +328,7 @@ float ConfigManager::getExperienceStage(uint32_t level) const
 	return std::get<2>(*it);
 }
 
-bool ConfigManager::setString(string_config_t what, const std::string& value)
+bool ConfigManager::setString(string_config_t what, std::string_view value)
 {
 	if (what >= LAST_STRING_CONFIG) {
 		std::cout << "[Warning - ConfigManager::setString] Accessing invalid index: " << what << std::endl;

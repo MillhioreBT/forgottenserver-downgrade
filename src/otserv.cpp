@@ -1,27 +1,25 @@
 // Copyright 2023 The Forgotten Server Authors. All rights reserved.
 // Use of this source code is governed by the GPL-2.0 License that can be found in the LICENSE file.
 
-
 #include "otpch.h"
 
+#include "configmanager.h"
+#include "databasemanager.h"
+#include "databasetasks.h"
+#include "game.h"
+#include "protocollogin.h"
+#include "protocolold.h"
+#include "protocolstatus.h"
+#include "rsa.h"
+#include "scheduler.h"
+#include "script.h"
+#include "scriptmanager.h"
 #include "server.h"
 
-#include "game.h"
-
-#include "configmanager.h"
-#include "scriptmanager.h"
-#include "rsa.h"
-#include "protocolold.h"
-#include "protocollogin.h"
-#include "protocolstatus.h"
-#include "databasemanager.h"
-#include "scheduler.h"
-#include "databasetasks.h"
-#include "script.h"
-#include <fstream>
 #include <fmt/format.h>
+#include <fstream>
 #if __has_include("gitmetadata.h")
-	#include "gitmetadata.h"
+#include "gitmetadata.h"
 #endif
 
 DatabaseTasks g_databaseTasks;
@@ -59,7 +57,7 @@ bool argumentsHandler(const StringVector& args);
 int main(int argc, char* argv[])
 {
 	StringVector args = StringVector(argv, argv + argc);
-	if(argc > 1 && !argumentsHandler(args)) {
+	if (argc > 1 && !argumentsHandler(args)) {
 		return 0;
 	}
 
@@ -76,7 +74,8 @@ int main(int argc, char* argv[])
 	g_loaderSignal.wait(g_loaderUniqueLock);
 
 	if (serviceManager.is_running()) {
-		std::cout << ">> " << g_config.getString(ConfigManager::SERVER_NAME) << " Server Online!" << std::endl << std::endl;
+		std::cout << ">> " << g_config.getString(ConfigManager::SERVER_NAME) << " Server Online!" << std::endl
+		          << std::endl;
 		serviceManager.run();
 	} else {
 		std::cout << ">> No services running. The server is NOT online." << std::endl;
@@ -95,10 +94,10 @@ void printServerVersion()
 {
 #if defined(GIT_RETRIEVED_STATE) && GIT_RETRIEVED_STATE
 	std::cout << STATUS_SERVER_NAME << " - Version " << GIT_DESCRIBE << std::endl;
-	std::cout << "Git SHA1 " << GIT_SHORT_SHA1  << " dated " << GIT_COMMIT_DATE_ISO8601 << std::endl;
-	#if GIT_IS_DIRTY
+	std::cout << "Git SHA1 " << GIT_SHORT_SHA1 << " dated " << GIT_COMMIT_DATE_ISO8601 << std::endl;
+#if GIT_IS_DIRTY
 	std::cout << "*** DIRTY - NOT OFFICIAL RELEASE ***" << std::endl;
-	#endif
+#endif
 #else
 	std::cout << STATUS_SERVER_NAME << " - Version " << STATUS_SERVER_VERSION << std::endl;
 #endif
@@ -118,7 +117,7 @@ void printServerVersion()
 #if defined(LUAJIT_VERSION)
 	std::cout << "Linked with " << LUAJIT_VERSION << " for Lua support" << std::endl;
 #else
-	std::cout << "Linked with " << LUA_RELEASE << " for Lua support"  << std::endl;
+	std::cout << "Linked with " << LUA_RELEASE << " for Lua support" << std::endl;
 #endif
 	std::cout << std::endl;
 
@@ -130,7 +129,7 @@ void printServerVersion()
 
 void mainLoader(int, char*[], ServiceManager* services)
 {
-	//dispatcher thread
+	// dispatcher thread
 	g_game.setGameState(GAME_STATE_STARTUP);
 
 	srand(static_cast<unsigned int>(OTSYS_TIME()));
@@ -165,17 +164,17 @@ void mainLoader(int, char*[], ServiceManager* services)
 
 #ifdef _WIN32
 	const std::string& defaultPriority = g_config.getString(ConfigManager::DEFAULT_PRIORITY);
-	if (strcasecmp(defaultPriority.c_str(), "high") == 0) {
+	if (caseInsensitiveEqual(defaultPriority, "high")) {
 		SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
-	} else if (strcasecmp(defaultPriority.c_str(), "above-normal") == 0) {
+	} else if (caseInsensitiveEqual(defaultPriority, "above-normal")) {
 		SetPriorityClass(GetCurrentProcess(), ABOVE_NORMAL_PRIORITY_CLASS);
 	}
 #endif
 
-	//set RSA key
+	// set RSA key
 	try {
 		g_RSA.loadPEM("key.pem");
-	} catch(const std::exception& e) {
+	} catch (const std::exception& e) {
 		startupErrorMessage(e.what());
 		return;
 	}
@@ -193,7 +192,8 @@ void mainLoader(int, char*[], ServiceManager* services)
 	std::cout << ">> Running database manager" << std::endl;
 
 	if (!DatabaseManager::isDatabaseSetup()) {
-		startupErrorMessage("The database you have specified in config.lua is empty, please import the schema.sql to your database.");
+		startupErrorMessage(
+		    "The database you have specified in config.lua is empty, please import the schema.sql to your database.");
 		return;
 	}
 	g_databaseTasks.start();
@@ -204,7 +204,7 @@ void mainLoader(int, char*[], ServiceManager* services)
 		std::cout << "> No tables were optimized." << std::endl;
 	}
 
-	//load vocations
+	// load vocations
 	std::cout << ">> Loading vocations" << std::endl;
 	if (!g_vocations.loadFromXml()) {
 		startupErrorMessage("Unable to load vocations!");
@@ -217,7 +217,9 @@ void mainLoader(int, char*[], ServiceManager* services)
 		startupErrorMessage("Unable to load items (OTB)!");
 		return;
 	}
-	std::cout << fmt::format("OTB v{:d}.{:d}.{:d}", Item::items.majorVersion, Item::items.minorVersion, Item::items.buildNumber) << std::endl;
+	std::cout << fmt::format("OTB v{:d}.{:d}.{:d}", Item::items.majorVersion, Item::items.minorVersion,
+	                         Item::items.buildNumber)
+	          << std::endl;
 
 	if (!Item::items.loadFromXml()) {
 		startupErrorMessage("Unable to load items (XML)!");
@@ -264,7 +266,9 @@ void mainLoader(int, char*[], ServiceManager* services)
 		g_game.setWorldType(WORLD_TYPE_PVP_ENFORCED);
 	} else {
 		std::cout << std::endl;
-		startupErrorMessage(fmt::format("Unknown world type: {:s}, valid world types are: pvp, no-pvp and pvp-enforced.", g_config.getString(ConfigManager::WORLD_TYPE)));
+		startupErrorMessage(
+		    fmt::format("Unknown world type: {:s}, valid world types are: pvp, no-pvp and pvp-enforced.",
+		                g_config.getString(ConfigManager::WORLD_TYPE)));
 		return;
 	}
 	std::cout << asUpperCaseString(worldType) << std::endl;
@@ -309,7 +313,8 @@ void mainLoader(int, char*[], ServiceManager* services)
 
 #ifndef _WIN32
 	if (getuid() == 0 || geteuid() == 0) {
-		std::cout << "> Warning: " << STATUS_SERVER_NAME << " has been executed as root user, please consider running it as a normal user." << std::endl;
+		std::cout << "> Warning: " << STATUS_SERVER_NAME
+		          << " has been executed as root user, please consider running it as a normal user." << std::endl;
 	}
 #endif
 
@@ -323,12 +328,12 @@ bool argumentsHandler(const StringVector& args)
 	for (const auto& arg : args) {
 		if (arg == "--help") {
 			std::clog << "Usage:\n"
-			"\n"
-			"\t--config=$1\t\tAlternate configuration file path.\n"
-			"\t--ip=$1\t\t\tIP address of the server.\n"
-			"\t\t\t\tShould be equal to the global IP.\n"
-			"\t--login-port=$1\tPort for login server to listen on.\n"
-			"\t--game-port=$1\tPort for game server to listen on.\n";
+			             "\n"
+			             "\t--config=$1\t\tAlternate configuration file path.\n"
+			             "\t--ip=$1\t\t\tIP address of the server.\n"
+			             "\t\t\t\tShould be equal to the global IP.\n"
+			             "\t--login-port=$1\tPort for login server to listen on.\n"
+			             "\t--game-port=$1\tPort for game server to listen on.\n";
 			return false;
 		} else if (arg == "--version") {
 			printServerVersion();
@@ -340,7 +345,7 @@ bool argumentsHandler(const StringVector& args)
 		if (tmp[0] == "--config")
 			g_config.setString(ConfigManager::CONFIG_FILE, tmp[1]);
 		else if (tmp[0] == "--ip")
-			g_config.setString(ConfigManager::IP_STRING, tmp[1]);
+			g_config.setString(ConfigManager::IP, tmp[1]);
 		else if (tmp[0] == "--login-port")
 			g_config.setNumber(ConfigManager::LOGIN_PORT, std::stoi(tmp[1]));
 		else if (tmp[0] == "--game-port")

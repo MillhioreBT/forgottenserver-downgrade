@@ -1,14 +1,12 @@
 // Copyright 2023 The Forgotten Server Authors. All rights reserved.
 // Use of this source code is governed by the GPL-2.0 License that can be found in the LICENSE file.
 
-
 #include "otpch.h"
 
 #include "rsa.h"
 
 #include <cryptopp/base64.h>
 #include <cryptopp/osrng.h>
-
 #include <fstream>
 #include <sstream>
 
@@ -34,10 +32,11 @@ void RSA::loadPEM(const std::string& filename)
 
 	if (!file.is_open()) {
 		throw std::runtime_error("Missing file " + filename + ".");
- 	}
+	}
 
 	std::ostringstream oss;
-	for (std::string line; std::getline(file, line); oss << line);
+	for (std::string line; std::getline(file, line); oss << line)
+		;
 	std::string key = oss.str();
 
 	if (key.substr(0, header.size()) != header) {

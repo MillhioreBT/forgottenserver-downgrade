@@ -1,22 +1,20 @@
 // Copyright 2023 The Forgotten Server Authors. All rights reserved.
 // Use of this source code is governed by the GPL-2.0 License that can be found in the LICENSE file.
 
-
 #include "otpch.h"
 
 #include "protocollogin.h"
 
+#include "ban.h"
+#include "configmanager.h"
+#include "game.h"
+#include "iologindata.h"
 #include "outputmessage.h"
 #include "tasks.h"
-
-#include "configmanager.h"
-#include "iologindata.h"
-#include "ban.h"
-#include <iomanip>
-#include "game.h"
 #include "tools.h"
 
 #include <fmt/format.h>
+#include <iomanip>
 
 extern ConfigManager g_config;
 extern Game g_game;
@@ -42,12 +40,12 @@ void ProtocolLogin::getCharacterList(const std::string& accountName, const std::
 
 	const std::string& motd = g_config.getString(ConfigManager::MOTD);
 	if (!motd.empty()) {
-		//Add MOTD
+		// Add MOTD
 		output->addByte(0x14);
 		output->addString(fmt::format("{:d}\n{:s}", g_game.getMotdNum(), motd));
 	}
 
-	//Add char list
+	// Add char list
 	output->addByte(0x64);
 
 	uint8_t size = std::min<size_t>(std::numeric_limits<uint8_t>::max(), account.characters.size());
@@ -55,13 +53,13 @@ void ProtocolLogin::getCharacterList(const std::string& accountName, const std::
 	for (uint8_t i = 0; i < size; i++) {
 		output->addString(account.characters[i]);
 		output->addString(g_config.getString(ConfigManager::SERVER_NAME));
-		output->add<uint32_t>(g_config.getNumber(ConfigManager::IP));
+		output->add<uint32_t>(0);
 		output->add<uint16_t>(g_config.getNumber(ConfigManager::GAME_PORT));
 	}
 
-	//Add premium days
+	// Add premium days
 	if (g_config.getBoolean(ConfigManager::FREE_PREMIUM)) {
-		output->add<uint16_t>(0xFFFF); //client displays free premium
+		output->add<uint16_t>(0xFFFF); // client displays free premium
 	} else {
 		output->add<uint16_t>(std::max<time_t>(0, account.premiumEndsAt - time(nullptr)) / 86400);
 	}
@@ -133,7 +131,8 @@ void ProtocolLogin::onRecvFirstMessage(NetworkMessage& msg)
 			banInfo.reason = "(none)";
 		}
 
-		disconnectClient(fmt::format("Your IP has been banned until {:s} by {:s}.\n\nReason specified:\n{:s}", formatDateShort(banInfo.expiresAt), banInfo.bannedBy, banInfo.reason));
+		disconnectClient(fmt::format("Your IP has been banned until {:s} by {:s}.\n\nReason specified:\n{:s}",
+		                             formatDateShort(banInfo.expiresAt), banInfo.bannedBy, banInfo.reason));
 		return;
 	}
 
@@ -149,7 +148,7 @@ void ProtocolLogin::onRecvFirstMessage(NetworkMessage& msg)
 		return;
 	}
 
-	g_dispatcher.addTask(
-	    [=, thisPtr = std::static_pointer_cast<ProtocolLogin>(shared_from_this()), accountName = std::string{accountName},
-	     password = std::string{password}]() { thisPtr->getCharacterList(accountName, password); });
+	g_dispatcher.addTask([=, thisPtr = std::static_pointer_cast<ProtocolLogin>(shared_from_this()),
+	                      accountName = std::string{accountName},
+	                      password = std::string{password}]() { thisPtr->getCharacterList(accountName, password); });
 }

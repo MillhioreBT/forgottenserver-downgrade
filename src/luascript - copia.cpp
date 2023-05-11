@@ -292,10 +292,10 @@ int LuaScriptInterface::protectedCall(lua_State* L, int nargs, int nresults)
 	return ret;
 }
 
-int32_t LuaScriptInterface::loadFile(std::string_view file, Npc* npc /* = nullptr*/)
+int32_t LuaScriptInterface::loadFile(const std::string& file, Npc* npc /* = nullptr*/)
 {
 	// loads file as a chunk at stack top
-	int ret = luaL_loadfile(luaState, file.data());
+	int ret = luaL_loadfile(luaState, file.c_str());
 	if (ret != 0) {
 		lastLuaError = popString(luaState);
 		return -1;
@@ -330,7 +330,7 @@ int32_t LuaScriptInterface::loadFile(std::string_view file, Npc* npc /* = nullpt
 	return 0;
 }
 
-int32_t LuaScriptInterface::getEvent(std::string_view eventName)
+int32_t LuaScriptInterface::getEvent(const std::string& eventName)
 {
 	// get our events table
 	lua_rawgeti(luaState, LUA_REGISTRYINDEX, eventTableRef);
@@ -340,7 +340,7 @@ int32_t LuaScriptInterface::getEvent(std::string_view eventName)
 	}
 
 	// get current event function pointer
-	lua_getglobal(luaState, eventName.data());
+	lua_getglobal(luaState, eventName.c_str());
 	if (!isFunction(luaState, -1)) {
 		lua_pop(luaState, 2);
 		return -1;
@@ -353,9 +353,9 @@ int32_t LuaScriptInterface::getEvent(std::string_view eventName)
 
 	// reset global value of this event
 	lua_pushnil(luaState);
-	lua_setglobal(luaState, eventName.data());
+	lua_setglobal(luaState, eventName.c_str());
 
-	cacheFiles[runningEventId] = fmt::format("{}:{}", loadingFile, eventName);
+	cacheFiles[runningEventId] = loadingFile + ":" + eventName;
 	return runningEventId++;
 }
 
@@ -382,7 +382,7 @@ int32_t LuaScriptInterface::getEvent()
 	return runningEventId++;
 }
 
-int32_t LuaScriptInterface::getMetaEvent(std::string_view globalName, std::string_view eventName)
+int32_t LuaScriptInterface::getMetaEvent(const std::string& globalName, const std::string& eventName)
 {
 	// get our events table
 	lua_rawgeti(luaState, LUA_REGISTRYINDEX, eventTableRef);
@@ -392,8 +392,8 @@ int32_t LuaScriptInterface::getMetaEvent(std::string_view globalName, std::strin
 	}
 
 	// get current event function pointer
-	lua_getglobal(luaState, globalName.data());
-	lua_getfield(luaState, -1, eventName.data());
+	lua_getglobal(luaState, globalName.c_str());
+	lua_getfield(luaState, -1, eventName.c_str());
 	if (!isFunction(luaState, -1)) {
 		lua_pop(luaState, 3);
 		return -1;
@@ -406,10 +406,10 @@ int32_t LuaScriptInterface::getMetaEvent(std::string_view globalName, std::strin
 
 	// reset global value of this event
 	lua_pushnil(luaState);
-	lua_setfield(luaState, -2, eventName.data());
+	lua_setfield(luaState, -2, eventName.c_str());
 	lua_pop(luaState, 2);
 
-	cacheFiles[runningEventId] = fmt::format("{}:{}@{}", loadingFile, globalName, eventName);
+	cacheFiles[runningEventId] = loadingFile + ":" + globalName + "@" + eventName;
 	return runningEventId++;
 }
 
@@ -637,10 +637,10 @@ void LuaScriptInterface::pushCallback(lua_State* L, int32_t callback) { lua_rawg
 std::string LuaScriptInterface::popString(lua_State* L)
 {
 	if (lua_gettop(L) == 0) {
-		return {};
+		return std::string();
 	}
 
-	auto str = getString(L, -1);
+	std::string str(getString(L, -1));
 	lua_pop(L, 1);
 	return str;
 }
@@ -717,9 +717,9 @@ std::string LuaScriptInterface::getString(lua_State* L, int32_t arg)
 	size_t len;
 	const char* c_str = lua_tolstring(L, arg, &len);
 	if (!c_str || len == 0) {
-		return {};
+		return std::string();
 	}
-	return {c_str, len};
+	return std::string(c_str, len);
 }
 
 Position LuaScriptInterface::getPosition(lua_State* L, int32_t arg, int32_t& stackpos)
@@ -1087,794 +1087,453 @@ void LuaScriptInterface::registerFunctions()
 	// registerEnumIn(tableName, value)
 
 	// Enums
-	registerEnum(ACCOUNT_TYPE_NORMAL);
-	registerEnum(ACCOUNT_TYPE_TUTOR);
-	registerEnum(ACCOUNT_TYPE_SENIORTUTOR);
-	registerEnum(ACCOUNT_TYPE_GAMEMASTER);
-	registerEnum(ACCOUNT_TYPE_COMMUNITYMANAGER);
-	registerEnum(ACCOUNT_TYPE_GOD);
+	registerEnum(ACCOUNT_TYPE_NORMAL) registerEnum(ACCOUNT_TYPE_TUTOR) registerEnum(ACCOUNT_TYPE_SENIORTUTOR) registerEnum(
+	    ACCOUNT_TYPE_GAMEMASTER) registerEnum(ACCOUNT_TYPE_COMMUNITYMANAGER) registerEnum(ACCOUNT_TYPE_GOD)
 
-	registerEnum(AMMO_NONE);
-	registerEnum(AMMO_BOLT);
-	registerEnum(AMMO_ARROW);
-	registerEnum(AMMO_SPEAR);
-	registerEnum(AMMO_THROWINGSTAR);
-	registerEnum(AMMO_THROWINGKNIFE);
-	registerEnum(AMMO_STONE);
-	registerEnum(AMMO_SNOWBALL);
+	    registerEnum(AMMO_NONE) registerEnum(AMMO_BOLT) registerEnum(AMMO_ARROW) registerEnum(AMMO_SPEAR) registerEnum(
+	        AMMO_THROWINGSTAR) registerEnum(AMMO_THROWINGKNIFE) registerEnum(AMMO_STONE) registerEnum(AMMO_SNOWBALL)
 
-	registerEnum(BUG_CATEGORY_MAP);
-	registerEnum(BUG_CATEGORY_TYPO);
-	registerEnum(BUG_CATEGORY_TECHNICAL);
-	registerEnum(BUG_CATEGORY_OTHER);
+	        registerEnum(BUG_CATEGORY_MAP) registerEnum(BUG_CATEGORY_TYPO) registerEnum(
+	            BUG_CATEGORY_TECHNICAL) registerEnum(BUG_CATEGORY_OTHER)
 
-	registerEnum(CALLBACK_PARAM_LEVELMAGICVALUE);
-	registerEnum(CALLBACK_PARAM_SKILLVALUE);
-	registerEnum(CALLBACK_PARAM_TARGETTILE);
-	registerEnum(CALLBACK_PARAM_TARGETCREATURE);
+	            registerEnum(CALLBACK_PARAM_LEVELMAGICVALUE) registerEnum(CALLBACK_PARAM_SKILLVALUE) registerEnum(
+	                CALLBACK_PARAM_TARGETTILE) registerEnum(CALLBACK_PARAM_TARGETCREATURE)
 
-	registerEnum(COMBAT_FORMULA_UNDEFINED);
-	registerEnum(COMBAT_FORMULA_LEVELMAGIC);
-	registerEnum(COMBAT_FORMULA_SKILL);
-	registerEnum(COMBAT_FORMULA_DAMAGE);
+	                registerEnum(COMBAT_FORMULA_UNDEFINED) registerEnum(COMBAT_FORMULA_LEVELMAGIC) registerEnum(
+	                    COMBAT_FORMULA_SKILL) registerEnum(COMBAT_FORMULA_DAMAGE)
 
-	registerEnum(DIRECTION_NORTH);
-	registerEnum(DIRECTION_EAST);
-	registerEnum(DIRECTION_SOUTH);
-	registerEnum(DIRECTION_WEST);
-	registerEnum(DIRECTION_SOUTHWEST);
-	registerEnum(DIRECTION_SOUTHEAST);
-	registerEnum(DIRECTION_NORTHWEST);
-	registerEnum(DIRECTION_NORTHEAST);
+	                    registerEnum(DIRECTION_NORTH) registerEnum(DIRECTION_EAST) registerEnum(DIRECTION_SOUTH) registerEnum(DIRECTION_WEST) registerEnum(
+	                        DIRECTION_SOUTHWEST) registerEnum(DIRECTION_SOUTHEAST) registerEnum(DIRECTION_NORTHWEST) registerEnum(DIRECTION_NORTHEAST)
 
-	registerEnum(COMBAT_NONE);
-	registerEnum(COMBAT_PHYSICALDAMAGE);
-	registerEnum(COMBAT_ENERGYDAMAGE);
-	registerEnum(COMBAT_EARTHDAMAGE);
-	registerEnum(COMBAT_FIREDAMAGE);
-	registerEnum(COMBAT_UNDEFINEDDAMAGE);
-	registerEnum(COMBAT_LIFEDRAIN);
-	registerEnum(COMBAT_MANADRAIN);
-	registerEnum(COMBAT_HEALING);
-	registerEnum(COMBAT_DROWNDAMAGE);
-	registerEnum(COMBAT_ICEDAMAGE);
-	registerEnum(COMBAT_HOLYDAMAGE);
-	registerEnum(COMBAT_DEATHDAMAGE);
+	                        registerEnum(COMBAT_NONE) registerEnum(COMBAT_PHYSICALDAMAGE) registerEnum(COMBAT_ENERGYDAMAGE) registerEnum(
+	                            COMBAT_EARTHDAMAGE) registerEnum(COMBAT_FIREDAMAGE) registerEnum(COMBAT_UNDEFINEDDAMAGE)
+	                            registerEnum(COMBAT_LIFEDRAIN) registerEnum(COMBAT_MANADRAIN) registerEnum(COMBAT_HEALING) registerEnum(
+	                                COMBAT_DROWNDAMAGE) registerEnum(COMBAT_ICEDAMAGE) registerEnum(COMBAT_HOLYDAMAGE) registerEnum(COMBAT_DEATHDAMAGE)
 
-	registerEnum(COMBAT_PARAM_TYPE);
-	registerEnum(COMBAT_PARAM_EFFECT);
-	registerEnum(COMBAT_PARAM_DISTANCEEFFECT);
-	registerEnum(COMBAT_PARAM_BLOCKSHIELD);
-	registerEnum(COMBAT_PARAM_BLOCKARMOR);
-	registerEnum(COMBAT_PARAM_TARGETCASTERORTOPMOST);
-	registerEnum(COMBAT_PARAM_CREATEITEM);
-	registerEnum(COMBAT_PARAM_AGGRESSIVE);
-	registerEnum(COMBAT_PARAM_DISPEL);
-	registerEnum(COMBAT_PARAM_USECHARGES);
+	                                registerEnum(COMBAT_PARAM_TYPE) registerEnum(COMBAT_PARAM_EFFECT) registerEnum(
+	                                    COMBAT_PARAM_DISTANCEEFFECT) registerEnum(COMBAT_PARAM_BLOCKSHIELD) registerEnum(COMBAT_PARAM_BLOCKARMOR)
+	                                    registerEnum(COMBAT_PARAM_TARGETCASTERORTOPMOST) registerEnum(COMBAT_PARAM_CREATEITEM) registerEnum(
+	                                        COMBAT_PARAM_AGGRESSIVE) registerEnum(COMBAT_PARAM_DISPEL) registerEnum(COMBAT_PARAM_USECHARGES)
 
-	registerEnum(CONDITION_NONE);
-	registerEnum(CONDITION_POISON);
-	registerEnum(CONDITION_FIRE);
-	registerEnum(CONDITION_ENERGY);
-	registerEnum(CONDITION_BLEEDING);
-	registerEnum(CONDITION_HASTE);
-	registerEnum(CONDITION_PARALYZE);
-	registerEnum(CONDITION_OUTFIT);
-	registerEnum(CONDITION_INVISIBLE);
-	registerEnum(CONDITION_LIGHT);
-	registerEnum(CONDITION_MANASHIELD);
-	registerEnum(CONDITION_INFIGHT);
-	registerEnum(CONDITION_DRUNK);
-	registerEnum(CONDITION_EXHAUST_WEAPON);
-	registerEnum(CONDITION_REGENERATION);
-	registerEnum(CONDITION_SOUL);
-	registerEnum(CONDITION_DROWN);
-	registerEnum(CONDITION_MUTED);
-	registerEnum(CONDITION_CHANNELMUTEDTICKS);
-	registerEnum(CONDITION_YELLTICKS);
-	registerEnum(CONDITION_ATTRIBUTES);
-	registerEnum(CONDITION_FREEZING);
-	registerEnum(CONDITION_DAZZLED);
-	registerEnum(CONDITION_CURSED);
-	registerEnum(CONDITION_EXHAUST_COMBAT);
-	registerEnum(CONDITION_EXHAUST_HEAL);
-	registerEnum(CONDITION_PACIFIED);
+	                                        registerEnum(CONDITION_NONE) registerEnum(CONDITION_POISON) registerEnum(
+	                                            CONDITION_FIRE) registerEnum(CONDITION_ENERGY) registerEnum(CONDITION_BLEEDING)
+	                                            registerEnum(CONDITION_HASTE) registerEnum(CONDITION_PARALYZE) registerEnum(CONDITION_OUTFIT) registerEnum(CONDITION_INVISIBLE) registerEnum(CONDITION_LIGHT) registerEnum(CONDITION_MANASHIELD) registerEnum(CONDITION_INFIGHT) registerEnum(CONDITION_DRUNK) registerEnum(CONDITION_EXHAUST_WEAPON) registerEnum(CONDITION_REGENERATION) registerEnum(CONDITION_SOUL) registerEnum(CONDITION_DROWN) registerEnum(CONDITION_MUTED) registerEnum(
+	                                                CONDITION_CHANNELMUTEDTICKS) registerEnum(CONDITION_YELLTICKS) registerEnum(CONDITION_ATTRIBUTES)
+	                                                registerEnum(CONDITION_FREEZING) registerEnum(CONDITION_DAZZLED) registerEnum(
+	                                                    CONDITION_CURSED) registerEnum(CONDITION_EXHAUST_COMBAT) registerEnum(CONDITION_EXHAUST_HEAL) registerEnum(CONDITION_PACIFIED)
 
-	registerEnum(CONDITIONID_DEFAULT);
-	registerEnum(CONDITIONID_COMBAT);
-	registerEnum(CONDITIONID_HEAD);
-	registerEnum(CONDITIONID_NECKLACE);
-	registerEnum(CONDITIONID_BACKPACK);
-	registerEnum(CONDITIONID_ARMOR);
-	registerEnum(CONDITIONID_RIGHT);
-	registerEnum(CONDITIONID_LEFT);
-	registerEnum(CONDITIONID_LEGS);
-	registerEnum(CONDITIONID_FEET);
-	registerEnum(CONDITIONID_RING);
-	registerEnum(CONDITIONID_AMMO);
+	                                                    registerEnum(CONDITIONID_DEFAULT) registerEnum(CONDITIONID_COMBAT) registerEnum(CONDITIONID_HEAD) registerEnum(
+	                                                        CONDITIONID_NECKLACE) registerEnum(CONDITIONID_BACKPACK) registerEnum(CONDITIONID_ARMOR) registerEnum(CONDITIONID_RIGHT)
+	                                                        registerEnum(CONDITIONID_LEFT) registerEnum(CONDITIONID_LEGS) registerEnum(
+	                                                            CONDITIONID_FEET) registerEnum(CONDITIONID_RING) registerEnum(CONDITIONID_AMMO)
 
-	registerEnum(CONDITION_PARAM_OWNER);
-	registerEnum(CONDITION_PARAM_TICKS);
-	registerEnum(CONDITION_PARAM_DRUNKENNESS);
-	registerEnum(CONDITION_PARAM_HEALTHGAIN);
-	registerEnum(CONDITION_PARAM_HEALTHTICKS);
-	registerEnum(CONDITION_PARAM_MANAGAIN);
-	registerEnum(CONDITION_PARAM_MANATICKS);
-	registerEnum(CONDITION_PARAM_DELAYED);
-	registerEnum(CONDITION_PARAM_SPEED);
-	registerEnum(CONDITION_PARAM_LIGHT_LEVEL);
-	registerEnum(CONDITION_PARAM_LIGHT_COLOR);
-	registerEnum(CONDITION_PARAM_SOULGAIN);
-	registerEnum(CONDITION_PARAM_SOULTICKS);
-	registerEnum(CONDITION_PARAM_MINVALUE);
-	registerEnum(CONDITION_PARAM_MAXVALUE);
-	registerEnum(CONDITION_PARAM_STARTVALUE);
-	registerEnum(CONDITION_PARAM_TICKINTERVAL);
-	registerEnum(CONDITION_PARAM_FORCEUPDATE);
-	registerEnum(CONDITION_PARAM_SKILL_MELEE);
-	registerEnum(CONDITION_PARAM_SKILL_FIST);
-	registerEnum(CONDITION_PARAM_SKILL_CLUB);
-	registerEnum(CONDITION_PARAM_SKILL_SWORD);
-	registerEnum(CONDITION_PARAM_SKILL_AXE);
-	registerEnum(CONDITION_PARAM_SKILL_DISTANCE);
-	registerEnum(CONDITION_PARAM_SKILL_SHIELD);
-	registerEnum(CONDITION_PARAM_SKILL_FISHING);
-	registerEnum(CONDITION_PARAM_STAT_MAXHITPOINTS);
-	registerEnum(CONDITION_PARAM_STAT_MAXMANAPOINTS);
-	registerEnum(CONDITION_PARAM_STAT_MAGICPOINTS);
-	registerEnum(CONDITION_PARAM_STAT_MAXHITPOINTSPERCENT);
-	registerEnum(CONDITION_PARAM_STAT_MAXMANAPOINTSPERCENT);
-	registerEnum(CONDITION_PARAM_STAT_MAGICPOINTSPERCENT);
-	registerEnum(CONDITION_PARAM_PERIODICDAMAGE);
-	registerEnum(CONDITION_PARAM_SKILL_MELEEPERCENT);
-	registerEnum(CONDITION_PARAM_SKILL_FISTPERCENT);
-	registerEnum(CONDITION_PARAM_SKILL_CLUBPERCENT);
-	registerEnum(CONDITION_PARAM_SKILL_SWORDPERCENT);
-	registerEnum(CONDITION_PARAM_SKILL_AXEPERCENT);
-	registerEnum(CONDITION_PARAM_SKILL_DISTANCEPERCENT);
-	registerEnum(CONDITION_PARAM_SKILL_SHIELDPERCENT);
-	registerEnum(CONDITION_PARAM_SKILL_FISHINGPERCENT);
-	registerEnum(CONDITION_PARAM_BUFF_SPELL);
-	registerEnum(CONDITION_PARAM_SUBID);
-	registerEnum(CONDITION_PARAM_FIELD);
-	registerEnum(CONDITION_PARAM_DISABLE_DEFENSE);
-	registerEnum(CONDITION_PARAM_SPECIALSKILL_CRITICALHITCHANCE);
-	registerEnum(CONDITION_PARAM_SPECIALSKILL_CRITICALHITAMOUNT);
-	registerEnum(CONDITION_PARAM_SPECIALSKILL_LIFELEECHCHANCE);
-	registerEnum(CONDITION_PARAM_SPECIALSKILL_LIFELEECHAMOUNT);
-	registerEnum(CONDITION_PARAM_SPECIALSKILL_MANALEECHCHANCE);
-	registerEnum(CONDITION_PARAM_SPECIALSKILL_MANALEECHAMOUNT);
-	registerEnum(CONDITION_PARAM_AGGRESSIVE);
+	                                                            registerEnum(
+	                                                                CONDITION_PARAM_OWNER) registerEnum(CONDITION_PARAM_TICKS)
+	                                                                registerEnum(CONDITION_PARAM_DRUNKENNESS) registerEnum(
+	                                                                    CONDITION_PARAM_HEALTHGAIN) registerEnum(CONDITION_PARAM_HEALTHTICKS) registerEnum(CONDITION_PARAM_MANAGAIN) registerEnum(CONDITION_PARAM_MANATICKS) registerEnum(CONDITION_PARAM_DELAYED) registerEnum(CONDITION_PARAM_SPEED) registerEnum(CONDITION_PARAM_LIGHT_LEVEL) registerEnum(CONDITION_PARAM_LIGHT_COLOR) registerEnum(CONDITION_PARAM_SOULGAIN) registerEnum(CONDITION_PARAM_SOULTICKS) registerEnum(CONDITION_PARAM_MINVALUE) registerEnum(CONDITION_PARAM_MAXVALUE) registerEnum(CONDITION_PARAM_STARTVALUE) registerEnum(CONDITION_PARAM_TICKINTERVAL) registerEnum(CONDITION_PARAM_FORCEUPDATE) registerEnum(CONDITION_PARAM_SKILL_MELEE)
+	                                                                    registerEnum(CONDITION_PARAM_SKILL_FIST) registerEnum(CONDITION_PARAM_SKILL_CLUB) registerEnum(CONDITION_PARAM_SKILL_SWORD) registerEnum(
+	                                                                        CONDITION_PARAM_SKILL_AXE) registerEnum(CONDITION_PARAM_SKILL_DISTANCE)
+	                                                                        registerEnum(CONDITION_PARAM_SKILL_SHIELD) registerEnum(
+	                                                                            CONDITION_PARAM_SKILL_FISHING) registerEnum(CONDITION_PARAM_STAT_MAXHITPOINTS)
+	                                                                            registerEnum(
+	                                                                                CONDITION_PARAM_STAT_MAXMANAPOINTS) registerEnum(CONDITION_PARAM_STAT_MAGICPOINTS) registerEnum(CONDITION_PARAM_STAT_MAXHITPOINTSPERCENT) registerEnum(CONDITION_PARAM_STAT_MAXMANAPOINTSPERCENT) registerEnum(CONDITION_PARAM_STAT_MAGICPOINTSPERCENT) registerEnum(CONDITION_PARAM_PERIODICDAMAGE) registerEnum(CONDITION_PARAM_SKILL_MELEEPERCENT) registerEnum(CONDITION_PARAM_SKILL_FISTPERCENT) registerEnum(CONDITION_PARAM_SKILL_CLUBPERCENT) registerEnum(CONDITION_PARAM_SKILL_SWORDPERCENT)
+	                                                                                registerEnum(CONDITION_PARAM_SKILL_AXEPERCENT) registerEnum(CONDITION_PARAM_SKILL_DISTANCEPERCENT) registerEnum(CONDITION_PARAM_SKILL_SHIELDPERCENT) registerEnum(CONDITION_PARAM_SKILL_FISHINGPERCENT) registerEnum(CONDITION_PARAM_BUFF_SPELL) registerEnum(CONDITION_PARAM_SUBID) registerEnum(CONDITION_PARAM_FIELD) registerEnum(CONDITION_PARAM_DISABLE_DEFENSE) registerEnum(CONDITION_PARAM_SPECIALSKILL_CRITICALHITCHANCE) registerEnum(CONDITION_PARAM_SPECIALSKILL_CRITICALHITAMOUNT) registerEnum(CONDITION_PARAM_SPECIALSKILL_LIFELEECHCHANCE) registerEnum(
+	                                                                                    CONDITION_PARAM_SPECIALSKILL_LIFELEECHAMOUNT) registerEnum(CONDITION_PARAM_SPECIALSKILL_MANALEECHCHANCE) registerEnum(CONDITION_PARAM_SPECIALSKILL_MANALEECHAMOUNT) registerEnum(CONDITION_PARAM_AGGRESSIVE)
 
-	registerEnum(CONST_ME_NONE);
-	registerEnum(CONST_ME_DRAWBLOOD);
-	registerEnum(CONST_ME_LOSEENERGY);
-	registerEnum(CONST_ME_POFF);
-	registerEnum(CONST_ME_BLOCKHIT);
-	registerEnum(CONST_ME_EXPLOSIONAREA);
-	registerEnum(CONST_ME_EXPLOSIONHIT);
-	registerEnum(CONST_ME_FIREAREA);
-	registerEnum(CONST_ME_YELLOW_RINGS);
-	registerEnum(CONST_ME_GREEN_RINGS);
-	registerEnum(CONST_ME_HITAREA);
-	registerEnum(CONST_ME_TELEPORT);
-	registerEnum(CONST_ME_ENERGYHIT);
-	registerEnum(CONST_ME_MAGIC_BLUE);
-	registerEnum(CONST_ME_MAGIC_RED);
-	registerEnum(CONST_ME_MAGIC_GREEN);
-	registerEnum(CONST_ME_HITBYFIRE);
-	registerEnum(CONST_ME_HITBYPOISON);
-	registerEnum(CONST_ME_MORTAREA);
-	registerEnum(CONST_ME_SOUND_GREEN);
-	registerEnum(CONST_ME_SOUND_RED);
-	registerEnum(CONST_ME_POISONAREA);
-	registerEnum(CONST_ME_SOUND_YELLOW);
-	registerEnum(CONST_ME_SOUND_PURPLE);
-	registerEnum(CONST_ME_SOUND_BLUE);
-	registerEnum(CONST_ME_SOUND_WHITE);
-	registerEnum(CONST_ME_BUBBLES);
-	registerEnum(CONST_ME_CRAPS);
-	registerEnum(CONST_ME_GIFT_WRAPS);
-	registerEnum(CONST_ME_FIREWORK_YELLOW);
-	registerEnum(CONST_ME_FIREWORK_RED);
-	registerEnum(CONST_ME_FIREWORK_BLUE);
-	registerEnum(CONST_ME_STUN);
-	registerEnum(CONST_ME_SLEEP);
-	registerEnum(CONST_ME_WATERCREATURE);
-	registerEnum(CONST_ME_GROUNDSHAKER);
-	registerEnum(CONST_ME_HEARTS);
-	registerEnum(CONST_ME_FIREATTACK);
-	registerEnum(CONST_ME_ENERGYAREA);
-	registerEnum(CONST_ME_SMALLCLOUDS);
-	registerEnum(CONST_ME_HOLYDAMAGE);
-	registerEnum(CONST_ME_BIGCLOUDS);
-	registerEnum(CONST_ME_ICEAREA);
-	registerEnum(CONST_ME_ICETORNADO);
-	registerEnum(CONST_ME_ICEATTACK);
-	registerEnum(CONST_ME_STONES);
-	registerEnum(CONST_ME_SMALLPLANTS);
-	registerEnum(CONST_ME_CARNIPHILA);
-	registerEnum(CONST_ME_PURPLEENERGY);
-	registerEnum(CONST_ME_YELLOWENERGY);
-	registerEnum(CONST_ME_HOLYAREA);
-	registerEnum(CONST_ME_BIGPLANTS);
-	registerEnum(CONST_ME_CAKE);
-	registerEnum(CONST_ME_GIANTICE);
-	registerEnum(CONST_ME_WATERSPLASH);
-	registerEnum(CONST_ME_PLANTATTACK);
-	registerEnum(CONST_ME_TUTORIALARROW);
-	registerEnum(CONST_ME_TUTORIALSQUARE);
-	registerEnum(CONST_ME_MIRRORHORIZONTAL);
-	registerEnum(CONST_ME_MIRRORVERTICAL);
-	registerEnum(CONST_ME_SKULLHORIZONTAL);
-	registerEnum(CONST_ME_SKULLVERTICAL);
-	registerEnum(CONST_ME_ASSASSIN);
-	registerEnum(CONST_ME_STEPSHORIZONTAL);
-	registerEnum(CONST_ME_BLOODYSTEPS);
-	registerEnum(CONST_ME_STEPSVERTICAL);
-	registerEnum(CONST_ME_YALAHARIGHOST);
-	registerEnum(CONST_ME_BATS);
-	registerEnum(CONST_ME_SMOKE);
-	registerEnum(CONST_ME_INSECTS);
-	registerEnum(CONST_ME_DRAGONHEAD);
+	                                                                                    registerEnum(CONST_ME_NONE)
+	                                                                                        registerEnum(
+	                                                                                            CONST_ME_DRAWBLOOD) registerEnum(CONST_ME_LOSEENERGY) registerEnum(CONST_ME_POFF) registerEnum(CONST_ME_BLOCKHIT) registerEnum(CONST_ME_EXPLOSIONAREA) registerEnum(CONST_ME_EXPLOSIONHIT) registerEnum(CONST_ME_FIREAREA) registerEnum(CONST_ME_YELLOW_RINGS) registerEnum(CONST_ME_GREEN_RINGS) registerEnum(CONST_ME_HITAREA) registerEnum(CONST_ME_TELEPORT) registerEnum(CONST_ME_ENERGYHIT) registerEnum(CONST_ME_MAGIC_BLUE) registerEnum(CONST_ME_MAGIC_RED) registerEnum(CONST_ME_MAGIC_GREEN) registerEnum(CONST_ME_HITBYFIRE) registerEnum(CONST_ME_HITBYPOISON) registerEnum(CONST_ME_MORTAREA) registerEnum(CONST_ME_SOUND_GREEN) registerEnum(CONST_ME_SOUND_RED) registerEnum(CONST_ME_POISONAREA) registerEnum(CONST_ME_SOUND_YELLOW) registerEnum(CONST_ME_SOUND_PURPLE) registerEnum(CONST_ME_SOUND_BLUE) registerEnum(CONST_ME_SOUND_WHITE)
+	                                                                                            registerEnum(CONST_ME_BUBBLES) registerEnum(CONST_ME_CRAPS) registerEnum(CONST_ME_GIFT_WRAPS) registerEnum(CONST_ME_FIREWORK_YELLOW) registerEnum(CONST_ME_FIREWORK_RED) registerEnum(CONST_ME_FIREWORK_BLUE) registerEnum(CONST_ME_STUN) registerEnum(CONST_ME_SLEEP) registerEnum(CONST_ME_WATERCREATURE) registerEnum(CONST_ME_GROUNDSHAKER) registerEnum(CONST_ME_HEARTS) registerEnum(CONST_ME_FIREATTACK) registerEnum(CONST_ME_ENERGYAREA) registerEnum(CONST_ME_SMALLCLOUDS) registerEnum(CONST_ME_HOLYDAMAGE) registerEnum(CONST_ME_BIGCLOUDS) registerEnum(
+	                                                                                                CONST_ME_ICEAREA) registerEnum(CONST_ME_ICETORNADO) registerEnum(CONST_ME_ICEATTACK)
+	                                                                                                registerEnum(CONST_ME_STONES) registerEnum(
+	                                                                                                    CONST_ME_SMALLPLANTS) registerEnum(CONST_ME_CARNIPHILA)
+	                                                                                                    registerEnum(CONST_ME_PURPLEENERGY) registerEnum(
+	                                                                                                        CONST_ME_YELLOWENERGY)
+	                                                                                                        registerEnum(CONST_ME_HOLYAREA) registerEnum(
+	                                                                                                            CONST_ME_BIGPLANTS)
+	                                                                                                            registerEnum(
+	                                                                                                                CONST_ME_CAKE)
+	                                                                                                                registerEnum(CONST_ME_GIANTICE)
+	                                                                                                                    registerEnum(
+	                                                                                                                        CONST_ME_WATERSPLASH)
+	                                                                                                                        registerEnum(
+	                                                                                                                            CONST_ME_PLANTATTACK)
+	                                                                                                                            registerEnum(
+	                                                                                                                                CONST_ME_TUTORIALARROW)
+	                                                                                                                                registerEnum(CONST_ME_TUTORIALSQUARE) registerEnum(CONST_ME_MIRRORHORIZONTAL) registerEnum(CONST_ME_MIRRORVERTICAL) registerEnum(CONST_ME_SKULLHORIZONTAL) registerEnum(CONST_ME_SKULLVERTICAL) registerEnum(CONST_ME_ASSASSIN) registerEnum(CONST_ME_STEPSHORIZONTAL) registerEnum(CONST_ME_BLOODYSTEPS) registerEnum(CONST_ME_STEPSVERTICAL) registerEnum(CONST_ME_YALAHARIGHOST) registerEnum(CONST_ME_BATS) registerEnum(
+	                                                                                                                                    CONST_ME_SMOKE)
+	                                                                                                                                    registerEnum(CONST_ME_INSECTS) registerEnum(
+	                                                                                                                                        CONST_ME_DRAGONHEAD)
 
-	registerEnum(CONST_ANI_NONE);
-	registerEnum(CONST_ANI_SPEAR);
-	registerEnum(CONST_ANI_BOLT);
-	registerEnum(CONST_ANI_ARROW);
-	registerEnum(CONST_ANI_FIRE);
-	registerEnum(CONST_ANI_ENERGY);
-	registerEnum(CONST_ANI_POISONARROW);
-	registerEnum(CONST_ANI_BURSTARROW);
-	registerEnum(CONST_ANI_THROWINGSTAR);
-	registerEnum(CONST_ANI_THROWINGKNIFE);
-	registerEnum(CONST_ANI_SMALLSTONE);
-	registerEnum(CONST_ANI_DEATH);
-	registerEnum(CONST_ANI_LARGEROCK);
-	registerEnum(CONST_ANI_SNOWBALL);
-	registerEnum(CONST_ANI_POWERBOLT);
-	registerEnum(CONST_ANI_POISON);
-	registerEnum(CONST_ANI_INFERNALBOLT);
-	registerEnum(CONST_ANI_HUNTINGSPEAR);
-	registerEnum(CONST_ANI_ENCHANTEDSPEAR);
-	registerEnum(CONST_ANI_REDSTAR);
-	registerEnum(CONST_ANI_GREENSTAR);
-	registerEnum(CONST_ANI_ROYALSPEAR);
-	registerEnum(CONST_ANI_SNIPERARROW);
-	registerEnum(CONST_ANI_ONYXARROW);
-	registerEnum(CONST_ANI_PIERCINGBOLT);
-	registerEnum(CONST_ANI_WHIRLWINDSWORD);
-	registerEnum(CONST_ANI_WHIRLWINDAXE);
-	registerEnum(CONST_ANI_WHIRLWINDCLUB);
-	registerEnum(CONST_ANI_ETHEREALSPEAR);
-	registerEnum(CONST_ANI_ICE);
-	registerEnum(CONST_ANI_EARTH);
-	registerEnum(CONST_ANI_HOLY);
-	registerEnum(CONST_ANI_SUDDENDEATH);
-	registerEnum(CONST_ANI_FLASHARROW);
-	registerEnum(CONST_ANI_FLAMMINGARROW);
-	registerEnum(CONST_ANI_SHIVERARROW);
-	registerEnum(CONST_ANI_ENERGYBALL);
-	registerEnum(CONST_ANI_SMALLICE);
-	registerEnum(CONST_ANI_SMALLHOLY);
-	registerEnum(CONST_ANI_SMALLEARTH);
-	registerEnum(CONST_ANI_EARTHARROW);
-	registerEnum(CONST_ANI_EXPLOSION);
-	registerEnum(CONST_ANI_WEAPONTYPE);
+	                                                                                                                                        registerEnum(CONST_ANI_NONE) registerEnum(
+	                                                                                                                                            CONST_ANI_SPEAR)
+	                                                                                                                                            registerEnum(
+	                                                                                                                                                CONST_ANI_BOLT)
+	                                                                                                                                                registerEnum(
+	                                                                                                                                                    CONST_ANI_ARROW)
+	                                                                                                                                                    registerEnum(
+	                                                                                                                                                        CONST_ANI_FIRE)
+	                                                                                                                                                        registerEnum(
+	                                                                                                                                                            CONST_ANI_ENERGY)
+	                                                                                                                                                            registerEnum(
+	                                                                                                                                                                CONST_ANI_POISONARROW) registerEnum(CONST_ANI_BURSTARROW) registerEnum(CONST_ANI_THROWINGSTAR) registerEnum(CONST_ANI_THROWINGKNIFE) registerEnum(CONST_ANI_SMALLSTONE) registerEnum(CONST_ANI_DEATH) registerEnum(CONST_ANI_LARGEROCK) registerEnum(CONST_ANI_SNOWBALL) registerEnum(CONST_ANI_POWERBOLT) registerEnum(CONST_ANI_POISON) registerEnum(CONST_ANI_INFERNALBOLT) registerEnum(CONST_ANI_HUNTINGSPEAR) registerEnum(CONST_ANI_ENCHANTEDSPEAR) registerEnum(CONST_ANI_REDSTAR) registerEnum(CONST_ANI_GREENSTAR) registerEnum(CONST_ANI_ROYALSPEAR) registerEnum(CONST_ANI_SNIPERARROW) registerEnum(CONST_ANI_ONYXARROW)
+	                                                                                                                                                                registerEnum(
+	                                                                                                                                                                    CONST_ANI_PIERCINGBOLT)
+	                                                                                                                                                                    registerEnum(
+	                                                                                                                                                                        CONST_ANI_WHIRLWINDSWORD)
+	                                                                                                                                                                        registerEnum(CONST_ANI_WHIRLWINDAXE) registerEnum(CONST_ANI_WHIRLWINDCLUB) registerEnum(CONST_ANI_ETHEREALSPEAR) registerEnum(CONST_ANI_ICE) registerEnum(CONST_ANI_EARTH)
+	                                                                                                                                                                            registerEnum(CONST_ANI_HOLY) registerEnum(
+	                                                                                                                                                                                CONST_ANI_SUDDENDEATH)
+	                                                                                                                                                                                registerEnum(
+	                                                                                                                                                                                    CONST_ANI_FLASHARROW) registerEnum(CONST_ANI_FLAMMINGARROW) registerEnum(CONST_ANI_SHIVERARROW) registerEnum(CONST_ANI_ENERGYBALL) registerEnum(CONST_ANI_SMALLICE) registerEnum(CONST_ANI_SMALLHOLY)
+	                                                                                                                                                                                    registerEnum(CONST_ANI_SMALLEARTH) registerEnum(CONST_ANI_EARTHARROW) registerEnum(
+	                                                                                                                                                                                        CONST_ANI_EXPLOSION) registerEnum(CONST_ANI_WEAPONTYPE)
 
-	registerEnum(CONST_PROP_BLOCKSOLID);
-	registerEnum(CONST_PROP_HASHEIGHT);
-	registerEnum(CONST_PROP_BLOCKPROJECTILE);
-	registerEnum(CONST_PROP_BLOCKPATH);
-	registerEnum(CONST_PROP_ISVERTICAL);
-	registerEnum(CONST_PROP_ISHORIZONTAL);
-	registerEnum(CONST_PROP_MOVEABLE);
-	registerEnum(CONST_PROP_IMMOVABLEBLOCKSOLID);
-	registerEnum(CONST_PROP_IMMOVABLEBLOCKPATH);
-	registerEnum(CONST_PROP_IMMOVABLENOFIELDBLOCKPATH);
-	registerEnum(CONST_PROP_NOFIELDBLOCKPATH);
-	registerEnum(CONST_PROP_SUPPORTHANGABLE);
+	                                                                                                                                                                                        registerEnum(
+	                                                                                                                                                                                            CONST_PROP_BLOCKSOLID) registerEnum(CONST_PROP_HASHEIGHT) registerEnum(CONST_PROP_BLOCKPROJECTILE) registerEnum(CONST_PROP_BLOCKPATH)
+	                                                                                                                                                                                            registerEnum(CONST_PROP_ISVERTICAL) registerEnum(
+	                                                                                                                                                                                                CONST_PROP_ISHORIZONTAL)
+	                                                                                                                                                                                                registerEnum(
+	                                                                                                                                                                                                    CONST_PROP_MOVEABLE) registerEnum(CONST_PROP_IMMOVABLEBLOCKSOLID) registerEnum(CONST_PROP_IMMOVABLEBLOCKPATH) registerEnum(CONST_PROP_IMMOVABLENOFIELDBLOCKPATH) registerEnum(CONST_PROP_NOFIELDBLOCKPATH) registerEnum(CONST_PROP_SUPPORTHANGABLE)
 
-	registerEnum(CONST_SLOT_HEAD);
-	registerEnum(CONST_SLOT_NECKLACE);
-	registerEnum(CONST_SLOT_BACKPACK);
-	registerEnum(CONST_SLOT_ARMOR);
-	registerEnum(CONST_SLOT_RIGHT);
-	registerEnum(CONST_SLOT_LEFT);
-	registerEnum(CONST_SLOT_LEGS);
-	registerEnum(CONST_SLOT_FEET);
-	registerEnum(CONST_SLOT_RING);
-	registerEnum(CONST_SLOT_AMMO);
+	                                                                                                                                                                                                    registerEnum(CONST_SLOT_HEAD) registerEnum(
+	                                                                                                                                                                                                        CONST_SLOT_NECKLACE) registerEnum(CONST_SLOT_BACKPACK) registerEnum(CONST_SLOT_ARMOR) registerEnum(CONST_SLOT_RIGHT)
+	                                                                                                                                                                                                        registerEnum(
+	                                                                                                                                                                                                            CONST_SLOT_LEFT)
+	                                                                                                                                                                                                            registerEnum(
+	                                                                                                                                                                                                                CONST_SLOT_LEGS)
+	                                                                                                                                                                                                                registerEnum(
+	                                                                                                                                                                                                                    CONST_SLOT_FEET)
+	                                                                                                                                                                                                                    registerEnum(
+	                                                                                                                                                                                                                        CONST_SLOT_RING)
+	                                                                                                                                                                                                                        registerEnum(
+	                                                                                                                                                                                                                            CONST_SLOT_AMMO)
 
-	registerEnum(CREATURE_EVENT_NONE);
-	registerEnum(CREATURE_EVENT_LOGIN);
-	registerEnum(CREATURE_EVENT_LOGOUT);
-	registerEnum(CREATURE_EVENT_THINK);
-	registerEnum(CREATURE_EVENT_PREPAREDEATH);
-	registerEnum(CREATURE_EVENT_DEATH);
-	registerEnum(CREATURE_EVENT_KILL);
-	registerEnum(CREATURE_EVENT_ADVANCE);
-	registerEnum(CREATURE_EVENT_TEXTEDIT);
-	registerEnum(CREATURE_EVENT_HEALTHCHANGE);
-	registerEnum(CREATURE_EVENT_MANACHANGE);
-	registerEnum(CREATURE_EVENT_EXTENDED_OPCODE);
+	                                                                                                                                                                                                                            registerEnum(CREATURE_EVENT_NONE) registerEnum(CREATURE_EVENT_LOGIN) registerEnum(CREATURE_EVENT_LOGOUT) registerEnum(CREATURE_EVENT_THINK) registerEnum(CREATURE_EVENT_PREPAREDEATH) registerEnum(CREATURE_EVENT_DEATH) registerEnum(CREATURE_EVENT_KILL) registerEnum(
+	                                                                                                                                                                                                                                CREATURE_EVENT_ADVANCE) registerEnum(CREATURE_EVENT_TEXTEDIT) registerEnum(CREATURE_EVENT_HEALTHCHANGE) registerEnum(CREATURE_EVENT_MANACHANGE) registerEnum(CREATURE_EVENT_EXTENDED_OPCODE)
 
-	registerEnum(GAME_STATE_STARTUP);
-	registerEnum(GAME_STATE_INIT);
-	registerEnum(GAME_STATE_NORMAL);
-	registerEnum(GAME_STATE_CLOSED);
-	registerEnum(GAME_STATE_SHUTDOWN);
-	registerEnum(GAME_STATE_CLOSING);
-	registerEnum(GAME_STATE_MAINTAIN);
+	                                                                                                                                                                                                                                registerEnum(GAME_STATE_STARTUP) registerEnum(
+	                                                                                                                                                                                                                                    GAME_STATE_INIT) registerEnum(GAME_STATE_NORMAL) registerEnum(GAME_STATE_CLOSED) registerEnum(GAME_STATE_SHUTDOWN) registerEnum(GAME_STATE_CLOSING)
+	                                                                                                                                                                                                                                    registerEnum(
+	                                                                                                                                                                                                                                        GAME_STATE_MAINTAIN)
 
-	registerEnum(MESSAGE_STATUS_DEFAULT);
-	registerEnum(MESSAGE_STATUS_WARNING);
-	registerEnum(MESSAGE_EVENT_ADVANCE);
-	registerEnum(MESSAGE_STATUS_SMALL);
-	registerEnum(MESSAGE_INFO_DESCR);
-	registerEnum(MESSAGE_EVENT_DEFAULT);
+	                                                                                                                                                                                                                                        registerEnum(MESSAGE_STATUS_CONSOLE_BLUE) registerEnum(MESSAGE_STATUS_CONSOLE_RED) registerEnum(MESSAGE_STATUS_DEFAULT) registerEnum(MESSAGE_STATUS_WARNING) registerEnum(
+	                                                                                                                                                                                                                                            MESSAGE_EVENT_ADVANCE) registerEnum(MESSAGE_STATUS_SMALL) registerEnum(MESSAGE_INFO_DESCR) registerEnum(MESSAGE_EVENT_DEFAULT) registerEnum(MESSAGE_EVENT_ORANGE) registerEnum(MESSAGE_STATUS_CONSOLE_ORANGE)
 
-	registerEnum(CREATURETYPE_PLAYER);
-	registerEnum(CREATURETYPE_MONSTER);
-	registerEnum(CREATURETYPE_NPC);
-	registerEnum(CREATURETYPE_SUMMON_OWN);
-	registerEnum(CREATURETYPE_SUMMON_OTHERS);
+	                                                                                                                                                                                                                                            registerEnum(CREATURETYPE_PLAYER) registerEnum(
+	                                                                                                                                                                                                                                                CREATURETYPE_MONSTER)
+	                                                                                                                                                                                                                                                registerEnum(
+	                                                                                                                                                                                                                                                    CREATURETYPE_NPC) registerEnum(CREATURETYPE_SUMMON_OWN) registerEnum(CREATURETYPE_SUMMON_OTHERS)
 
-	registerEnum(CLIENTOS_LINUX);
-	registerEnum(CLIENTOS_WINDOWS);
-	registerEnum(CLIENTOS_FLASH);
-	registerEnum(CLIENTOS_OTCLIENT_LINUX);
-	registerEnum(CLIENTOS_OTCLIENT_WINDOWS);
-	registerEnum(CLIENTOS_OTCLIENT_MAC);
+	                                                                                                                                                                                                                                                    registerEnum(CLIENTOS_LINUX) registerEnum(CLIENTOS_WINDOWS) registerEnum(CLIENTOS_FLASH) registerEnum(
+	                                                                                                                                                                                                                                                        CLIENTOS_OTCLIENT_LINUX) registerEnum(CLIENTOS_OTCLIENT_WINDOWS) registerEnum(CLIENTOS_OTCLIENT_MAC)
 
-	registerEnum(FIGHTMODE_ATTACK);
-	registerEnum(FIGHTMODE_BALANCED);
-	registerEnum(FIGHTMODE_DEFENSE);
+	                                                                                                                                                                                                                                                        registerEnum(FIGHTMODE_ATTACK) registerEnum(
+	                                                                                                                                                                                                                                                            FIGHTMODE_BALANCED) registerEnum(FIGHTMODE_DEFENSE)
 
-	registerEnum(ITEM_ATTRIBUTE_NONE);
-	registerEnum(ITEM_ATTRIBUTE_ACTIONID);
-	registerEnum(ITEM_ATTRIBUTE_UNIQUEID);
-	registerEnum(ITEM_ATTRIBUTE_DESCRIPTION);
-	registerEnum(ITEM_ATTRIBUTE_TEXT);
-	registerEnum(ITEM_ATTRIBUTE_DATE);
-	registerEnum(ITEM_ATTRIBUTE_WRITER);
-	registerEnum(ITEM_ATTRIBUTE_NAME);
-	registerEnum(ITEM_ATTRIBUTE_ARTICLE);
-	registerEnum(ITEM_ATTRIBUTE_PLURALNAME);
-	registerEnum(ITEM_ATTRIBUTE_WEIGHT);
-	registerEnum(ITEM_ATTRIBUTE_ATTACK);
-	registerEnum(ITEM_ATTRIBUTE_DEFENSE);
-	registerEnum(ITEM_ATTRIBUTE_EXTRADEFENSE);
-	registerEnum(ITEM_ATTRIBUTE_ARMOR);
-	registerEnum(ITEM_ATTRIBUTE_HITCHANCE);
-	registerEnum(ITEM_ATTRIBUTE_SHOOTRANGE);
-	registerEnum(ITEM_ATTRIBUTE_OWNER);
-	registerEnum(ITEM_ATTRIBUTE_DURATION);
-	registerEnum(ITEM_ATTRIBUTE_DECAYSTATE);
-	registerEnum(ITEM_ATTRIBUTE_CORPSEOWNER);
-	registerEnum(ITEM_ATTRIBUTE_CHARGES);
-	registerEnum(ITEM_ATTRIBUTE_FLUIDTYPE);
-	registerEnum(ITEM_ATTRIBUTE_DOORID);
-	registerEnum(ITEM_ATTRIBUTE_DECAYTO);
-	registerEnum(ITEM_ATTRIBUTE_WRAPID);
-	registerEnum(ITEM_ATTRIBUTE_STOREITEM);
-	registerEnum(ITEM_ATTRIBUTE_ATTACK_SPEED);
+	                                                                                                                                                                                                                                                            registerEnum(ITEM_ATTRIBUTE_NONE) registerEnum(ITEM_ATTRIBUTE_ACTIONID) registerEnum(ITEM_ATTRIBUTE_UNIQUEID) registerEnum(ITEM_ATTRIBUTE_DESCRIPTION) registerEnum(ITEM_ATTRIBUTE_TEXT) registerEnum(ITEM_ATTRIBUTE_DATE) registerEnum(
+	                                                                                                                                                                                                                                                                ITEM_ATTRIBUTE_WRITER)
+	                                                                                                                                                                                                                                                                registerEnum(ITEM_ATTRIBUTE_NAME)
+	                                                                                                                                                                                                                                                                    registerEnum(
+	                                                                                                                                                                                                                                                                        ITEM_ATTRIBUTE_ARTICLE)
+	                                                                                                                                                                                                                                                                        registerEnum(ITEM_ATTRIBUTE_PLURALNAME) registerEnum(ITEM_ATTRIBUTE_WEIGHT) registerEnum(ITEM_ATTRIBUTE_ATTACK)
+	                                                                                                                                                                                                                                                                            registerEnum(
+	                                                                                                                                                                                                                                                                                ITEM_ATTRIBUTE_DEFENSE)
+	                                                                                                                                                                                                                                                                                registerEnum(
+	                                                                                                                                                                                                                                                                                    ITEM_ATTRIBUTE_EXTRADEFENSE)
+	                                                                                                                                                                                                                                                                                    registerEnum(ITEM_ATTRIBUTE_ARMOR) registerEnum(ITEM_ATTRIBUTE_HITCHANCE) registerEnum(ITEM_ATTRIBUTE_SHOOTRANGE)
+	                                                                                                                                                                                                                                                                                        registerEnum(
+	                                                                                                                                                                                                                                                                                            ITEM_ATTRIBUTE_OWNER)
+	                                                                                                                                                                                                                                                                                            registerEnum(
+	                                                                                                                                                                                                                                                                                                ITEM_ATTRIBUTE_DURATION)
+	                                                                                                                                                                                                                                                                                                registerEnum(
+	                                                                                                                                                                                                                                                                                                    ITEM_ATTRIBUTE_DECAYSTATE)
+	                                                                                                                                                                                                                                                                                                    registerEnum(ITEM_ATTRIBUTE_CORPSEOWNER) registerEnum(ITEM_ATTRIBUTE_CHARGES) registerEnum(
+	                                                                                                                                                                                                                                                                                                        ITEM_ATTRIBUTE_FLUIDTYPE)
+	                                                                                                                                                                                                                                                                                                        registerEnum(
+	                                                                                                                                                                                                                                                                                                            ITEM_ATTRIBUTE_DOORID)
+	                                                                                                                                                                                                                                                                                                            registerEnum(
+	                                                                                                                                                                                                                                                                                                                ITEM_ATTRIBUTE_DECAYTO) registerEnum(ITEM_ATTRIBUTE_WRAPID) registerEnum(ITEM_ATTRIBUTE_STOREITEM)
+	                                                                                                                                                                                                                                                                                                                registerEnum(
+	                                                                                                                                                                                                                                                                                                                    ITEM_ATTRIBUTE_ATTACK_SPEED)
 
-	registerEnum(ITEM_TYPE_DEPOT);
-	registerEnum(ITEM_TYPE_MAILBOX);
-	registerEnum(ITEM_TYPE_TRASHHOLDER);
-	registerEnum(ITEM_TYPE_CONTAINER);
-	registerEnum(ITEM_TYPE_DOOR);
-	registerEnum(ITEM_TYPE_MAGICFIELD);
-	registerEnum(ITEM_TYPE_TELEPORT);
-	registerEnum(ITEM_TYPE_BED);
-	registerEnum(ITEM_TYPE_KEY);
-	registerEnum(ITEM_TYPE_RUNE);
+	                                                                                                                                                                                                                                                                                                                    registerEnum(
+	                                                                                                                                                                                                                                                                                                                        ITEM_TYPE_DEPOT) registerEnum(ITEM_TYPE_MAILBOX) registerEnum(ITEM_TYPE_TRASHHOLDER) registerEnum(ITEM_TYPE_CONTAINER)
+	                                                                                                                                                                                                                                                                                                                        registerEnum(ITEM_TYPE_DOOR) registerEnum(
+	                                                                                                                                                                                                                                                                                                                            ITEM_TYPE_MAGICFIELD)
+	                                                                                                                                                                                                                                                                                                                            registerEnum(ITEM_TYPE_TELEPORT) registerEnum(ITEM_TYPE_BED)
+	                                                                                                                                                                                                                                                                                                                                registerEnum(ITEM_TYPE_KEY) registerEnum(
+	                                                                                                                                                                                                                                                                                                                                    ITEM_TYPE_RUNE)
 
-	registerEnum(ITEM_GROUP_GROUND);
-	registerEnum(ITEM_GROUP_CONTAINER);
-	registerEnum(ITEM_GROUP_WEAPON);
-	registerEnum(ITEM_GROUP_AMMUNITION);
-	registerEnum(ITEM_GROUP_ARMOR);
-	registerEnum(ITEM_GROUP_CHARGES);
-	registerEnum(ITEM_GROUP_TELEPORT);
-	registerEnum(ITEM_GROUP_MAGICFIELD);
-	registerEnum(ITEM_GROUP_WRITEABLE);
-	registerEnum(ITEM_GROUP_KEY);
-	registerEnum(ITEM_GROUP_SPLASH);
-	registerEnum(ITEM_GROUP_FLUID);
-	registerEnum(ITEM_GROUP_DOOR);
-	registerEnum(ITEM_GROUP_DEPRECATED);
+	                                                                                                                                                                                                                                                                                                                                    registerEnum(
+	                                                                                                                                                                                                                                                                                                                                        ITEM_GROUP_GROUND) registerEnum(ITEM_GROUP_CONTAINER) registerEnum(ITEM_GROUP_WEAPON)
+	                                                                                                                                                                                                                                                                                                                                        registerEnum(ITEM_GROUP_AMMUNITION) registerEnum(
+	                                                                                                                                                                                                                                                                                                                                            ITEM_GROUP_ARMOR)
+	                                                                                                                                                                                                                                                                                                                                            registerEnum(ITEM_GROUP_CHARGES) registerEnum(ITEM_GROUP_TELEPORT) registerEnum(ITEM_GROUP_MAGICFIELD) registerEnum(ITEM_GROUP_WRITEABLE) registerEnum(ITEM_GROUP_KEY) registerEnum(ITEM_GROUP_SPLASH) registerEnum(ITEM_GROUP_FLUID) registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                ITEM_GROUP_DOOR) registerEnum(ITEM_GROUP_DEPRECATED)
 
-	registerEnum(ITEM_BAG);
-	registerEnum(ITEM_GOLD_COIN);
-	registerEnum(ITEM_PLATINUM_COIN);
-	registerEnum(ITEM_CRYSTAL_COIN);
-	registerEnum(ITEM_AMULETOFLOSS);
-	registerEnum(ITEM_PARCEL);
-	registerEnum(ITEM_LABEL);
-	registerEnum(ITEM_FIREFIELD_PVP_FULL);
-	registerEnum(ITEM_FIREFIELD_PVP_MEDIUM);
-	registerEnum(ITEM_FIREFIELD_PVP_SMALL);
-	registerEnum(ITEM_FIREFIELD_PERSISTENT_FULL);
-	registerEnum(ITEM_FIREFIELD_PERSISTENT_MEDIUM);
-	registerEnum(ITEM_FIREFIELD_PERSISTENT_SMALL);
-	registerEnum(ITEM_FIREFIELD_NOPVP);
-	registerEnum(ITEM_POISONFIELD_PVP);
-	registerEnum(ITEM_POISONFIELD_PERSISTENT);
-	registerEnum(ITEM_POISONFIELD_NOPVP);
-	registerEnum(ITEM_ENERGYFIELD_PVP);
-	registerEnum(ITEM_ENERGYFIELD_PERSISTENT);
-	registerEnum(ITEM_ENERGYFIELD_NOPVP);
-	registerEnum(ITEM_MAGICWALL);
-	registerEnum(ITEM_MAGICWALL_PERSISTENT);
-	registerEnum(ITEM_MAGICWALL_SAFE);
-	registerEnum(ITEM_WILDGROWTH);
-	registerEnum(ITEM_WILDGROWTH_PERSISTENT);
-	registerEnum(ITEM_WILDGROWTH_SAFE);
+	                                                                                                                                                                                                                                                                                                                                                registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                    ITEM_BAG)
+	                                                                                                                                                                                                                                                                                                                                                    registerEnum(ITEM_BACKPACK) registerEnum(ITEM_GOLD_COIN) registerEnum(ITEM_PLATINUM_COIN) registerEnum(ITEM_CRYSTAL_COIN) registerEnum(ITEM_AMULETOFLOSS) registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                        ITEM_PARCEL)
+	                                                                                                                                                                                                                                                                                                                                                        registerEnum(ITEM_LABEL) registerEnum(ITEM_FIREFIELD_PVP_FULL) registerEnum(ITEM_FIREFIELD_PVP_MEDIUM) registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                            ITEM_FIREFIELD_PVP_SMALL) registerEnum(ITEM_FIREFIELD_PERSISTENT_FULL)
+	                                                                                                                                                                                                                                                                                                                                                            registerEnum(ITEM_FIREFIELD_PERSISTENT_MEDIUM) registerEnum(ITEM_FIREFIELD_PERSISTENT_SMALL) registerEnum(ITEM_FIREFIELD_NOPVP) registerEnum(ITEM_POISONFIELD_PVP) registerEnum(ITEM_POISONFIELD_PERSISTENT) registerEnum(ITEM_POISONFIELD_NOPVP) registerEnum(ITEM_ENERGYFIELD_PVP) registerEnum(ITEM_ENERGYFIELD_PERSISTENT) registerEnum(ITEM_ENERGYFIELD_NOPVP) registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                ITEM_MAGICWALL)
+	                                                                                                                                                                                                                                                                                                                                                                registerEnum(ITEM_MAGICWALL_PERSISTENT) registerEnum(ITEM_MAGICWALL_SAFE) registerEnum(ITEM_WILDGROWTH) registerEnum(ITEM_WILDGROWTH_PERSISTENT) registerEnum(ITEM_WILDGROWTH_SAFE)
 
-	registerEnum(WIELDINFO_NONE);
-	registerEnum(WIELDINFO_LEVEL);
-	registerEnum(WIELDINFO_MAGLV);
-	registerEnum(WIELDINFO_VOCREQ);
-	registerEnum(WIELDINFO_PREMIUM);
+	                                                                                                                                                                                                                                                                                                                                                                    registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                        WIELDINFO_NONE)
+	                                                                                                                                                                                                                                                                                                                                                                        registerEnum(WIELDINFO_LEVEL) registerEnum(WIELDINFO_MAGLV) registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                            WIELDINFO_VOCREQ)
+	                                                                                                                                                                                                                                                                                                                                                                            registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                WIELDINFO_PREMIUM)
 
-	registerEnum(PlayerFlag_CannotUseCombat);
-	registerEnum(PlayerFlag_CannotAttackPlayer);
-	registerEnum(PlayerFlag_CannotAttackMonster);
-	registerEnum(PlayerFlag_CannotBeAttacked);
-	registerEnum(PlayerFlag_CanConvinceAll);
-	registerEnum(PlayerFlag_CanSummonAll);
-	registerEnum(PlayerFlag_CanIllusionAll);
-	registerEnum(PlayerFlag_CanSenseInvisibility);
-	registerEnum(PlayerFlag_IgnoredByMonsters);
-	registerEnum(PlayerFlag_NotGainInFight);
-	registerEnum(PlayerFlag_HasInfiniteMana);
-	registerEnum(PlayerFlag_HasInfiniteSoul);
-	registerEnum(PlayerFlag_HasNoExhaustion);
-	registerEnum(PlayerFlag_CannotUseSpells);
-	registerEnum(PlayerFlag_CannotPickupItem);
-	registerEnum(PlayerFlag_CanAlwaysLogin);
-	registerEnum(PlayerFlag_CanBroadcast);
-	registerEnum(PlayerFlag_CanEditHouses);
-	registerEnum(PlayerFlag_CannotBeBanned);
-	registerEnum(PlayerFlag_CannotBePushed);
-	registerEnum(PlayerFlag_HasInfiniteCapacity);
-	registerEnum(PlayerFlag_CanPushAllCreatures);
-	registerEnum(PlayerFlag_CanTalkRedPrivate);
-	registerEnum(PlayerFlag_CanTalkRedChannel);
-	registerEnum(PlayerFlag_TalkOrangeHelpChannel);
-	registerEnum(PlayerFlag_NotGainExperience);
-	registerEnum(PlayerFlag_NotGainMana);
-	registerEnum(PlayerFlag_NotGainHealth);
-	registerEnum(PlayerFlag_NotGainSkill);
-	registerEnum(PlayerFlag_SetMaxSpeed);
-	registerEnum(PlayerFlag_SpecialVIP);
-	registerEnum(PlayerFlag_NotGenerateLoot);
-	registerEnum(PlayerFlag_IgnoreProtectionZone);
-	registerEnum(PlayerFlag_IgnoreSpellCheck);
-	registerEnum(PlayerFlag_IgnoreWeaponCheck);
-	registerEnum(PlayerFlag_CannotBeMuted);
-	registerEnum(PlayerFlag_IsAlwaysPremium);
-	registerEnum(PlayerFlag_IgnoreYellCheck);
-	registerEnum(PlayerFlag_IgnoreSendPrivateCheck);
+	                                                                                                                                                                                                                                                                                                                                                                                registerEnum(PlayerFlag_CannotUseCombat) registerEnum(PlayerFlag_CannotAttackPlayer) registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                    PlayerFlag_CannotAttackMonster) registerEnum(PlayerFlag_CannotBeAttacked)
+	                                                                                                                                                                                                                                                                                                                                                                                    registerEnum(PlayerFlag_CanConvinceAll) registerEnum(PlayerFlag_CanSummonAll)
+	                                                                                                                                                                                                                                                                                                                                                                                        registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                            PlayerFlag_CanIllusionAll)
+	                                                                                                                                                                                                                                                                                                                                                                                            registerEnum(PlayerFlag_CanSenseInvisibility) registerEnum(PlayerFlag_IgnoredByMonsters) registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                PlayerFlag_NotGainInFight)
+	                                                                                                                                                                                                                                                                                                                                                                                                registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                    PlayerFlag_HasInfiniteMana)
+	                                                                                                                                                                                                                                                                                                                                                                                                    registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                        PlayerFlag_HasInfiniteSoul) registerEnum(PlayerFlag_HasNoExhaustion) registerEnum(PlayerFlag_CannotUseSpells) registerEnum(PlayerFlag_CannotPickupItem) registerEnum(PlayerFlag_CanAlwaysLogin)
+	                                                                                                                                                                                                                                                                                                                                                                                                        registerEnum(PlayerFlag_CanBroadcast) registerEnum(PlayerFlag_CanEditHouses) registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                            PlayerFlag_CannotBeBanned)
+	                                                                                                                                                                                                                                                                                                                                                                                                            registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                PlayerFlag_CannotBePushed)
+	                                                                                                                                                                                                                                                                                                                                                                                                                registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                    PlayerFlag_HasInfiniteCapacity)
+	                                                                                                                                                                                                                                                                                                                                                                                                                    registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                        PlayerFlag_CanPushAllCreatures)
+	                                                                                                                                                                                                                                                                                                                                                                                                                        registerEnum(PlayerFlag_CanTalkRedPrivate) registerEnum(PlayerFlag_CanTalkRedChannel) registerEnum(PlayerFlag_TalkOrangeHelpChannel) registerEnum(PlayerFlag_NotGainExperience) registerEnum(PlayerFlag_NotGainMana) registerEnum(PlayerFlag_NotGainHealth) registerEnum(PlayerFlag_NotGainSkill) registerEnum(PlayerFlag_SetMaxSpeed) registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                            PlayerFlag_SpecialVIP) registerEnum(PlayerFlag_NotGenerateLoot) registerEnum(PlayerFlag_CanTalkRedChannelAnonymous) registerEnum(PlayerFlag_IgnoreProtectionZone)
+	                                                                                                                                                                                                                                                                                                                                                                                                                            registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                PlayerFlag_IgnoreSpellCheck) registerEnum(PlayerFlag_IgnoreWeaponCheck) registerEnum(PlayerFlag_CannotBeMuted)
+	                                                                                                                                                                                                                                                                                                                                                                                                                                registerEnum(PlayerFlag_IsAlwaysPremium) registerEnum(PlayerFlag_IgnoreYellCheck) registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                    PlayerFlag_IgnoreSendPrivateCheck)
 
-	registerEnum(PLAYERSEX_FEMALE);
-	registerEnum(PLAYERSEX_MALE);
+	                                                                                                                                                                                                                                                                                                                                                                                                                                    registerEnum(PLAYERSEX_FEMALE) registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                        PLAYERSEX_MALE)
 
-	registerEnum(REPORT_REASON_NAMEINAPPROPRIATE);
-	registerEnum(REPORT_REASON_NAMEPOORFORMATTED);
-	registerEnum(REPORT_REASON_NAMEADVERTISING);
-	registerEnum(REPORT_REASON_NAMEUNFITTING);
-	registerEnum(REPORT_REASON_NAMERULEVIOLATION);
-	registerEnum(REPORT_REASON_INSULTINGSTATEMENT);
-	registerEnum(REPORT_REASON_SPAMMING);
-	registerEnum(REPORT_REASON_ADVERTISINGSTATEMENT);
-	registerEnum(REPORT_REASON_UNFITTINGSTATEMENT);
-	registerEnum(REPORT_REASON_LANGUAGESTATEMENT);
-	registerEnum(REPORT_REASON_DISCLOSURE);
-	registerEnum(REPORT_REASON_RULEVIOLATION);
-	registerEnum(REPORT_REASON_STATEMENT_BUGABUSE);
-	registerEnum(REPORT_REASON_UNOFFICIALSOFTWARE);
-	registerEnum(REPORT_REASON_PRETENDING);
-	registerEnum(REPORT_REASON_HARASSINGOWNERS);
-	registerEnum(REPORT_REASON_FALSEINFO);
-	registerEnum(REPORT_REASON_ACCOUNTSHARING);
-	registerEnum(REPORT_REASON_STEALINGDATA);
-	registerEnum(REPORT_REASON_SERVICEATTACKING);
-	registerEnum(REPORT_REASON_SERVICEAGREEMENT);
+	                                                                                                                                                                                                                                                                                                                                                                                                                                        registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                            REPORT_REASON_NAMEINAPPROPRIATE)
+	                                                                                                                                                                                                                                                                                                                                                                                                                                            registerEnum(REPORT_REASON_NAMEPOORFORMATTED) registerEnum(REPORT_REASON_NAMEADVERTISING) registerEnum(REPORT_REASON_NAMEUNFITTING)
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                    REPORT_REASON_NAMERULEVIOLATION)
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                    registerEnum(REPORT_REASON_INSULTINGSTATEMENT) registerEnum(REPORT_REASON_SPAMMING)
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                        registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                            REPORT_REASON_ADVERTISINGSTATEMENT) registerEnum(REPORT_REASON_UNFITTINGSTATEMENT) registerEnum(REPORT_REASON_LANGUAGESTATEMENT)
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                            registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                REPORT_REASON_DISCLOSURE)
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                    REPORT_REASON_RULEVIOLATION)
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                    registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                        REPORT_REASON_STATEMENT_BUGABUSE)
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                        registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                            REPORT_REASON_UNOFFICIALSOFTWARE) registerEnum(REPORT_REASON_PRETENDING) registerEnum(REPORT_REASON_HARASSINGOWNERS)
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                            registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                REPORT_REASON_FALSEINFO)
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                registerEnum(REPORT_REASON_ACCOUNTSHARING)
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        REPORT_REASON_STEALINGDATA)
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            REPORT_REASON_SERVICEATTACKING) registerEnum(REPORT_REASON_SERVICEAGREEMENT)
 
-	registerEnum(REPORT_TYPE_NAME);
-	registerEnum(REPORT_TYPE_STATEMENT);
-	registerEnum(REPORT_TYPE_BOT);
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                REPORT_TYPE_NAME)
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    REPORT_TYPE_STATEMENT) registerEnum(REPORT_TYPE_BOT)
 
-	registerEnum(VOCATION_NONE);
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        VOCATION_NONE)
 
-	registerEnum(SKILL_FIST);
-	registerEnum(SKILL_CLUB);
-	registerEnum(SKILL_SWORD);
-	registerEnum(SKILL_AXE);
-	registerEnum(SKILL_DISTANCE);
-	registerEnum(SKILL_SHIELD);
-	registerEnum(SKILL_FISHING);
-	registerEnum(SKILL_MAGLEVEL);
-	registerEnum(SKILL_LEVEL);
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            SKILL_FIST) registerEnum(SKILL_CLUB)
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                SKILL_SWORD)
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    SKILL_AXE)
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        SKILL_DISTANCE) registerEnum(SKILL_SHIELD) registerEnum(SKILL_FISHING) registerEnum(SKILL_MAGLEVEL) registerEnum(SKILL_LEVEL)
 
-	registerEnum(SPECIALSKILL_CRITICALHITCHANCE);
-	registerEnum(SPECIALSKILL_CRITICALHITAMOUNT);
-	registerEnum(SPECIALSKILL_LIFELEECHCHANCE);
-	registerEnum(SPECIALSKILL_LIFELEECHAMOUNT);
-	registerEnum(SPECIALSKILL_MANALEECHCHANCE);
-	registerEnum(SPECIALSKILL_MANALEECHAMOUNT);
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            SPECIALSKILL_CRITICALHITCHANCE)
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                SPECIALSKILL_CRITICALHITAMOUNT) registerEnum(SPECIALSKILL_LIFELEECHCHANCE)
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    SPECIALSKILL_LIFELEECHAMOUNT)
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        SPECIALSKILL_MANALEECHCHANCE)
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            SPECIALSKILL_MANALEECHAMOUNT)
 
-	registerEnum(STAT_MAXHITPOINTS);
-	registerEnum(STAT_MAXMANAPOINTS);
-	registerEnum(STAT_SOULPOINTS);
-	registerEnum(STAT_MAGICPOINTS);
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            registerEnum(SKULL_NONE) registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                SKULL_YELLOW)
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    SKULL_GREEN)
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    registerEnum(SKULL_WHITE)
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            SKULL_RED)
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                SKULL_BLACK)
 
-	registerEnum(SKULL_NONE);
-	registerEnum(SKULL_YELLOW);
-	registerEnum(SKULL_GREEN);
-	registerEnum(SKULL_WHITE);
-	registerEnum(SKULL_RED);
-	registerEnum(SKULL_BLACK);
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                registerEnum(FLUID_NONE) registerEnum(FLUID_WATER) registerEnum(FLUID_BLOOD) registerEnum(FLUID_BEER) registerEnum(FLUID_SLIME) registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    FLUID_LEMONADE)
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    registerEnum(FLUID_MILK) registerEnum(FLUID_MANA) registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        FLUID_LIFE)
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        registerEnum(FLUID_OIL) registerEnum(FLUID_URINE) registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            FLUID_COCONUTMILK) registerEnum(FLUID_WINE) registerEnum(FLUID_MUD) registerEnum(FLUID_FRUITJUICE) registerEnum(FLUID_LAVA)
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            registerEnum(FLUID_RUM) registerEnum(FLUID_SWAMP) registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                FLUID_TEA) registerEnum(FLUID_MEAD)
 
-	registerEnum(FLUID_NONE);
-	registerEnum(FLUID_WATER);
-	registerEnum(FLUID_BLOOD);
-	registerEnum(FLUID_BEER);
-	registerEnum(FLUID_SLIME);
-	registerEnum(FLUID_LEMONADE);
-	registerEnum(FLUID_MILK);
-	registerEnum(FLUID_MANA);
-	registerEnum(FLUID_LIFE);
-	registerEnum(FLUID_OIL);
-	registerEnum(FLUID_URINE);
-	registerEnum(FLUID_COCONUTMILK);
-	registerEnum(FLUID_WINE);
-	registerEnum(FLUID_MUD);
-	registerEnum(FLUID_FRUITJUICE);
-	registerEnum(FLUID_LAVA);
-	registerEnum(FLUID_RUM);
-	registerEnum(FLUID_SWAMP);
-	registerEnum(FLUID_TEA);
-	registerEnum(FLUID_MEAD);
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    TALKTYPE_SAY) registerEnum(TALKTYPE_WHISPER) registerEnum(TALKTYPE_YELL) registerEnum(TALKTYPE_CHANNEL_Y) registerEnum(TALKTYPE_CHANNEL_O) registerEnum(TALKTYPE_PRIVATE_NP) registerEnum(TALKTYPE_PRIVATE_PN)
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    registerEnum(TALKTYPE_BROADCAST) registerEnum(TALKTYPE_CHANNEL_R1) registerEnum(TALKTYPE_MONSTER_SAY) registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        TALKTYPE_MONSTER_YELL)
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            TALKTYPE_CHANNEL_R2)
 
-	registerEnum(TALKTYPE_SAY);
-	registerEnum(TALKTYPE_WHISPER);
-	registerEnum(TALKTYPE_YELL);
-	registerEnum(TALKTYPE_CHANNEL_Y);
-	registerEnum(TALKTYPE_CHANNEL_O);
-	registerEnum(TALKTYPE_PRIVATE_NP);
-	registerEnum(TALKTYPE_PRIVATE_PN);
-	registerEnum(TALKTYPE_BROADCAST);
-	registerEnum(TALKTYPE_CHANNEL_R1);
-	registerEnum(TALKTYPE_MONSTER_SAY);
-	registerEnum(TALKTYPE_MONSTER_YELL);
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                TEXTCOLOR_BLACK)
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    TEXTCOLOR_BLUE) registerEnum(TEXTCOLOR_GREEN) registerEnum(TEXTCOLOR_LIGHTGREEN) registerEnum(TEXTCOLOR_DARKBROWN) registerEnum(TEXTCOLOR_LIGHTBLUE) registerEnum(TEXTCOLOR_MAYABLUE)
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    registerEnum(TEXTCOLOR_DARKRED) registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        TEXTCOLOR_DARKPURPLE)
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            TEXTCOLOR_BROWN) registerEnum(TEXTCOLOR_GREY) registerEnum(TEXTCOLOR_TEAL) registerEnum(TEXTCOLOR_DARKPINK)
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            registerEnum(TEXTCOLOR_PURPLE) registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                TEXTCOLOR_DARKORANGE)
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    TEXTCOLOR_RED)
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        TEXTCOLOR_PINK) registerEnum(TEXTCOLOR_ORANGE) registerEnum(TEXTCOLOR_DARKYELLOW)
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        registerEnum(TEXTCOLOR_YELLOW) registerEnum(TEXTCOLOR_WHITE) registerEnum(TEXTCOLOR_NONE)
 
-	registerEnum(TEXTCOLOR_BLUE);
-	registerEnum(TEXTCOLOR_LIGHTGREEN);
-	registerEnum(TEXTCOLOR_LIGHTBLUE);
-	registerEnum(TEXTCOLOR_MAYABLUE);
-	registerEnum(TEXTCOLOR_DARKRED);
-	registerEnum(TEXTCOLOR_PURPLE);
-	registerEnum(TEXTCOLOR_RED);
-	registerEnum(TEXTCOLOR_ORANGE);
-	registerEnum(TEXTCOLOR_YELLOW);
-	registerEnum(TEXTCOLOR_NONE);
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                TILESTATE_NONE) registerEnum(TILESTATE_PROTECTIONZONE) registerEnum(TILESTATE_NOPVPZONE) registerEnum(TILESTATE_NOLOGOUT) registerEnum(TILESTATE_PVPZONE)
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    TILESTATE_FLOORCHANGE) registerEnum(TILESTATE_FLOORCHANGE_DOWN)
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    registerEnum(TILESTATE_FLOORCHANGE_NORTH) registerEnum(TILESTATE_FLOORCHANGE_SOUTH) registerEnum(TILESTATE_FLOORCHANGE_EAST) registerEnum(TILESTATE_FLOORCHANGE_WEST) registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        TILESTATE_TELEPORT)
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        registerEnum(TILESTATE_MAGICFIELD) registerEnum(TILESTATE_MAILBOX) registerEnum(TILESTATE_TRASHHOLDER) registerEnum(TILESTATE_BED)
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            registerEnum(TILESTATE_DEPOT) registerEnum(TILESTATE_BLOCKSOLID) registerEnum(TILESTATE_BLOCKPATH) registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                TILESTATE_IMMOVABLEBLOCKSOLID)
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    TILESTATE_IMMOVABLEBLOCKPATH) registerEnum(TILESTATE_IMMOVABLENOFIELDBLOCKPATH) registerEnum(TILESTATE_NOFIELDBLOCKPATH) registerEnum(TILESTATE_FLOORCHANGE_SOUTH_ALT) registerEnum(TILESTATE_FLOORCHANGE_EAST_ALT)
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        TILESTATE_SUPPORTS_HANGABLE)
 
-	registerEnum(TILESTATE_NONE);
-	registerEnum(TILESTATE_PROTECTIONZONE);
-	registerEnum(TILESTATE_NOPVPZONE);
-	registerEnum(TILESTATE_NOLOGOUT);
-	registerEnum(TILESTATE_PVPZONE);
-	registerEnum(TILESTATE_FLOORCHANGE);
-	registerEnum(TILESTATE_FLOORCHANGE_DOWN);
-	registerEnum(TILESTATE_FLOORCHANGE_NORTH);
-	registerEnum(TILESTATE_FLOORCHANGE_SOUTH);
-	registerEnum(TILESTATE_FLOORCHANGE_EAST);
-	registerEnum(TILESTATE_FLOORCHANGE_WEST);
-	registerEnum(TILESTATE_TELEPORT);
-	registerEnum(TILESTATE_MAGICFIELD);
-	registerEnum(TILESTATE_MAILBOX);
-	registerEnum(TILESTATE_TRASHHOLDER);
-	registerEnum(TILESTATE_BED);
-	registerEnum(TILESTATE_DEPOT);
-	registerEnum(TILESTATE_BLOCKSOLID);
-	registerEnum(TILESTATE_BLOCKPATH);
-	registerEnum(TILESTATE_IMMOVABLEBLOCKSOLID);
-	registerEnum(TILESTATE_IMMOVABLEBLOCKPATH);
-	registerEnum(TILESTATE_IMMOVABLENOFIELDBLOCKPATH);
-	registerEnum(TILESTATE_NOFIELDBLOCKPATH);
-	registerEnum(TILESTATE_FLOORCHANGE_SOUTH_ALT);
-	registerEnum(TILESTATE_FLOORCHANGE_EAST_ALT);
-	registerEnum(TILESTATE_SUPPORTS_HANGABLE);
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        registerEnum(WEAPON_NONE) registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            WEAPON_SWORD)
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                WEAPON_CLUB)
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    WEAPON_AXE) registerEnum(WEAPON_SHIELD) registerEnum(WEAPON_DISTANCE) registerEnum(WEAPON_WAND) registerEnum(WEAPON_AMMO)
 
-	registerEnum(WEAPON_NONE);
-	registerEnum(WEAPON_SWORD);
-	registerEnum(WEAPON_CLUB);
-	registerEnum(WEAPON_AXE);
-	registerEnum(WEAPON_SHIELD);
-	registerEnum(WEAPON_DISTANCE);
-	registerEnum(WEAPON_WAND);
-	registerEnum(WEAPON_AMMO);
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        WORLD_TYPE_NO_PVP)
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            WORLD_TYPE_PVP)
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            registerEnum(
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                WORLD_TYPE_PVP_ENFORCED)
 
-	registerEnum(WORLD_TYPE_NO_PVP);
-	registerEnum(WORLD_TYPE_PVP);
-	registerEnum(WORLD_TYPE_PVP_ENFORCED);
+	    // Use with container:addItem, container:addItemEx and possibly other functions.
+	    registerEnum(FLAG_NOLIMIT) registerEnum(FLAG_IGNOREBLOCKITEM) registerEnum(FLAG_IGNOREBLOCKCREATURE)
+	        registerEnum(FLAG_CHILDISOWNER) registerEnum(FLAG_PATHFINDING) registerEnum(FLAG_IGNOREFIELDDAMAGE)
+	            registerEnum(FLAG_IGNORENOTMOVEABLE) registerEnum(FLAG_IGNOREAUTOSTACK)
 
-	// Use with container:addItem, container:addItemEx and possibly other functions.
-	registerEnum(FLAG_NOLIMIT);
-	registerEnum(FLAG_IGNOREBLOCKITEM);
-	registerEnum(FLAG_IGNOREBLOCKCREATURE);
-	registerEnum(FLAG_CHILDISOWNER);
-	registerEnum(FLAG_PATHFINDING);
-	registerEnum(FLAG_IGNOREFIELDDAMAGE);
-	registerEnum(FLAG_IGNORENOTMOVEABLE);
-	registerEnum(FLAG_IGNOREAUTOSTACK);
+	    // Use with itemType:getSlotPosition
+	    registerEnum(SLOTP_WHEREEVER) registerEnum(SLOTP_HEAD) registerEnum(SLOTP_NECKLACE) registerEnum(SLOTP_BACKPACK)
+	        registerEnum(SLOTP_ARMOR) registerEnum(SLOTP_RIGHT) registerEnum(SLOTP_LEFT) registerEnum(SLOTP_LEGS)
+	            registerEnum(SLOTP_FEET) registerEnum(SLOTP_RING) registerEnum(SLOTP_AMMO) registerEnum(SLOTP_DEPOT)
+	                registerEnum(SLOTP_TWO_HAND)
 
-	// Use with itemType:getSlotPosition
-	registerEnum(SLOTP_WHEREEVER);
-	registerEnum(SLOTP_HEAD);
-	registerEnum(SLOTP_NECKLACE);
-	registerEnum(SLOTP_BACKPACK);
-	registerEnum(SLOTP_ARMOR);
-	registerEnum(SLOTP_RIGHT);
-	registerEnum(SLOTP_LEFT);
-	registerEnum(SLOTP_LEGS);
-	registerEnum(SLOTP_FEET);
-	registerEnum(SLOTP_RING);
-	registerEnum(SLOTP_AMMO);
-	registerEnum(SLOTP_DEPOT);
-	registerEnum(SLOTP_TWO_HAND);
+	    // Use with combat functions
+	    registerEnum(ORIGIN_NONE) registerEnum(ORIGIN_CONDITION) registerEnum(ORIGIN_SPELL) registerEnum(ORIGIN_MELEE)
+	        registerEnum(ORIGIN_RANGED) registerEnum(ORIGIN_WAND)
 
-	// Use with combat functions
-	registerEnum(ORIGIN_NONE);
-	registerEnum(ORIGIN_CONDITION);
-	registerEnum(ORIGIN_SPELL);
-	registerEnum(ORIGIN_MELEE);
-	registerEnum(ORIGIN_RANGED);
-	registerEnum(ORIGIN_WAND);
+	    // Use with house:getAccessList, house:setAccessList
+	    registerEnum(GUEST_LIST) registerEnum(SUBOWNER_LIST)
 
-	// Use with house:getAccessList, house:setAccessList
-	registerEnum(GUEST_LIST);
-	registerEnum(SUBOWNER_LIST);
+	    // Use with player:addMapMark
+	    registerEnum(MAPMARK_TICK) registerEnum(MAPMARK_QUESTION) registerEnum(MAPMARK_EXCLAMATION)
+	        registerEnum(MAPMARK_STAR) registerEnum(MAPMARK_CROSS) registerEnum(MAPMARK_TEMPLE)
+	            registerEnum(MAPMARK_KISS) registerEnum(MAPMARK_SHOVEL) registerEnum(MAPMARK_SWORD)
+	                registerEnum(MAPMARK_FLAG) registerEnum(MAPMARK_LOCK) registerEnum(MAPMARK_BAG)
+	                    registerEnum(MAPMARK_SKULL) registerEnum(MAPMARK_DOLLAR) registerEnum(MAPMARK_REDNORTH)
+	                        registerEnum(MAPMARK_REDSOUTH) registerEnum(MAPMARK_REDEAST) registerEnum(MAPMARK_REDWEST)
+	                            registerEnum(MAPMARK_GREENNORTH) registerEnum(MAPMARK_GREENSOUTH)
 
-	// Use with player:addMapMark
-	registerEnum(MAPMARK_TICK);
-	registerEnum(MAPMARK_QUESTION);
-	registerEnum(MAPMARK_EXCLAMATION);
-	registerEnum(MAPMARK_STAR);
-	registerEnum(MAPMARK_CROSS);
-	registerEnum(MAPMARK_TEMPLE);
-	registerEnum(MAPMARK_KISS);
-	registerEnum(MAPMARK_SHOVEL);
-	registerEnum(MAPMARK_SWORD);
-	registerEnum(MAPMARK_FLAG);
-	registerEnum(MAPMARK_LOCK);
-	registerEnum(MAPMARK_BAG);
-	registerEnum(MAPMARK_SKULL);
-	registerEnum(MAPMARK_DOLLAR);
-	registerEnum(MAPMARK_REDNORTH);
-	registerEnum(MAPMARK_REDSOUTH);
-	registerEnum(MAPMARK_REDEAST);
-	registerEnum(MAPMARK_REDWEST);
-	registerEnum(MAPMARK_GREENNORTH);
-	registerEnum(MAPMARK_GREENSOUTH);
+	    // Use with Game.getReturnMessage
+	    registerEnum(RETURNVALUE_NOERROR) registerEnum(RETURNVALUE_NOTPOSSIBLE) registerEnum(RETURNVALUE_NOTENOUGHROOM) registerEnum(
+	        RETURNVALUE_PLAYERISPZLOCKED) registerEnum(RETURNVALUE_PLAYERISNOTINVITED) registerEnum(RETURNVALUE_CANNOTTHROW)
+	        registerEnum(RETURNVALUE_THEREISNOWAY) registerEnum(RETURNVALUE_DESTINATIONOUTOFREACH) registerEnum(
+	            RETURNVALUE_CREATUREBLOCK) registerEnum(RETURNVALUE_NOTMOVEABLE) registerEnum(RETURNVALUE_DROPTWOHANDEDITEM)
+	            registerEnum(RETURNVALUE_BOTHHANDSNEEDTOBEFREE) registerEnum(RETURNVALUE_CANONLYUSEONEWEAPON) registerEnum(
+	                RETURNVALUE_NEEDEXCHANGE) registerEnum(RETURNVALUE_CANNOTBEDRESSED) registerEnum(RETURNVALUE_PUTTHISOBJECTINYOURHAND)
+	                registerEnum(RETURNVALUE_PUTTHISOBJECTINBOTHHANDS) registerEnum(RETURNVALUE_TOOFARAWAY) registerEnum(
+	                    RETURNVALUE_FIRSTGODOWNSTAIRS) registerEnum(RETURNVALUE_FIRSTGOUPSTAIRS)
+	                    registerEnum(RETURNVALUE_CONTAINERNOTENOUGHROOM) registerEnum(RETURNVALUE_NOTENOUGHCAPACITY) registerEnum(
+	                        RETURNVALUE_CANNOTPICKUP) registerEnum(RETURNVALUE_THISISIMPOSSIBLE) registerEnum(RETURNVALUE_DEPOTISFULL)
+	                        registerEnum(RETURNVALUE_CREATUREDOESNOTEXIST) registerEnum(RETURNVALUE_CANNOTUSETHISOBJECT) registerEnum(
+	                            RETURNVALUE_PLAYERWITHTHISNAMEISNOTONLINE) registerEnum(RETURNVALUE_NOTREQUIREDLEVELTOUSERUNE)
+	                            registerEnum(RETURNVALUE_YOUAREALREADYTRADING) registerEnum(
+	                                RETURNVALUE_THISPLAYERISALREADYTRADING)
+	                                registerEnum(RETURNVALUE_YOUMAYNOTLOGOUTDURINGAFIGHT) registerEnum(
+	                                    RETURNVALUE_DIRECTPLAYERSHOOT) registerEnum(RETURNVALUE_NOTENOUGHLEVEL)
+	                                    registerEnum(RETURNVALUE_NOTENOUGHMAGICLEVEL) registerEnum(RETURNVALUE_NOTENOUGHMANA) registerEnum(
+	                                        RETURNVALUE_NOTENOUGHSOUL) registerEnum(RETURNVALUE_YOUAREEXHAUSTED)
+	                                        registerEnum(RETURNVALUE_YOUCANNOTUSEOBJECTSTHATFAST) registerEnum(
+	                                            RETURNVALUE_PLAYERISNOTREACHABLE) registerEnum(RETURNVALUE_CANONLYUSETHISRUNEONCREATURES)
+	                                            registerEnum(RETURNVALUE_ACTIONNOTPERMITTEDINPROTECTIONZONE) registerEnum(
+	                                                RETURNVALUE_YOUMAYNOTATTACKTHISPLAYER)
+	                                                registerEnum(
+	                                                    RETURNVALUE_YOUMAYNOTATTACKAPERSONINPROTECTIONZONE) registerEnum(RETURNVALUE_YOUMAYNOTATTACKAPERSONWHILEINPROTECTIONZONE) registerEnum(RETURNVALUE_YOUMAYNOTATTACKTHISCREATURE) registerEnum(RETURNVALUE_YOUCANONLYUSEITONCREATURES) registerEnum(RETURNVALUE_CREATUREISNOTREACHABLE) registerEnum(RETURNVALUE_TURNSECUREMODETOATTACKUNMARKEDPLAYERS) registerEnum(RETURNVALUE_YOUNEEDPREMIUMACCOUNT) registerEnum(RETURNVALUE_YOUNEEDTOLEARNTHISSPELL) registerEnum(RETURNVALUE_YOURVOCATIONCANNOTUSETHISSPELL) registerEnum(RETURNVALUE_YOUNEEDAWEAPONTOUSETHISSPELL) registerEnum(RETURNVALUE_PLAYERISPZLOCKEDLEAVEPVPZONE) registerEnum(RETURNVALUE_PLAYERISPZLOCKEDENTERPVPZONE) registerEnum(RETURNVALUE_ACTIONNOTPERMITTEDINANOPVPZONE) registerEnum(RETURNVALUE_YOUCANNOTLOGOUTHERE) registerEnum(RETURNVALUE_YOUNEEDAMAGICITEMTOCASTSPELL) registerEnum(RETURNVALUE_CANNOTCONJUREITEMHERE) registerEnum(RETURNVALUE_YOUNEEDTOSPLITYOURSPEARS) registerEnum(RETURNVALUE_NAMEISTOOAMBIGUOUS) registerEnum(RETURNVALUE_CANONLYUSEONESHIELD) registerEnum(RETURNVALUE_NOPARTYMEMBERSINRANGE) registerEnum(RETURNVALUE_YOUARENOTTHEOWNER)
+	                                                    registerEnum(RETURNVALUE_TRADEPLAYERFARAWAY) registerEnum(RETURNVALUE_YOUDONTOWNTHISHOUSE) registerEnum(
+	                                                        RETURNVALUE_TRADEPLAYERALREADYOWNSAHOUSE) registerEnum(RETURNVALUE_TRADEPLAYERHIGHESTBIDDER)
+	                                                        registerEnum(RETURNVALUE_YOUCANNOTTRADETHISHOUSE) registerEnum(
+	                                                            RETURNVALUE_YOUDONTHAVEREQUIREDPROFESSION) registerEnum(RETURNVALUE_YOUCANNOTUSETHISBED)
 
-	// Use with Game.getReturnMessage
-	registerEnum(RETURNVALUE_NOERROR);
-	registerEnum(RETURNVALUE_NOTPOSSIBLE);
-	registerEnum(RETURNVALUE_NOTENOUGHROOM);
-	registerEnum(RETURNVALUE_PLAYERISPZLOCKED);
-	registerEnum(RETURNVALUE_PLAYERISNOTINVITED);
-	registerEnum(RETURNVALUE_CANNOTTHROW);
-	registerEnum(RETURNVALUE_THEREISNOWAY);
-	registerEnum(RETURNVALUE_DESTINATIONOUTOFREACH);
-	registerEnum(RETURNVALUE_CREATUREBLOCK);
-	registerEnum(RETURNVALUE_NOTMOVEABLE);
-	registerEnum(RETURNVALUE_DROPTWOHANDEDITEM);
-	registerEnum(RETURNVALUE_BOTHHANDSNEEDTOBEFREE);
-	registerEnum(RETURNVALUE_CANONLYUSEONEWEAPON);
-	registerEnum(RETURNVALUE_NEEDEXCHANGE);
-	registerEnum(RETURNVALUE_CANNOTBEDRESSED);
-	registerEnum(RETURNVALUE_PUTTHISOBJECTINYOURHAND);
-	registerEnum(RETURNVALUE_PUTTHISOBJECTINBOTHHANDS);
-	registerEnum(RETURNVALUE_TOOFARAWAY);
-	registerEnum(RETURNVALUE_FIRSTGODOWNSTAIRS);
-	registerEnum(RETURNVALUE_FIRSTGOUPSTAIRS);
-	registerEnum(RETURNVALUE_CONTAINERNOTENOUGHROOM);
-	registerEnum(RETURNVALUE_NOTENOUGHCAPACITY);
-	registerEnum(RETURNVALUE_CANNOTPICKUP);
-	registerEnum(RETURNVALUE_THISISIMPOSSIBLE);
-	registerEnum(RETURNVALUE_DEPOTISFULL);
-	registerEnum(RETURNVALUE_CREATUREDOESNOTEXIST);
-	registerEnum(RETURNVALUE_CANNOTUSETHISOBJECT);
-	registerEnum(RETURNVALUE_PLAYERWITHTHISNAMEISNOTONLINE);
-	registerEnum(RETURNVALUE_NOTREQUIREDLEVELTOUSERUNE);
-	registerEnum(RETURNVALUE_YOUAREALREADYTRADING);
-	registerEnum(RETURNVALUE_THISPLAYERISALREADYTRADING);
-	registerEnum(RETURNVALUE_YOUMAYNOTLOGOUTDURINGAFIGHT);
-	registerEnum(RETURNVALUE_DIRECTPLAYERSHOOT);
-	registerEnum(RETURNVALUE_NOTENOUGHLEVEL);
-	registerEnum(RETURNVALUE_NOTENOUGHMAGICLEVEL);
-	registerEnum(RETURNVALUE_NOTENOUGHMANA);
-	registerEnum(RETURNVALUE_NOTENOUGHSOUL);
-	registerEnum(RETURNVALUE_YOUAREEXHAUSTED);
-	registerEnum(RETURNVALUE_YOUCANNOTUSEOBJECTSTHATFAST);
-	registerEnum(RETURNVALUE_PLAYERISNOTREACHABLE);
-	registerEnum(RETURNVALUE_CANONLYUSETHISRUNEONCREATURES);
-	registerEnum(RETURNVALUE_ACTIONNOTPERMITTEDINPROTECTIONZONE);
-	registerEnum(RETURNVALUE_YOUMAYNOTATTACKTHISPLAYER);
-	registerEnum(RETURNVALUE_YOUMAYNOTATTACKAPERSONINPROTECTIONZONE);
-	registerEnum(RETURNVALUE_YOUMAYNOTATTACKAPERSONWHILEINPROTECTIONZONE);
-	registerEnum(RETURNVALUE_YOUMAYNOTATTACKTHISCREATURE);
-	registerEnum(RETURNVALUE_YOUCANONLYUSEITONCREATURES);
-	registerEnum(RETURNVALUE_CREATUREISNOTREACHABLE);
-	registerEnum(RETURNVALUE_TURNSECUREMODETOATTACKUNMARKEDPLAYERS);
-	registerEnum(RETURNVALUE_YOUNEEDPREMIUMACCOUNT);
-	registerEnum(RETURNVALUE_YOUNEEDTOLEARNTHISSPELL);
-	registerEnum(RETURNVALUE_YOURVOCATIONCANNOTUSETHISSPELL);
-	registerEnum(RETURNVALUE_YOUNEEDAWEAPONTOUSETHISSPELL);
-	registerEnum(RETURNVALUE_PLAYERISPZLOCKEDLEAVEPVPZONE);
-	registerEnum(RETURNVALUE_PLAYERISPZLOCKEDENTERPVPZONE);
-	registerEnum(RETURNVALUE_ACTIONNOTPERMITTEDINANOPVPZONE);
-	registerEnum(RETURNVALUE_YOUCANNOTLOGOUTHERE);
-	registerEnum(RETURNVALUE_YOUNEEDAMAGICITEMTOCASTSPELL);
-	registerEnum(RETURNVALUE_NAMEISTOOAMBIGUOUS);
-	registerEnum(RETURNVALUE_CANONLYUSEONESHIELD);
-	registerEnum(RETURNVALUE_NOPARTYMEMBERSINRANGE);
-	registerEnum(RETURNVALUE_YOUARENOTTHEOWNER);
-	registerEnum(RETURNVALUE_TRADEPLAYERFARAWAY);
-	registerEnum(RETURNVALUE_YOUDONTOWNTHISHOUSE);
-	registerEnum(RETURNVALUE_TRADEPLAYERALREADYOWNSAHOUSE);
-	registerEnum(RETURNVALUE_TRADEPLAYERHIGHESTBIDDER);
-	registerEnum(RETURNVALUE_YOUCANNOTTRADETHISHOUSE);
-	registerEnum(RETURNVALUE_YOUDONTHAVEREQUIREDPROFESSION);
-	registerEnum(RETURNVALUE_YOUCANNOTUSETHISBED);
+	                                                            registerEnum(RELOAD_TYPE_ALL) registerEnum(
+	                                                                RELOAD_TYPE_ACTIONS) registerEnum(RELOAD_TYPE_CHAT)
+	                                                                registerEnum(RELOAD_TYPE_CONFIG) registerEnum(
+	                                                                    RELOAD_TYPE_CREATURESCRIPTS) registerEnum(RELOAD_TYPE_EVENTS)
+	                                                                    registerEnum(RELOAD_TYPE_GLOBAL) registerEnum(
+	                                                                        RELOAD_TYPE_GLOBALEVENTS) registerEnum(RELOAD_TYPE_ITEMS)
+	                                                                        registerEnum(RELOAD_TYPE_MONSTERS) registerEnum(
+	                                                                            RELOAD_TYPE_MOVEMENTS) registerEnum(RELOAD_TYPE_NPCS)
+	                                                                            registerEnum(RELOAD_TYPE_QUESTS) registerEnum(
+	                                                                                RELOAD_TYPE_RAIDS) registerEnum(RELOAD_TYPE_SCRIPTS)
+	                                                                                registerEnum(RELOAD_TYPE_SPELLS) registerEnum(
+	                                                                                    RELOAD_TYPE_TALKACTIONS) registerEnum(RELOAD_TYPE_WEAPONS)
 
-	registerEnum(RELOAD_TYPE_ALL);
-	registerEnum(RELOAD_TYPE_ACTIONS);
-	registerEnum(RELOAD_TYPE_CHAT);
-	registerEnum(RELOAD_TYPE_CONFIG);
-	registerEnum(RELOAD_TYPE_CREATURESCRIPTS);
-	registerEnum(RELOAD_TYPE_EVENTS);
-	registerEnum(RELOAD_TYPE_GLOBAL);
-	registerEnum(RELOAD_TYPE_GLOBALEVENTS);
-	registerEnum(RELOAD_TYPE_ITEMS);
-	registerEnum(RELOAD_TYPE_MONSTERS);
-	registerEnum(RELOAD_TYPE_MOVEMENTS);
-	registerEnum(RELOAD_TYPE_NPCS);
-	registerEnum(RELOAD_TYPE_QUESTS);
-	registerEnum(RELOAD_TYPE_RAIDS);
-	registerEnum(RELOAD_TYPE_SCRIPTS);
-	registerEnum(RELOAD_TYPE_SPELLS);
-	registerEnum(RELOAD_TYPE_TALKACTIONS);
-	registerEnum(RELOAD_TYPE_WEAPONS);
+	                                                                                    registerEnum(ZONE_PROTECTION) registerEnum(
+	                                                                                        ZONE_NOPVP) registerEnum(ZONE_PVP)
+	                                                                                        registerEnum(
+	                                                                                            ZONE_NOLOGOUT) registerEnum(ZONE_NORMAL)
 
-	registerEnum(ZONE_PROTECTION);
-	registerEnum(ZONE_NOPVP);
-	registerEnum(ZONE_PVP);
-	registerEnum(ZONE_NOLOGOUT);
-	registerEnum(ZONE_NORMAL);
+	                                                                                            registerEnum(
+	                                                                                                MAX_LOOTCHANCE)
 
-	registerEnum(MAX_LOOTCHANCE);
+	                                                                                                registerEnum(
+	                                                                                                    SPELL_INSTANT) registerEnum(SPELL_RUNE)
 
-	registerEnum(SPELL_INSTANT);
-	registerEnum(SPELL_RUNE);
+	                                                                                                    registerEnum(
+	                                                                                                        MONSTERS_EVENT_THINK)
+	                                                                                                        registerEnum(
+	                                                                                                            MONSTERS_EVENT_APPEAR)
+	                                                                                                            registerEnum(
+	                                                                                                                MONSTERS_EVENT_DISAPPEAR)
+	                                                                                                                registerEnum(
+	                                                                                                                    MONSTERS_EVENT_MOVE)
+	                                                                                                                    registerEnum(
+	                                                                                                                        MONSTERS_EVENT_SAY)
 
-	registerEnum(MONSTERS_EVENT_THINK);
-	registerEnum(MONSTERS_EVENT_APPEAR);
-	registerEnum(MONSTERS_EVENT_DISAPPEAR);
-	registerEnum(MONSTERS_EVENT_MOVE);
-	registerEnum(MONSTERS_EVENT_SAY);
-
-	registerEnum(DECAYING_FALSE);
-	registerEnum(DECAYING_TRUE);
-	registerEnum(DECAYING_PENDING);
-
-	// _G
-	registerGlobalVariable("INDEX_WHEREEVER", INDEX_WHEREEVER);
+	    // _G
+	    registerGlobalVariable("INDEX_WHEREEVER", INDEX_WHEREEVER);
 	registerGlobalBoolean("VIRTUAL_PARENT", true);
 
 	registerGlobalMethod("isType", LuaScriptInterface::luaIsType);
@@ -1883,92 +1542,152 @@ void LuaScriptInterface::registerFunctions()
 	// configKeys
 	registerTable("configKeys");
 
-	registerEnumIn("configKeys", ConfigManager::ALLOW_CHANGEOUTFIT);
-	registerEnumIn("configKeys", ConfigManager::ONE_PLAYER_ON_ACCOUNT);
-	registerEnumIn("configKeys", ConfigManager::AIMBOT_HOTKEY_ENABLED);
-	registerEnumIn("configKeys", ConfigManager::REMOVE_RUNE_CHARGES);
-	registerEnumIn("configKeys", ConfigManager::REMOVE_WEAPON_AMMO);
-	registerEnumIn("configKeys", ConfigManager::REMOVE_WEAPON_CHARGES);
-	registerEnumIn("configKeys", ConfigManager::REMOVE_POTION_CHARGES);
-	registerEnumIn("configKeys", ConfigManager::EXPERIENCE_FROM_PLAYERS);
-	registerEnumIn("configKeys", ConfigManager::FREE_PREMIUM);
-	registerEnumIn("configKeys", ConfigManager::REPLACE_KICK_ON_LOGIN);
-	registerEnumIn("configKeys", ConfigManager::ALLOW_CLONES);
-	registerEnumIn("configKeys", ConfigManager::BIND_ONLY_GLOBAL_ADDRESS);
-	registerEnumIn("configKeys", ConfigManager::OPTIMIZE_DATABASE);
-	registerEnumIn("configKeys", ConfigManager::MARKET_PREMIUM);
-	registerEnumIn("configKeys", ConfigManager::EMOTE_SPELLS);
-	registerEnumIn("configKeys", ConfigManager::STAMINA_SYSTEM);
-	registerEnumIn("configKeys", ConfigManager::WARN_UNSAFE_SCRIPTS);
-	registerEnumIn("configKeys", ConfigManager::CONVERT_UNSAFE_SCRIPTS);
-	registerEnumIn("configKeys", ConfigManager::CLASSIC_EQUIPMENT_SLOTS);
-	registerEnumIn("configKeys", ConfigManager::CLASSIC_ATTACK_SPEED);
-	registerEnumIn("configKeys", ConfigManager::SERVER_SAVE_NOTIFY_MESSAGE);
-	registerEnumIn("configKeys", ConfigManager::SERVER_SAVE_NOTIFY_DURATION);
-	registerEnumIn("configKeys", ConfigManager::SERVER_SAVE_CLEAN_MAP);
-	registerEnumIn("configKeys", ConfigManager::SERVER_SAVE_CLOSE);
-	registerEnumIn("configKeys", ConfigManager::SERVER_SAVE_SHUTDOWN);
-	registerEnumIn("configKeys", ConfigManager::ONLINE_OFFLINE_CHARLIST);
+	registerEnumIn("configKeys", ConfigManager::ALLOW_CHANGEOUTFIT) registerEnumIn(
+	    "configKeys", ConfigManager::ONE_PLAYER_ON_ACCOUNT) registerEnumIn("configKeys",
+	                                                                       ConfigManager::AIMBOT_HOTKEY_ENABLED)
+	    registerEnumIn("configKeys", ConfigManager::REMOVE_RUNE_CHARGES) registerEnumIn(
+	        "configKeys",
+	        ConfigManager::
+	            REMOVE_WEAPON_AMMO) registerEnumIn("configKeys",
+	                                               ConfigManager::
+	                                                   REMOVE_WEAPON_CHARGES) registerEnumIn("configKeys",
+	                                                                                         ConfigManager::
+	                                                                                             REMOVE_POTION_CHARGES)
+	        registerEnumIn("configKeys", ConfigManager::PZLOCK_SKULL_ATTACKER) registerEnumIn(
+	            "configKeys",
+	            ConfigManager::
+	                EXPERIENCE_FROM_PLAYERS) registerEnumIn("configKeys",
+	                                                        ConfigManager::
+	                                                            FREE_PREMIUM) registerEnumIn("configKeys",
+	                                                                                         ConfigManager::
+	                                                                                             REPLACE_KICK_ON_LOGIN)
+	            registerEnumIn("configKeys", ConfigManager::ALLOW_CLONES) registerEnumIn(
+	                "configKeys",
+	                ConfigManager::
+	                    BIND_ONLY_GLOBAL_ADDRESS) registerEnumIn("configKeys",
+	                                                             ConfigManager::
+	                                                                 OPTIMIZE_DATABASE) registerEnumIn("configKeys",
+	                                                                                                   ConfigManager::
+	                                                                                                       EMOTE_SPELLS)
+	                registerEnumIn("configKeys", ConfigManager::STAMINA_SYSTEM) registerEnumIn(
+	                    "configKeys",
+	                    ConfigManager::WARN_UNSAFE_SCRIPTS) registerEnumIn("configKeys",
+	                                                                       ConfigManager::CONVERT_UNSAFE_SCRIPTS)
+	                    registerEnumIn("configKeys", ConfigManager::CLASSIC_EQUIPMENT_SLOTS) registerEnumIn(
+	                        "configKeys",
+	                        ConfigManager::CLASSIC_ATTACK_SPEED) registerEnumIn("configKeys",
+	                                                                            ConfigManager::
+	                                                                                SERVER_SAVE_NOTIFY_MESSAGE)
+	                        registerEnumIn("configKeys", ConfigManager::SERVER_SAVE_NOTIFY_DURATION) registerEnumIn(
+	                            "configKeys",
+	                            ConfigManager::SERVER_SAVE_CLEAN_MAP) registerEnumIn("configKeys",
+	                                                                                 ConfigManager::SERVER_SAVE_CLOSE)
+	                            registerEnumIn("configKeys", ConfigManager::SERVER_SAVE_SHUTDOWN) registerEnumIn(
+	                                "configKeys",
+	                                ConfigManager::ONLINE_OFFLINE_CHARLIST) registerEnumIn("configKeys",
+	                                                                                       ConfigManager::LUA_ITEM_DESC)
 
-	registerEnumIn("configKeys", ConfigManager::MAP_NAME);
-	registerEnumIn("configKeys", ConfigManager::HOUSE_RENT_PERIOD);
-	registerEnumIn("configKeys", ConfigManager::SERVER_NAME);
-	registerEnumIn("configKeys", ConfigManager::OWNER_NAME);
-	registerEnumIn("configKeys", ConfigManager::OWNER_EMAIL);
-	registerEnumIn("configKeys", ConfigManager::URL);
-	registerEnumIn("configKeys", ConfigManager::LOCATION);
-	registerEnumIn("configKeys", ConfigManager::IP);
-	registerEnumIn("configKeys", ConfigManager::MOTD);
-	registerEnumIn("configKeys", ConfigManager::WORLD_TYPE);
-	registerEnumIn("configKeys", ConfigManager::MYSQL_HOST);
-	registerEnumIn("configKeys", ConfigManager::MYSQL_USER);
-	registerEnumIn("configKeys", ConfigManager::MYSQL_PASS);
-	registerEnumIn("configKeys", ConfigManager::MYSQL_DB);
-	registerEnumIn("configKeys", ConfigManager::MYSQL_SOCK);
-	registerEnumIn("configKeys", ConfigManager::DEFAULT_PRIORITY);
-	registerEnumIn("configKeys", ConfigManager::MAP_AUTHOR);
+	                                registerEnumIn("configKeys", ConfigManager::MAP_NAME) registerEnumIn(
+	                                    "configKeys",
+	                                    ConfigManager::HOUSE_RENT_PERIOD) registerEnumIn("configKeys",
+	                                                                                     ConfigManager::SERVER_NAME)
+	                                    registerEnumIn("configKeys", ConfigManager::OWNER_NAME) registerEnumIn(
+	                                        "configKeys",
+	                                        ConfigManager::
+	                                            OWNER_EMAIL) registerEnumIn("configKeys",
+	                                                                        ConfigManager::
+	                                                                            URL) registerEnumIn("configKeys",
+	                                                                                                ConfigManager::
+	                                                                                                    LOCATION)
+	                                        registerEnumIn("configKeys", ConfigManager::IP) registerEnumIn(
+	                                            "configKeys",
+	                                            ConfigManager::
+	                                                MOTD) registerEnumIn("configKeys",
+	                                                                     ConfigManager::
+	                                                                         WORLD_TYPE) registerEnumIn("configKeys",
+	                                                                                                    ConfigManager::
+	                                                                                                        MYSQL_HOST)
+	                                            registerEnumIn("configKeys", ConfigManager::MYSQL_USER) registerEnumIn(
+	                                                "configKeys",
+	                                                ConfigManager::MYSQL_PASS) registerEnumIn("configKeys",
+	                                                                                          ConfigManager::MYSQL_DB)
+	                                                registerEnumIn("configKeys", ConfigManager::MYSQL_SOCK) registerEnumIn(
+	                                                    "configKeys",
+	                                                    ConfigManager::DEFAULT_PRIORITY) registerEnumIn("configKeys",
+	                                                                                                    ConfigManager::
+	                                                                                                        MAP_AUTHOR)
 
-	registerEnumIn("configKeys", ConfigManager::SQL_PORT);
-	registerEnumIn("configKeys", ConfigManager::MAX_PLAYERS);
-	registerEnumIn("configKeys", ConfigManager::PZ_LOCKED);
-	registerEnumIn("configKeys", ConfigManager::DEFAULT_DESPAWNRANGE);
-	registerEnumIn("configKeys", ConfigManager::DEFAULT_DESPAWNRADIUS);
-	registerEnumIn("configKeys", ConfigManager::DEFAULT_WALKTOSPAWNRADIUS);
-	registerEnumIn("configKeys", ConfigManager::REMOVE_ON_DESPAWN);
-	registerEnumIn("configKeys", ConfigManager::RATE_EXPERIENCE);
-	registerEnumIn("configKeys", ConfigManager::RATE_SKILL);
-	registerEnumIn("configKeys", ConfigManager::RATE_LOOT);
-	registerEnumIn("configKeys", ConfigManager::RATE_MAGIC);
-	registerEnumIn("configKeys", ConfigManager::RATE_SPAWN);
-	registerEnumIn("configKeys", ConfigManager::HOUSE_PRICE);
-	registerEnumIn("configKeys", ConfigManager::KILLS_TO_RED);
-	registerEnumIn("configKeys", ConfigManager::KILLS_TO_BLACK);
-	registerEnumIn("configKeys", ConfigManager::MAX_MESSAGEBUFFER);
-	registerEnumIn("configKeys", ConfigManager::ACTIONS_DELAY_INTERVAL);
-	registerEnumIn("configKeys", ConfigManager::EX_ACTIONS_DELAY_INTERVAL);
-	registerEnumIn("configKeys", ConfigManager::KICK_AFTER_MINUTES);
-	registerEnumIn("configKeys", ConfigManager::PROTECTION_LEVEL);
-	registerEnumIn("configKeys", ConfigManager::DEATH_LOSE_PERCENT);
-	registerEnumIn("configKeys", ConfigManager::STATUSQUERY_TIMEOUT);
-	registerEnumIn("configKeys", ConfigManager::FRAG_TIME);
-	registerEnumIn("configKeys", ConfigManager::WHITE_SKULL_TIME);
-	registerEnumIn("configKeys", ConfigManager::GAME_PORT);
-	registerEnumIn("configKeys", ConfigManager::LOGIN_PORT);
-	registerEnumIn("configKeys", ConfigManager::STATUS_PORT);
-	registerEnumIn("configKeys", ConfigManager::STAIRHOP_DELAY);
-	registerEnumIn("configKeys", ConfigManager::MARKET_OFFER_DURATION);
-	registerEnumIn("configKeys", ConfigManager::EXP_FROM_PLAYERS_LEVEL_RANGE);
-	registerEnumIn("configKeys", ConfigManager::MAX_PACKETS_PER_SECOND);
-	registerEnumIn("configKeys", ConfigManager::STAMINA_REGEN_MINUTE);
-	registerEnumIn("configKeys", ConfigManager::STAMINA_REGEN_PREMIUM);
-	registerEnumIn("configKeys", ConfigManager::HOUSE_DOOR_SHOW_PRICE);
-	registerEnumIn("configKeys", ConfigManager::MONSTER_OVERSPAWN);
+	                                                    registerEnumIn("configKeys", ConfigManager::SQL_PORT) registerEnumIn(
+	                                                        "configKeys",
+	                                                        ConfigManager::MAX_PLAYERS) registerEnumIn("configKeys",
+	                                                                                                   ConfigManager::
+	                                                                                                       PZ_LOCKED)
+	                                                        registerEnumIn("configKeys", ConfigManager::DEFAULT_DESPAWNRANGE) registerEnumIn(
+	                                                            "configKeys",
+	                                                            ConfigManager::
+	                                                                DEFAULT_DESPAWNRADIUS) registerEnumIn("configKeys", ConfigManager::
+	                                                                                                                        DEFAULT_WALKTOSPAWNRADIUS)
+	                                                            registerEnumIn("configKeys", ConfigManager::REMOVE_ON_DESPAWN) registerEnumIn(
+	                                                                "configKeys",
+	                                                                ConfigManager::
+	                                                                    RATE_EXPERIENCE) registerEnumIn("configKeys", ConfigManager::RATE_SKILL)
+	                                                                registerEnumIn("configKeys", ConfigManager::RATE_LOOT) registerEnumIn(
+	                                                                    "configKeys",
+	                                                                    ConfigManager::
+	                                                                        RATE_MAGIC) registerEnumIn("configKeys", ConfigManager::RATE_SPAWN)
+	                                                                    registerEnumIn("configKeys", ConfigManager::HOUSE_PRICE) registerEnumIn(
+	                                                                        "configKeys",
+	                                                                        ConfigManager::
+	                                                                            KILLS_TO_RED) registerEnumIn("configKeys", ConfigManager::KILLS_TO_BLACK)
+	                                                                        registerEnumIn("configKeys", ConfigManager::MAX_MESSAGEBUFFER) registerEnumIn(
+	                                                                            "configKeys",
+	                                                                            ConfigManager::ACTIONS_DELAY_INTERVAL)
+	                                                                            registerEnumIn("configKeys", ConfigManager::EX_ACTIONS_DELAY_INTERVAL) registerEnumIn(
+	                                                                                "configKeys",
+	                                                                                ConfigManager::KICK_AFTER_MINUTES)
+	                                                                                registerEnumIn("configKeys", ConfigManager::PROTECTION_LEVEL) registerEnumIn(
+	                                                                                    "configKeys",
+	                                                                                    ConfigManager::
+	                                                                                        DEATH_LOSE_PERCENT)
+	                                                                                    registerEnumIn(
+	                                                                                        "configKeys",
+	                                                                                        ConfigManager::
+	                                                                                            STATUSQUERY_TIMEOUT)
+	                                                                                        registerEnumIn("configKeys", ConfigManager::FRAG_TIME) registerEnumIn(
+	                                                                                            "configKeys",
+	                                                                                            ConfigManager::
+	                                                                                                WHITE_SKULL_TIME)
+	                                                                                            registerEnumIn(
+	                                                                                                "configKeys",
+	                                                                                                ConfigManager::
+	                                                                                                    GAME_PORT)
+	                                                                                                registerEnumIn(
+	                                                                                                    "configKeys",
+	                                                                                                    ConfigManager::
+	                                                                                                        LOGIN_PORT)
+	                                                                                                    registerEnumIn(
+	                                                                                                        "configKeys",
+	                                                                                                        ConfigManager::
+	                                                                                                            STATUS_PORT)
+	                                                                                                        registerEnumIn(
+	                                                                                                            "configKeys",
+	                                                                                                            ConfigManager::
+	                                                                                                                STAIRHOP_DELAY)
+	                                                                                                            registerEnumIn(
+	                                                                                                                "configKeys",
+	                                                                                                                ConfigManager::
+	                                                                                                                    EXP_FROM_PLAYERS_LEVEL_RANGE)
+	                                                                                                                registerEnumIn(
+	                                                                                                                    "configKeys",
+	                                                                                                                    ConfigManager::
+	                                                                                                                        MAX_PACKETS_PER_SECOND)
+	                                                                                                                    registerEnumIn(
+	                                                                                                                        "configKeys",
+	                                                                                                                        ConfigManager::
+	                                                                                                                            PLAYER_CONSOLE_LOGS)
 
-	registerEnumIn("configKeys", ConfigManager::QUEST_TRACKER_FREE_LIMIT);
-	registerEnumIn("configKeys", ConfigManager::QUEST_TRACKER_PREMIUM_LIMIT);
-
-	// os
-	registerMethod("os", "mtime", LuaScriptInterface::luaSystemTime);
+	    // os
+	    registerMethod("os", "mtime", LuaScriptInterface::luaSystemTime);
 
 	// table
 	registerMethod("table", "create", LuaScriptInterface::luaTableCreate);
@@ -3570,8 +3289,8 @@ int LuaScriptInterface::luaAddEvent(lua_State* L)
 		return 1;
 	}
 
-	if (!isInteger(L, 2)) {
-		reportErrorFunc(L, "delay parameter should be a integer.");
+	if (!isNumber(L, 2)) {
+		reportErrorFunc(L, "delay parameter should be a number.");
 		pushBoolean(L, false);
 		return 1;
 	}
@@ -3583,39 +3302,13 @@ int LuaScriptInterface::luaAddEvent(lua_State* L)
 			if (lua_getmetatable(L, i) == 0) {
 				continue;
 			}
-
 			lua_rawgeti(L, -1, 't');
+
 			LuaDataType type = getInteger<LuaDataType>(L, -1);
-			lua_pop(L, 2);
-
-			switch (type) {
-				case LuaData_Unknown:
-				case LuaData_Tile: {
-					break;
-				}
-
-				case LuaData_Player:
-				case LuaData_Monster:
-				case LuaData_Npc: {
-					if (auto creature = getCreature(L, i)) {
-						lua_pushinteger(L, creature->getID());
-						lua_setiuservalue(L, i, 1);
-					}
-
-					break;
-				}
-
-				case LuaData_Item:
-				case LuaData_Container:
-				case LuaData_Teleport: {
-					indexes.push_back({i, type});
-					break;
-				}
-
-				default: {
-					break;
-				}
+			if (type != LuaData_Unknown && type != LuaData_Tile) {
+				indexes.push_back({i, type});
 			}
+			lua_pop(L, 2);
 		}
 
 		if (!indexes.empty()) {
@@ -3658,6 +3351,13 @@ int LuaScriptInterface::luaAddEvent(lua_State* L)
 							lua_getfield(L, -1, "getUniqueId");
 							break;
 						}
+						case LuaData_Player:
+						case LuaData_Monster:
+						case LuaData_Npc: {
+							lua_getglobal(L, "Creature");
+							lua_getfield(L, -1, "getId");
+							break;
+						}
 						default:
 							break;
 					}
@@ -3685,7 +3385,7 @@ int LuaScriptInterface::luaAddEvent(lua_State* L)
 
 	auto& lastTimerEventId = g_luaEnvironment.lastEventTimerId;
 	eventDesc.eventId = g_scheduler.addEvent(
-	    createSchedulerTask(delay, [=]() { g_luaEnvironment.executeTimerEvent(lastTimerEventId); }));
+	    createSchedulerTask(delay, std::bind(&LuaEnvironment::executeTimerEvent, &g_luaEnvironment, lastTimerEventId)));
 
 	g_luaEnvironment.timerEvents.emplace(lastTimerEventId, std::move(eventDesc));
 	lua_pushinteger(L, lastTimerEventId++);
@@ -7880,7 +7580,7 @@ int LuaScriptInterface::luaPlayerGetIp(lua_State* L)
 	// player:getIp()
 	Player* player = getUserdata<Player>(L, 1);
 	if (player) {
-		pushString(L, player->getIP().to_string());
+		lua_pushinteger(L, player->getIP());
 	} else {
 		lua_pushnil(L);
 	}
@@ -16787,12 +16487,13 @@ void LuaEnvironment::clearAreaObjects(LuaScriptInterface* interface)
 
 void LuaEnvironment::executeTimerEvent(uint32_t eventIndex)
 {
-	if (!timerEvents.contains(eventIndex)) {
+	auto it = timerEvents.find(eventIndex);
+	if (it == timerEvents.end()) {
 		return;
 	}
 
-	LuaTimerEventDesc timerEventDesc = std::move(timerEvents[eventIndex]);
-	timerEvents.erase(eventIndex);
+	LuaTimerEventDesc timerEventDesc = std::move(it->second);
+	timerEvents.erase(it);
 
 	// push function
 	lua_rawgeti(luaState, LUA_REGISTRYINDEX, timerEventDesc.function);
@@ -16800,38 +16501,6 @@ void LuaEnvironment::executeTimerEvent(uint32_t eventIndex)
 	// push parameters
 	for (auto parameter : boost::adaptors::reverse(timerEventDesc.parameters)) {
 		lua_rawgeti(luaState, LUA_REGISTRYINDEX, parameter);
-		if (lua_getmetatable(luaState, -1) == 0) {
-			continue;
-		}
-
-		lua_rawgeti(luaState, -1, 't');
-		auto type = getInteger<LuaDataType>(luaState, -1);
-		lua_pop(luaState, 2);
-
-		switch (type) {
-			case LuaData_Player:
-			case LuaData_Monster:
-			case LuaData_Npc: {
-				if (lua_getiuservalue(luaState, -1, 1)) {
-					auto creatureId = getInteger<uint32_t>(luaState, -1);
-					if (auto creature = g_game.getCreatureByID(creatureId)) {
-						pushUserdata<Creature>(luaState, creature);
-						setCreatureMetatable(luaState, -1, creature);
-					} else {
-						lua_pushnil(luaState);
-					}
-
-					lua_replace(luaState, -3);
-				}
-
-				lua_pop(luaState, 1);
-				break;
-			}
-
-			default: {
-				break;
-			}
-		}
 	}
 
 	// call the function
