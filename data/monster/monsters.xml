@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<monsters>
+	<monster name="Rabbit" file="monsters/rabbit.xml" />
+	<monster name="Rat" file="monsters/rat.xml" />
+	<monster name="Demon" file="monsters/demon.xml" />
+	<monster name="Dragon" file="monsters/dragon.xml" />
+	<monster name="Dragon lord" file="monsters/dragon lord.xml" />
+	<monster name="Elf Arcanist" file="monsters/elf arcanist.xml"/>
+	<monster name="Elf Scout" file="monsters/elf scout.xml"/>
+	<monster name="Elf" file="monsters/elf.xml"/>
+	<monster name="Orc" file="monsters/orc.xml"/>
+	<monster name="Orc Leader" file="monsters/orc leader.xml"/>
+	<monster name="Orc Warrior" file="monsters/orc warrior.xml"/>
+	<monster name="Orc Spearman" file="monsters/orc spearman.xml"/>
+</monsters>
