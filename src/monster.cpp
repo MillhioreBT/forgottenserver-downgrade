@@ -279,7 +279,7 @@ void Monster::onCreatureMove(Creature* creature, const Tile* newTile, const Posi
 	}
 }
 
-void Monster::onCreatureSay(Creature* creature, SpeakClasses type, const std::string& text)
+void Monster::onCreatureSay(Creature* creature, SpeakClasses type, std::string_view text)
 {
 	Creature::onCreatureSay(creature, type, text);
 
@@ -493,7 +493,7 @@ void Monster::onCreatureLeave(Creature* creature)
 		updateIdleStatus();
 
 		if (!isSummon() && targetList.empty()) {
-			int32_t walkToSpawnRadius = g_config.getNumber(ConfigManager::DEFAULT_WALKTOSPAWNRADIUS);
+			const int64_t walkToSpawnRadius = g_config[ConfigKeysInteger::DEFAULT_WALKTOSPAWNRADIUS];
 			if (walkToSpawnRadius > 0 &&
 			    !Position::areInRange(position, masterPos, walkToSpawnRadius, walkToSpawnRadius)) {
 				walkToSpawn();
@@ -741,7 +741,7 @@ void Monster::onThink(uint32_t interval)
 
 	if (!isInSpawnRange(position)) {
 		g_game.addMagicEffect(this->getPosition(), CONST_ME_POFF);
-		if (g_config.getBoolean(ConfigManager::REMOVE_ON_DESPAWN)) {
+		if (g_config[ConfigKeysBoolean::REMOVE_ON_DESPAWN]) {
 			g_game.removeCreature(this, false);
 		} else {
 			g_game.internalTeleport(this, masterPos);

@@ -3,12 +3,15 @@
 
 #include "otpch.h"
 
+#include "map.h"
+
 #include "combat.h"
 #include "creature.h"
 #include "game.h"
 #include "iomap.h"
 #include "iomapserialize.h"
 #include "monster.h"
+#include "spectators.h"
 
 extern Game g_game;
 
@@ -331,12 +334,12 @@ void Map::getSpectatorsInternal(SpectatorVec& spectators, const Position& center
 	auto max_x = centerPos.x + maxRangeX;
 
 	int32_t minoffset = centerPos.getZ() - maxRangeZ;
-	uint16_t x1 = std::min<uint32_t>(0xFFFF, std::max<int32_t>(0, (min_x + minoffset)));
-	uint16_t y1 = std::min<uint32_t>(0xFFFF, std::max<int32_t>(0, (min_y + minoffset)));
+	uint16_t x1 = static_cast<uint16_t>(std::min<uint32_t>(0xFFFF, std::max<int32_t>(0, (min_x + minoffset))));
+	uint16_t y1 = static_cast<uint16_t>(std::min<uint32_t>(0xFFFF, std::max<int32_t>(0, (min_y + minoffset))));
 
 	int32_t maxoffset = centerPos.getZ() - minRangeZ;
-	uint16_t x2 = std::min<uint32_t>(0xFFFF, std::max<int32_t>(0, (max_x + maxoffset)));
-	uint16_t y2 = std::min<uint32_t>(0xFFFF, std::max<int32_t>(0, (max_y + maxoffset)));
+	uint16_t x2 = static_cast<uint16_t>(std::min<uint32_t>(0xFFFF, std::max<int32_t>(0, (max_x + maxoffset))));
+	uint16_t y2 = static_cast<uint16_t>(std::min<uint32_t>(0xFFFF, std::max<int32_t>(0, (max_y + maxoffset))));
 
 	int32_t startx1 = x1 - (x1 % FLOOR_SIZE);
 	int32_t starty1 = y1 - (y1 % FLOOR_SIZE);
@@ -400,12 +403,11 @@ void Map::getSpectators(SpectatorVec& spectators, const Position& centerPos, boo
 	if (minRangeX == -maxViewportX && maxRangeX == maxViewportX && minRangeY == -maxViewportY &&
 	    maxRangeY == maxViewportY && multifloor) {
 		if (onlyPlayers) {
-			auto it = playersSpectatorCache.find(centerPos);
-			if (it != playersSpectatorCache.end()) {
+			if (playersSpectatorCache.contains(centerPos)) {
 				if (!spectators.empty()) {
-					spectators.addSpectators(it->second);
+					spectators.addSpectators(playersSpectatorCache[centerPos]);
 				} else {
-					spectators = it->second;
+					spectators = playersSpectatorCache[centerPos];
 				}
 
 				foundCache = true;
@@ -413,17 +415,16 @@ void Map::getSpectators(SpectatorVec& spectators, const Position& centerPos, boo
 		}
 
 		if (!foundCache) {
-			auto it = spectatorCache.find(centerPos);
-			if (it != spectatorCache.end()) {
+			if (spectatorCache.contains(centerPos)) {
 				if (!onlyPlayers) {
 					if (!spectators.empty()) {
-						const SpectatorVec& cachedSpectators = it->second;
+						const SpectatorVec& cachedSpectators = spectatorCache[centerPos];
 						spectators.addSpectators(cachedSpectators);
 					} else {
-						spectators = it->second;
+						spectators = spectatorCache[centerPos];
 					}
 				} else {
-					const SpectatorVec& cachedSpectators = it->second;
+					const SpectatorVec& cachedSpectators = spectatorCache[centerPos];
 					for (Creature* spectator : cachedSpectators) {
 						if (spectator->getPlayer()) {
 							spectators.emplace_back(spectator);
@@ -594,7 +595,7 @@ bool Map::isSightClear(const Position& fromPos, const Position& toPos, bool same
 	}
 
 	// skip checks for sight line in case fromPos and toPos cross the ground floor
-	if (fromPos.z < 8 && toPos.z > 7 || fromPos.z > 7 && toPos.z < 8) {
+	if ((fromPos.z < 8 && toPos.z > 7) || (fromPos.z > 7 && toPos.z < 8)) {
 		return false;
 	}
 
@@ -610,8 +611,7 @@ bool Map::isSightClear(const Position& fromPos, const Position& toPos, bool same
 		       checkSightLine(fromPos.x, fromPos.y, toPos.x, toPos.y, newZ);
 	}
 
-	// target is below us
-	// check if tiles above the target are clear
+	// target is below us check if tiles above the target are clear
 	for (uint8_t z = fromPos.z; z < toPos.z; ++z) {
 		if (!isTileClear(toPos.x, toPos.y, z, true)) {
 			return false;
@@ -634,7 +634,16 @@ const Tile* Map::canWalkTo(const Creature& creature, const Position& pos) const
 	// used for non-cached tiles
 	Tile* tile = getTile(pos.x, pos.y, pos.z);
 	if (creature.getTile() != tile) {
-		if (!tile || tile->queryAdd(0, creature, 1, FLAG_PATHFINDING | FLAG_IGNOREFIELDDAMAGE) != RETURNVALUE_NOERROR) {
+		if (!tile) {
+			return nullptr;
+		}
+
+		uint32_t flags = FLAG_PATHFINDING;
+		if (!creature.getPlayer()) {
+			flags |= FLAG_IGNOREFIELDDAMAGE;
+		}
+
+		if (tile->queryAdd(0, creature, 1, flags) != RETURNVALUE_NOERROR) {
 			return nullptr;
 		}
 	}
@@ -672,8 +681,8 @@ bool Map::getPathMatching(const Creature& creature, std::vector<Direction>& dirL
 
 		const int_fast32_t x = n->x;
 		const int_fast32_t y = n->y;
-		pos.x = x;
-		pos.y = y;
+		pos.x = static_cast<uint16_t>(x);
+		pos.y = static_cast<uint16_t>(y);
 		if (pathCondition(startPos, pos, fpp, bestMatch)) {
 			found = n;
 			endPos = pos;
@@ -821,8 +830,8 @@ AStarNodes::AStarNodes(uint32_t x, uint32_t y) : nodes(), openNodes()
 
 	AStarNode& startNode = nodes[0];
 	startNode.parent = nullptr;
-	startNode.x = x;
-	startNode.y = y;
+	startNode.x = static_cast<uint16_t>(x);
+	startNode.y = static_cast<uint16_t>(y);
 	startNode.f = 0;
 	nodeTable[(x << 16) | y] = nodes;
 }
@@ -839,8 +848,8 @@ AStarNode* AStarNodes::createOpenNode(AStarNode* parent, uint32_t x, uint32_t y,
 	AStarNode* node = nodes + retNode;
 	nodeTable[(x << 16) | y] = node;
 	node->parent = parent;
-	node->x = x;
-	node->y = y;
+	node->x = static_cast<uint16_t>(x);
+	node->y = static_cast<uint16_t>(y);
 	node->f = f;
 	return node;
 }
@@ -907,7 +916,7 @@ int_fast32_t AStarNodes::getMapWalkCost(AStarNode* node, const Position& neighbo
 int_fast32_t AStarNodes::getTileWalkCost(const Creature& creature, const Tile* tile)
 {
 	int_fast32_t cost = 0;
-	if (tile->getTopVisibleCreature(&creature) != nullptr) {
+	if (tile->getTopVisibleCreature(&creature)) {
 		// destroy creature cost
 		cost += MAP_NORMALWALKCOST * 3;
 	}

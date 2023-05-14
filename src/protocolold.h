@@ -31,7 +31,7 @@ public:
 	void onRecvFirstMessage(NetworkMessage& msg) override;
 
 private:
-	void disconnectClient(const std::string& message);
+	void disconnectClient(std::string_view message);
 };
 
 #endif

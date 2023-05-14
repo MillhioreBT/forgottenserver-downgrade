@@ -11,7 +11,7 @@ class IOGuild
 {
 public:
 	static Guild* loadGuild(uint32_t guildId);
-	static uint32_t getGuildIdByName(const std::string& name);
+	static uint32_t getGuildIdByName(std::string_view name);
 	static void getWarList(uint32_t guildId, GuildWarVector& guildWarVector);
 };
 

@@ -83,13 +83,14 @@ public:
 	void onRemoveCreature(Creature* creature, bool isLogout) override;
 	void onCreatureMove(Creature* creature, const Tile* newTile, const Position& newPos, const Tile* oldTile,
 	                    const Position& oldPos, bool teleport) override;
-	void onCreatureSay(Creature* creature, SpeakClasses type, const std::string& text) override;
+	void onCreatureSay(Creature* creature, SpeakClasses type, std::string_view text) override;
 
 	void drainHealth(Creature* attacker, int32_t damage) override;
 	void changeHealth(int32_t healthChange, bool sendHealthChange = true) override;
 
 	bool isWalkingToSpawn() const { return walkingToSpawn; }
 	bool walkToSpawn();
+	using Creature::onWalk;
 	void onWalk() override;
 	void onWalkComplete() override;
 	bool getNextStep(Direction& direction, uint32_t& flags) override;

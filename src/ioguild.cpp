@@ -28,7 +28,7 @@ Guild* IOGuild::loadGuild(uint32_t guildId)
 	return nullptr;
 }
 
-uint32_t IOGuild::getGuildIdByName(const std::string& name)
+uint32_t IOGuild::getGuildIdByName(std::string_view name)
 {
 	Database& db = Database::getInstance();
 

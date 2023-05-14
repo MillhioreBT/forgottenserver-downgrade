@@ -156,15 +156,15 @@ std::string transformToSHA1(std::string_view input)
 		messageBlock[index++] = 0;
 	}
 
-	messageBlock[56] = length_high >> 24;
-	messageBlock[57] = length_high >> 16;
-	messageBlock[58] = length_high >> 8;
-	messageBlock[59] = length_high;
+	messageBlock[56] = static_cast<uint8_t>(length_high >> 24);
+	messageBlock[57] = static_cast<uint8_t>(length_high >> 16);
+	messageBlock[58] = static_cast<uint8_t>(length_high >> 8);
+	messageBlock[59] = static_cast<uint8_t>(length_high);
 
-	messageBlock[60] = length_low >> 24;
-	messageBlock[61] = length_low >> 16;
-	messageBlock[62] = length_low >> 8;
-	messageBlock[63] = length_low;
+	messageBlock[60] = static_cast<uint8_t>(length_low >> 24);
+	messageBlock[61] = static_cast<uint8_t>(length_low >> 16);
+	messageBlock[62] = static_cast<uint8_t>(length_low >> 8);
+	messageBlock[63] = static_cast<uint8_t>(length_low);
 
 	processSHA1MessageBlock(messageBlock, H);
 
@@ -223,37 +223,6 @@ std::string generateToken(const std::string& key, uint32_t ticks)
 	message.assign(message.substr(hashLen - std::min(hashLen, AUTHENTICATOR_DIGITS)));
 	message.insert(0, AUTHENTICATOR_DIGITS - std::min(hashLen, AUTHENTICATOR_DIGITS), '0');
 	return message;
-}
-
-void replaceString(std::string& str, const std::string& sought, const std::string& replacement)
-{
-	size_t pos = 0;
-	size_t start = 0;
-	size_t soughtLen = sought.length();
-	size_t replaceLen = replacement.length();
-
-	while ((pos = str.find(sought, start)) != std::string::npos) {
-		str = str.substr(0, pos) + replacement + str.substr(pos + soughtLen);
-		start = pos + replaceLen;
-	}
-}
-
-void trim_right(std::string& source, char t) { source.erase(source.find_last_not_of(t) + 1); }
-
-void trim_left(std::string& source, char t) { source.erase(0, source.find_first_not_of(t)); }
-
-void toLowerCaseString(std::string& source) { std::transform(source.begin(), source.end(), source.begin(), tolower); }
-
-std::string asLowerCaseString(std::string source)
-{
-	toLowerCaseString(source);
-	return source;
-}
-
-std::string asUpperCaseString(std::string source)
-{
-	std::transform(source.begin(), source.end(), source.begin(), toupper);
-	return source;
 }
 
 bool caseInsensitiveEqual(std::string_view str1, std::string_view str2)
@@ -337,10 +306,16 @@ bool boolean_random(double probability /* = 0.5*/)
 	return booleanRand(getRandomGenerator(), std::bernoulli_distribution::param_type(probability));
 }
 
-void trimString(std::string& str)
+std::string convertIPToString(uint32_t ip)
 {
-	str.erase(str.find_last_not_of(' ') + 1);
-	str.erase(0, str.find_first_not_of(' '));
+	char buffer[17];
+
+	int res = sprintf(buffer, "%u.%u.%u.%u", ip & 0xFF, (ip >> 8) & 0xFF, (ip >> 16) & 0xFF, (ip >> 24));
+	if (res < 0) {
+		return {};
+	}
+
+	return buffer;
 }
 
 std::string formatDate(time_t time)
@@ -778,7 +753,7 @@ std::string ucfirst(std::string str)
 {
 	for (char& i : str) {
 		if (i != ' ') {
-			i = toupper(i);
+			i = static_cast<char>(toupper(i));
 			break;
 		}
 	}
@@ -792,23 +767,23 @@ std::string ucwords(std::string str)
 		return str;
 	}
 
-	str[0] = toupper(str.front());
+	str[0] = static_cast<char>(toupper(str.front()));
 	for (size_t i = 1; i < strLength; ++i) {
 		if (str[i - 1] == ' ') {
-			str[i] = toupper(str[i]);
+			str[i] = static_cast<char>(toupper(str[i]));
 		}
 	}
 
 	return str;
 }
 
-bool booleanString(const std::string& str)
+bool booleanString(std::string_view str)
 {
 	if (str.empty()) {
 		return false;
 	}
 
-	char ch = tolower(str.front());
+	char ch = static_cast<char>(tolower(str.front()));
 	return ch != 'f' && ch != 'n' && ch != '0';
 }
 
@@ -946,7 +921,7 @@ itemAttrTypes stringToItemAttribute(const std::string& str)
 	return ITEM_ATTRIBUTE_NONE;
 }
 
-std::string getFirstLine(const std::string& str)
+std::string getFirstLine(std::string_view str)
 {
 	std::string firstLine;
 	firstLine.reserve(str.length());
@@ -959,7 +934,17 @@ std::string getFirstLine(const std::string& str)
 	return firstLine;
 }
 
-const char* getReturnMessage(ReturnValue value)
+std::string getStringLine(std::string_view str, const int lineNumber)
+{
+	std::istringstream iss(str.data());
+	std::string line;
+	for (int i = 1; i < lineNumber; ++i) {
+		std::getline(iss, line);
+	}
+	return std::getline(iss, line) ? line : std::string{};
+}
+
+std::string_view getReturnMessage(ReturnValue value)
 {
 	switch (value) {
 		case RETURNVALUE_DESTINATIONOUTOFREACH:
@@ -1184,9 +1169,9 @@ int64_t OTSYS_TIME()
 	    .count();
 }
 
-SpellGroup_t stringToSpellGroup(const std::string& value)
+SpellGroup_t stringToSpellGroup(std::string_view value)
 {
-	std::string tmpStr = asLowerCaseString(value);
+	auto tmpStr = boost::algorithm::to_lower_copy<std::string>(std::string{value});
 	if (tmpStr == "attack" || tmpStr == "1") {
 		return SPELLGROUP_ATTACK;
 	} else if (tmpStr == "healing" || tmpStr == "2") {

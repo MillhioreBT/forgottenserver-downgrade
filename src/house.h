@@ -18,10 +18,10 @@ class Player;
 class AccessList
 {
 public:
-	void parseList(const std::string& list);
-	void addPlayer(const std::string& name);
-	void addGuild(const std::string& name);
-	void addGuildRank(const std::string& name, const std::string& rankName);
+	void parseList(std::string_view list);
+	void addPlayer(std::string_view name);
+	void addGuild(std::string_view name);
+	void addGuildRank(std::string_view name, std::string_view rankName);
 
 	bool isInList(const Player* player);
 
@@ -57,7 +57,7 @@ public:
 
 	bool canUse(const Player* player);
 
-	void setAccessList(const std::string& textlist);
+	void setAccessList(std::string_view textlist);
 	bool getAccessList(std::string& list) const;
 
 	void onRemoved() override;
@@ -107,13 +107,12 @@ public:
 	explicit House(uint32_t houseId);
 
 	void addTile(HouseTile* tile);
-	void updateDoorDescription() const;
 
 	bool canEditAccessList(uint32_t listId, const Player* player);
 	// listId special values:
 	// GUEST_LIST	 guest list
 	// SUBOWNER_LIST subowner list
-	void setAccessList(uint32_t listId, const std::string& textlist);
+	void setAccessList(uint32_t listId, std::string_view textlist);
 	bool getAccessList(uint32_t listId, std::string& list) const;
 
 	bool isInvited(const Player* player);
@@ -124,9 +123,10 @@ public:
 	void setEntryPos(Position pos) { posEntry = pos; }
 	const Position& getEntryPosition() const { return posEntry; }
 
-	void setName(std::string houseName) { this->houseName = houseName; }
-	const std::string& getName() const { return houseName; }
+	void setName(std::string_view houseName) { this->houseName = houseName; }
+	std::string_view getName() const { return houseName; }
 
+	std::string_view getOwnerName() const { return ownerName; }
 	void setOwner(uint32_t guid, bool updateDatabase = true, Player* player = nullptr);
 	uint32_t getOwner() const { return owner; }
 

@@ -10,7 +10,7 @@
 #include "databasetasks.h"
 #include "tools.h"
 
-bool Ban::acceptConnection(const Connection::Address& clientIP)
+bool Ban::acceptConnection(const uint32_t clientIP)
 {
 	std::lock_guard<std::recursive_mutex> lockClass(lock);
 
@@ -72,25 +72,24 @@ bool IOBan::isAccountBanned(uint32_t accountId, BanInfo& banInfo)
 	return true;
 }
 
-bool IOBan::isIpBanned(const Connection::Address& clientIP, BanInfo& banInfo)
+bool IOBan::isIpBanned(const uint32_t clientIP, BanInfo& banInfo)
 {
-	if (clientIP.is_unspecified()) {
+	if (clientIP == 0) {
 		return false;
 	}
 
 	Database& db = Database::getInstance();
 
 	DBResult_ptr result = db.storeQuery(fmt::format(
-	    "SELECT `reason`, `expires_at`, (SELECT `name` FROM `players` WHERE `id` = `banned_by`) AS `name` FROM `ip_bans` WHERE `ip` = INET6_ATON('{:s}')",
-	    clientIP.to_string()));
+	    "SELECT `reason`, `expires_at`, (SELECT `name` FROM `players` WHERE `id` = `banned_by`) AS `name` FROM `ip_bans` WHERE `ip` = {:d}",
+	    clientIP));
 	if (!result) {
 		return false;
 	}
 
 	int64_t expiresAt = result->getNumber<int64_t>("expires_at");
 	if (expiresAt != 0 && time(nullptr) > expiresAt) {
-		g_databaseTasks.addTask(
-		    fmt::format("DELETE FROM `ip_bans` WHERE `ip` = INET6_ATON('{:s}')", clientIP.to_string()));
+		g_databaseTasks.addTask(fmt::format("DELETE FROM `ip_bans` WHERE `ip` = {:d}", clientIP));
 		return false;
 	}
 

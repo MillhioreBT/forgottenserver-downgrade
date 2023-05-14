@@ -89,7 +89,7 @@ std::size_t clientLogin(const Player& player)
 	cleanupList(priorityWaitList);
 	cleanupList(waitList);
 
-	uint32_t maxPlayers = static_cast<uint32_t>(g_config.getNumber(ConfigManager::MAX_PLAYERS));
+	const uint32_t maxPlayers = static_cast<uint32_t>(g_config[ConfigKeysInteger::MAX_PLAYERS]);
 	if (maxPlayers == 0 || (priorityWaitList.empty() && waitList.empty() && g_game.getPlayersOnline() < maxPlayers)) {
 		return 0;
 	}
@@ -137,7 +137,7 @@ void ProtocolGame::login(uint32_t characterId, uint32_t accountId, OperatingSyst
 {
 	// dispatcher thread
 	Player* foundPlayer = g_game.getPlayerByGUID(characterId);
-	if (!foundPlayer || g_config.getBoolean(ConfigManager::ALLOW_CLONES)) {
+	if (!foundPlayer || g_config[ConfigKeysBoolean::ALLOW_CLONES]) {
 		player = new Player(getThis());
 		player->setGUID(characterId);
 
@@ -164,8 +164,8 @@ void ProtocolGame::login(uint32_t characterId, uint32_t accountId, OperatingSyst
 			return;
 		}
 
-		if (g_config.getBoolean(ConfigManager::ONE_PLAYER_ON_ACCOUNT) &&
-		    player->getAccountType() < ACCOUNT_TYPE_GAMEMASTER && g_game.getPlayerByAccount(player->getAccount())) {
+		if (g_config[ConfigKeysBoolean::ONE_PLAYER_ON_ACCOUNT] && player->getAccountType() < ACCOUNT_TYPE_GAMEMASTER &&
+		    g_game.getPlayerByAccount(player->getAccount())) {
 			disconnectClient("You may only login with one character\nof your account at the same time.");
 			return;
 		}
@@ -224,7 +224,7 @@ void ProtocolGame::login(uint32_t characterId, uint32_t accountId, OperatingSyst
 		player->lastLoginSaved = std::max<time_t>(time(nullptr), player->lastLoginSaved + 1);
 		acceptPackets = true;
 	} else {
-		if (eventConnect != 0 || !g_config.getBoolean(ConfigManager::REPLACE_KICK_ON_LOGIN)) {
+		if (eventConnect != 0 || !g_config[ConfigKeysBoolean::REPLACE_KICK_ON_LOGIN]) {
 			// Already trying to connect
 			disconnectClient("You are already logged in.");
 			return;
@@ -666,13 +666,6 @@ void ProtocolGame::parsePacket(NetworkMessage& msg)
 		case 0xE8:
 			parseDebugAssert(msg);
 			break;
-		case 0xF0:
-			g_dispatcher.addTask(DISPATCHER_TASK_EXPIRATION,
-			                     [playerID = player->getID()]() { g_game.playerShowQuestLog(playerID); });
-			break;
-		case 0xF1:
-			parseQuestLine(msg);
-			break;
 		case 0xF2:
 			parseRuleViolationReport(msg);
 			break;
@@ -761,7 +754,7 @@ void ProtocolGame::GetMapDescription(int32_t x, int32_t y, int32_t z, int32_t wi
 	}
 
 	if (skip >= 0) {
-		msg.addByte(skip);
+		msg.addByte(static_cast<uint8_t>(skip));
 		msg.addByte(0xFF);
 	}
 }
@@ -771,10 +764,11 @@ void ProtocolGame::GetFloorDescription(NetworkMessage& msg, int32_t x, int32_t y
 {
 	for (int32_t nx = 0; nx < width; nx++) {
 		for (int32_t ny = 0; ny < height; ny++) {
-			Tile* tile = g_game.map.getTile(x + nx + offset, y + ny + offset, z);
+			Tile* tile = g_game.map.getTile(static_cast<uint16_t>(x + nx + offset),
+			                                static_cast<uint16_t>(y + ny + offset), static_cast<uint8_t>(z));
 			if (tile) {
 				if (skip >= 0) {
-					msg.addByte(skip);
+					msg.addByte(static_cast<uint8_t>(skip));
 					msg.addByte(0xFF);
 				}
 
@@ -1292,12 +1286,6 @@ void ProtocolGame::parseEnableSharedPartyExperience(NetworkMessage& msg)
 	    [=, playerID = player->getID()]() { g_game.playerEnableSharedPartyExperience(playerID, sharedExpActive); });
 }
 
-void ProtocolGame::parseQuestLine(NetworkMessage& msg)
-{
-	uint16_t questId = msg.get<uint16_t>();
-	g_dispatcher.addTask([=, playerID = player->getID()]() { g_game.playerShowQuestLine(playerID, questId); });
-}
-
 // Send methods
 void ProtocolGame::sendOpenPrivateChannel(std::string_view receiver)
 {
@@ -1508,11 +1496,11 @@ void ProtocolGame::sendContainer(uint8_t cid, const Container* container, bool h
 	msg.addItem(container);
 	msg.addString(container->getName());
 
-	msg.addByte(container->capacity());
+	msg.addByte(static_cast<uint8_t>(container->capacity()));
 
 	msg.addByte(hasParent ? 0x01 : 0x00);
 
-	msg.addByte(std::min<uint32_t>(0xFF, container->size()));
+	msg.addByte(static_cast<uint8_t>(std::min<uint32_t>(0xFF, container->size())));
 
 	uint32_t i = 0;
 	const ItemDeque& itemList = container->getItemList();
@@ -1621,41 +1609,7 @@ void ProtocolGame::sendSaleItemList(const std::list<ShopInfo>& shop)
 	uint8_t i = 0;
 	for (std::map<uint16_t, uint32_t>::const_iterator it = saleMap.begin(); i < itemsToSend; ++it, ++i) {
 		msg.addItemId(it->first);
-		msg.addByte(std::min<uint32_t>(it->second, std::numeric_limits<uint8_t>::max()));
-	}
-
-	writeToOutputBuffer(msg);
-}
-
-void ProtocolGame::sendQuestLog()
-{
-	NetworkMessage msg;
-	msg.addByte(0xF0);
-	msg.add<uint16_t>(g_game.quests.getQuestsCount(player));
-
-	for (const Quest& quest : g_game.quests.getQuests()) {
-		if (quest.isStarted(player)) {
-			msg.add<uint16_t>(quest.getID());
-			msg.addString(quest.getName());
-			msg.addByte(quest.isCompleted(player));
-		}
-	}
-
-	writeToOutputBuffer(msg);
-}
-
-void ProtocolGame::sendQuestLine(const Quest* quest)
-{
-	NetworkMessage msg;
-	msg.addByte(0xF1);
-	msg.add<uint16_t>(quest->getID());
-	msg.addByte(quest->getMissionsCount(player));
-
-	for (const Mission& mission : quest->getMissions()) {
-		if (mission.isStarted(player)) {
-			msg.addString(mission.getName(player));
-			msg.addString(mission.getDescription(player));
-		}
+		msg.addByte(static_cast<uint8_t>(std::min<uint32_t>(it->second, std::numeric_limits<uint8_t>::max())));
 	}
 
 	writeToOutputBuffer(msg);
@@ -1728,7 +1682,7 @@ void ProtocolGame::sendCreatureTurn(const Creature* creature, uint32_t stackPos)
 		msg.add<uint32_t>(creature->getID());
 	} else {
 		msg.addPosition(creature->getPosition());
-		msg.addByte(stackPos);
+		msg.addByte(static_cast<uint8_t>(stackPos));
 	}
 
 	msg.add<uint16_t>(0x63);
@@ -1752,7 +1706,7 @@ void ProtocolGame::sendCreatureSay(const Creature* creature, SpeakClasses type, 
 
 	// Add level only for players
 	if (const Player* speaker = creature->getPlayer()) {
-		msg.add<uint16_t>(speaker->getLevel());
+		msg.add<uint16_t>(static_cast<uint16_t>(speaker->getLevel()));
 	} else {
 		msg.add<uint16_t>(0x00);
 	}
@@ -1768,8 +1722,7 @@ void ProtocolGame::sendCreatureSay(const Creature* creature, SpeakClasses type, 
 	writeToOutputBuffer(msg);
 }
 
-void ProtocolGame::sendToChannel(const Creature* creature, SpeakClasses type, std::string_view text,
-                                 uint16_t channelId)
+void ProtocolGame::sendToChannel(const Creature* creature, SpeakClasses type, std::string_view text, uint16_t channelId)
 {
 	if (!creature) {
 		return;
@@ -1786,7 +1739,7 @@ void ProtocolGame::sendToChannel(const Creature* creature, SpeakClasses type, st
 		msg.addString(creature->getName());
 		// Add level only for players
 		if (const Player* speaker = creature->getPlayer()) {
-			msg.add<uint16_t>(speaker->getLevel());
+			msg.add<uint16_t>(static_cast<uint16_t>(speaker->getLevel()));
 		} else {
 			msg.add<uint16_t>(0x00);
 		}
@@ -2231,12 +2184,12 @@ void ProtocolGame::sendTextWindow(uint32_t windowTextId, Item* item, uint16_t ma
 		msg.add<uint16_t>(maxlen);
 		msg.addString(item->getText());
 	} else {
-		const std::string& text = item->getText();
+		auto text = item->getText();
 		msg.add<uint16_t>(text.size());
 		msg.addString(text);
 	}
 
-	const std::string& writer = item->getWriter();
+	auto writer = item->getWriter();
 	if (!writer.empty()) {
 		msg.addString(writer);
 	} else {
@@ -2292,11 +2245,6 @@ void ProtocolGame::sendOutfitWindow()
 		newOutfit.lookType = outfits.front().lookType;
 		currentOutfit = newOutfit;
 	}
-
-	/*Mount* currentMount = g_game.mounts.getMountByID(player->getCurrentMount());
-	if (currentMount) {
-	    currentOutfit.lookMount = currentMount->clientId;
-	}*/
 
 	AddOutfit(msg, currentOutfit);
 
@@ -2412,9 +2360,9 @@ void ProtocolGame::AddPlayerStats(NetworkMessage& msg)
 	msg.add<uint16_t>(std::min<int32_t>(player->getHealth(), std::numeric_limits<uint16_t>::max()));
 	msg.add<uint16_t>(std::min<int32_t>(player->getMaxHealth(), std::numeric_limits<uint16_t>::max()));
 
-	msg.add<uint32_t>(player->getFreeCapacity());
+	msg.add<uint32_t>(player->hasFlag(PlayerFlag_HasInfiniteCapacity) ? 1000000 : player->getFreeCapacity());
 
-	msg.add<uint32_t>(std::min<uint32_t>(player->getExperience(), 0x7FFFFFFF));
+	msg.add<uint32_t>(std::min<uint32_t>(player->getExperience(), std::numeric_limits<int32_t>::max()));
 
 	msg.add<uint16_t>(player->getLevel());
 	msg.addByte(player->getLevelPercent());

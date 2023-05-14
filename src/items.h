@@ -238,23 +238,11 @@ public:
 
 	std::string getPluralName() const
 	{
-		if (!pluralName.empty()) {
-			return pluralName;
-		}
-
 		if (showCount == 0) {
 			return name;
 		}
 
-		if (name.empty() || name.back() == 's') {
-			return name;
-		}
-
-		std::string str;
-		str.reserve(name.length() + 1);
-		str.assign(name);
-		str += 's';
-		return str;
+		return pluralName;
 	}
 
 	itemgroup_t group = ITEM_GROUP_NONE;

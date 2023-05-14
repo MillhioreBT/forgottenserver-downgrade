@@ -1,12 +1,11 @@
 // Copyright 2023 The Forgotten Server Authors. All rights reserved.
 // Use of this source code is governed by the GPL-2.0 License that can be found in the LICENSE file.
 
-#ifndef FS_PROTOCOLSTATUS_H
-#define FS_PROTOCOLSTATUS_H
+#ifndef FS_STATUS_H
+#define FS_STATUS_H
 
+#include "networkmessage.h"
 #include "protocol.h"
-
-class NetworkMessage;
 
 class ProtocolStatus final : public Protocol
 {
@@ -31,12 +30,12 @@ public:
 	void onRecvFirstMessage(NetworkMessage& msg) override;
 
 	void sendStatusString();
-	void sendInfo(uint16_t requestedInfo, const std::string& characterName);
+	void sendInfo(uint16_t requestedInfo, std::string_view characterName);
 
 	static const uint64_t start;
 
 private:
-	static std::map<Connection::Address, int64_t> ipConnectMap;
+	static std::map<uint32_t, int64_t> ipConnectMap;
 };
 
-#endif // FS_PROTOCOLSTATUS_H
+#endif

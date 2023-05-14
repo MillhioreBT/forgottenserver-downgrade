@@ -217,7 +217,7 @@ void Creature::onWalk(Direction& dir)
 		return;
 	}
 
-	uint16_t rand = uniform_random(0, 399);
+	uint16_t rand = static_cast<uint16_t>(uniform_random(0, 399));
 	if (rand / 4 > getDrunkenness()) {
 		return;
 	}
@@ -296,7 +296,7 @@ void Creature::addEventWalk(bool firstStep)
 		g_game.checkCreatureWalk(getID());
 	}
 
-	eventWalk = g_scheduler.addEvent(createSchedulerTask(ticks, std::bind(&Game::checkCreatureWalk, &g_game, getID())));
+	eventWalk = g_scheduler.addEvent(createSchedulerTask(ticks, [id = getID()]() { g_game.checkCreatureWalk(id); }));
 }
 
 void Creature::stopEventWalk()
@@ -635,7 +635,7 @@ CreatureVector Creature::getKillers()
 {
 	CreatureVector killers;
 	const int64_t timeNow = OTSYS_TIME();
-	const uint32_t inFightTicks = g_config.getNumber(ConfigManager::PZ_LOCKED);
+	const int64_t inFightTicks = g_config[ConfigKeysInteger::PZ_LOCKED];
 	for (const auto& it : damageMap) {
 		Creature* attacker = g_game.getCreatureByID(it.first);
 		if (attacker && attacker != this && timeNow - it.second.ticks <= inFightTicks) {
@@ -661,7 +661,7 @@ void Creature::onDeath()
 	Creature* mostDamageCreature = nullptr;
 
 	const int64_t timeNow = OTSYS_TIME();
-	const uint32_t inFightTicks = g_config.getNumber(ConfigManager::PZ_LOCKED);
+	const int64_t inFightTicks = g_config[ConfigKeysInteger::PZ_LOCKED];
 	int32_t mostDamage = 0;
 	std::map<Creature*, uint64_t> experienceMap;
 	for (const auto& it : damageMap) {
@@ -783,7 +783,7 @@ bool Creature::hasBeenAttacked(uint32_t attackerId)
 	if (it == damageMap.end()) {
 		return false;
 	}
-	return (OTSYS_TIME() - it->second.ticks) <= g_config.getNumber(ConfigManager::PZ_LOCKED);
+	return (OTSYS_TIME() - it->second.ticks) <= g_config[ConfigKeysInteger::PZ_LOCKED];
 }
 
 Item* Creature::getCorpse(Creature*, Creature*) { return Item::CreateItem(getLookCorpse()); }
@@ -1178,7 +1178,7 @@ bool Creature::addCondition(Condition* condition, bool force /* = false*/)
 		int64_t walkDelay = getWalkDelay();
 		if (walkDelay > 0) {
 			g_scheduler.addEvent(
-			    createSchedulerTask(walkDelay, std::bind(&Game::forceAddCondition, &g_game, getID(), condition)));
+			    createSchedulerTask(walkDelay, [=, id = getID()]() { g_game.forceAddCondition(id, condition); }));
 			return false;
 		}
 	}
@@ -1227,7 +1227,7 @@ void Creature::removeCondition(ConditionType_t type, bool force /* = false*/)
 			int64_t walkDelay = getWalkDelay();
 			if (walkDelay > 0) {
 				g_scheduler.addEvent(
-				    createSchedulerTask(walkDelay, std::bind(&Game::forceRemoveCondition, &g_game, getID(), type)));
+				    createSchedulerTask(walkDelay, [=, id = getID()]() { g_game.forceRemoveCondition(id, type); }));
 				return;
 			}
 		}
@@ -1255,7 +1255,7 @@ void Creature::removeCondition(ConditionType_t type, ConditionId_t conditionId, 
 			int64_t walkDelay = getWalkDelay();
 			if (walkDelay > 0) {
 				g_scheduler.addEvent(
-				    createSchedulerTask(walkDelay, std::bind(&Game::forceRemoveCondition, &g_game, getID(), type)));
+				    createSchedulerTask(walkDelay, [=, id = getID()]() { g_game.forceRemoveCondition(id, type); }));
 				return;
 			}
 		}
@@ -1294,7 +1294,7 @@ void Creature::removeCondition(Condition* condition, bool force /* = false*/)
 		int64_t walkDelay = getWalkDelay();
 		if (walkDelay > 0) {
 			g_scheduler.addEvent(createSchedulerTask(
-			    walkDelay, std::bind(&Game::forceRemoveCondition, &g_game, getID(), condition->getType())));
+			    walkDelay, [id = getID(), type = condition->getType()]() { g_game.forceRemoveCondition(id, type); }));
 			return;
 		}
 	}

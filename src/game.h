@@ -13,7 +13,6 @@
 #include "npc.h"
 #include "player.h"
 #include "position.h"
-#include "quests.h"
 #include "raids.h"
 #include "wildcardtree.h"
 
@@ -152,14 +151,14 @@ public:
 	 * \param s is the name identifier
 	 * \returns A Pointer to the npc
 	 */
-	Npc* getNpcByName(const std::string& s);
+	Npc* getNpcByName(std::string_view npcName);
 
 	/**
 	 * Returns a player based on a string name identifier
 	 * \param s is the name identifier
 	 * \returns A Pointer to the player
 	 */
-	Player* getPlayerByName(const std::string& s);
+	Player* getPlayerByName(std::string_view s);
 
 	/**
 	 * Returns a player based on guid
@@ -173,7 +172,7 @@ public:
 	 * \param player will point to the found player (if any)
 	 * \return "RETURNVALUE_PLAYERWITHTHISNAMEISNOTONLINE" or "RETURNVALUE_NAMEISTOOAMBIGIOUS"
 	 */
-	ReturnValue getPlayerByNameWildcard(const std::string& s, Player*& player);
+	ReturnValue getPlayerByNameWildcard(std::string_view s, Player*& player);
 
 	/**
 	 * Returns a player based on an account number identifier
@@ -304,8 +303,8 @@ public:
 	 * \param type Type of message
 	 * \param text The text to say
 	 */
-	bool internalCreatureSay(Creature* creature, SpeakClasses type, const std::string& text, bool ghostMode,
-	                         SpectatorVec* spectatorsPtr = nullptr, const Position* pos = nullptr);
+	bool internalCreatureSay(Creature* creature, SpeakClasses type, std::string_view text, bool ghostMode,
+	                         SpectatorVec* spectatorsPtr = nullptr, const Position* pos = nullptr, bool echo = false);
 
 	void loadPlayersRecord();
 	void checkPlayersRecord();
@@ -378,8 +377,6 @@ public:
 	void playerRequestRemoveVip(uint32_t playerId, uint32_t guid);
 	void playerTurn(uint32_t playerId, Direction dir);
 	void playerRequestOutfit(uint32_t playerId);
-	void playerShowQuestLog(uint32_t playerId);
-	void playerShowQuestLine(uint32_t playerId, uint16_t questId);
 	void playerSay(uint32_t playerId, uint16_t channelId, SpeakClasses type, const std::string& receiver,
 	               const std::string& text);
 	void playerChangeOutfit(uint32_t playerId, Outfit_t outfit);
@@ -489,7 +486,6 @@ public:
 	Groups groups;
 	Map map;
 	Raids raids;
-	Quests quests;
 
 	std::forward_list<Item*> toDecayItems;
 
@@ -499,11 +495,11 @@ public:
 	void clearTilesToClean() { tilesToClean.clear(); }
 
 private:
-	bool playerSaySpell(Player* player, SpeakClasses type, const std::string& text);
-	void playerWhisper(Player* player, const std::string& text);
-	bool playerYell(Player* player, const std::string& text);
-	bool playerSpeakTo(Player* player, SpeakClasses type, const std::string& receiver, const std::string& text);
-	void playerSpeakToNpc(Player* player, const std::string& text);
+	bool playerSaySpell(Player* player, SpeakClasses type, std::string_view text);
+	void playerWhisper(Player* player, std::string_view text);
+	bool playerYell(Player* player, std::string_view text);
+	bool playerSpeakTo(Player* player, SpeakClasses type, std::string_view receiver, std::string_view text);
+	void playerSpeakToNpc(Player* player, std::string_view text);
 
 	void checkDecay();
 	void internalDecayItem(Item* item);

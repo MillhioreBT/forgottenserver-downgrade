@@ -30,20 +30,20 @@ std::string getGlobalString(lua_State* L, const char* identifier, const char* de
 	}
 
 	size_t len = lua_strlen(L, -1);
-	std::string ret(lua_tostring(L, -1), len);
+	std::string ret{lua_tostring(L, -1), len};
 	lua_pop(L, 1);
 	return ret;
 }
 
-int32_t getGlobalNumber(lua_State* L, const char* identifier, const int32_t defaultValue = 0)
+int64_t getGlobalInteger(lua_State* L, const char* identifier, const int64_t defaultValue = 0)
 {
 	lua_getglobal(L, identifier);
-	if (!lua_isnumber(L, -1)) {
+	if (!lua_isinteger(L, -1)) {
 		lua_pop(L, 1);
 		return defaultValue;
 	}
 
-	int32_t val = lua_tonumber(L, -1);
+	int64_t val = lua_tointeger(L, -1);
 	lua_pop(L, 1);
 	return val;
 }
@@ -58,7 +58,7 @@ bool getGlobalBoolean(lua_State* L, const char* identifier, const bool defaultVa
 		}
 
 		size_t len = lua_strlen(L, -1);
-		std::string ret(lua_tostring(L, -1), len);
+		std::string ret{lua_tostring(L, -1), len};
 		lua_pop(L, 1);
 		return booleanString(ret);
 	}
@@ -70,7 +70,7 @@ bool getGlobalBoolean(lua_State* L, const char* identifier, const bool defaultVa
 
 } // namespace
 
-ConfigManager::ConfigManager() { string[CONFIG_FILE] = "config.lua"; }
+ConfigManager::ConfigManager() { strings[ConfigKeysString::CONFIG_FILE] = "config.lua"; }
 
 namespace {
 
@@ -148,7 +148,7 @@ bool ConfigManager::load()
 
 	luaL_openlibs(L);
 
-	if (luaL_dofile(L, getString(CONFIG_FILE).c_str())) {
+	if (luaL_dofile(L, getString(ConfigKeysString::CONFIG_FILE).data())) {
 		std::cout << "[Error - ConfigManager::load] " << lua_tostring(L, -1) << std::endl;
 		lua_close(L);
 		return false;
@@ -156,118 +156,121 @@ bool ConfigManager::load()
 
 	// parse config
 	if (!loaded) { // info that must be loaded one time (unless we reset the modules involved)
-		boolean[BIND_ONLY_GLOBAL_ADDRESS] = getGlobalBoolean(L, "bindOnlyGlobalAddress", false);
-		boolean[OPTIMIZE_DATABASE] = getGlobalBoolean(L, "startupDatabaseOptimization", true);
+		booleans[ConfigKeysBoolean::BIND_ONLY_GLOBAL_ADDRESS] = getGlobalBoolean(L, "bindOnlyGlobalAddress", false);
+		booleans[ConfigKeysBoolean::OPTIMIZE_DATABASE] = getGlobalBoolean(L, "startupDatabaseOptimization", true);
 
-		if (string[IP] == "") {
-			string[IP] = getGlobalString(L, "ip", "127.0.0.1");
+		if (strings[ConfigKeysString::IP] == "") {
+			strings[ConfigKeysString::IP] = getGlobalString(L, "ip", "127.0.0.1");
 		}
 
-		string[MAP_NAME] = getGlobalString(L, "mapName", "forgotten");
-		string[MAP_AUTHOR] = getGlobalString(L, "mapAuthor", "Unknown");
-		string[HOUSE_RENT_PERIOD] = getGlobalString(L, "houseRentPeriod", "never");
-		string[MYSQL_HOST] = getGlobalString(L, "mysqlHost", "127.0.0.1");
-		string[MYSQL_USER] = getGlobalString(L, "mysqlUser", "forgottenserver");
-		string[MYSQL_PASS] = getGlobalString(L, "mysqlPass", "");
-		string[MYSQL_DB] = getGlobalString(L, "mysqlDatabase", "forgottenserver");
-		string[MYSQL_SOCK] = getGlobalString(L, "mysqlSock", "");
+		strings[ConfigKeysString::MAP_NAME] = getGlobalString(L, "mapName", "forgotten");
+		strings[ConfigKeysString::MAP_AUTHOR] = getGlobalString(L, "mapAuthor", "Unknown");
+		strings[ConfigKeysString::HOUSE_RENT_PERIOD] = getGlobalString(L, "houseRentPeriod", "never");
+		strings[ConfigKeysString::MYSQL_HOST] = getGlobalString(L, "mysqlHost", "127.0.0.1");
+		strings[ConfigKeysString::MYSQL_USER] = getGlobalString(L, "mysqlUser", "forgottenserver");
+		strings[ConfigKeysString::MYSQL_PASS] = getGlobalString(L, "mysqlPass", "");
+		strings[ConfigKeysString::MYSQL_DB] = getGlobalString(L, "mysqlDatabase", "forgottenserver");
+		strings[ConfigKeysString::MYSQL_SOCK] = getGlobalString(L, "mysqlSock", "");
 
-		integer[SQL_PORT] = getGlobalNumber(L, "mysqlPort", 3306);
+		integers[ConfigKeysInteger::SQL_PORT] = getGlobalInteger(L, "mysqlPort", 3306);
 
-		if (integer[GAME_PORT] == 0) {
-			integer[GAME_PORT] = getGlobalNumber(L, "gameProtocolPort", 7172);
+		if (integers[ConfigKeysInteger::GAME_PORT] == 0) {
+			integers[ConfigKeysInteger::GAME_PORT] = getGlobalInteger(L, "gameProtocolPort", 7172);
 		}
 
-		if (integer[LOGIN_PORT] == 0) {
-			integer[LOGIN_PORT] = getGlobalNumber(L, "loginProtocolPort", 7171);
+		if (integers[ConfigKeysInteger::LOGIN_PORT] == 0) {
+			integers[ConfigKeysInteger::LOGIN_PORT] = getGlobalInteger(L, "loginProtocolPort", 7171);
 		}
 
-		integer[STATUS_PORT] = getGlobalNumber(L, "statusProtocolPort", 7171);
+		integers[ConfigKeysInteger::STATUS_PORT] = getGlobalInteger(L, "statusProtocolPort", 7171);
 
-		integer[MARKET_OFFER_DURATION] = getGlobalNumber(L, "marketOfferDuration", 30 * 24 * 60 * 60);
+		integers[ConfigKeysInteger::MARKET_OFFER_DURATION] =
+		    getGlobalInteger(L, "marketOfferDuration", 30 * 24 * 60 * 60);
 	}
 
-	boolean[ALLOW_CHANGEOUTFIT] = getGlobalBoolean(L, "allowChangeOutfit", true);
-	boolean[ONE_PLAYER_ON_ACCOUNT] = getGlobalBoolean(L, "onePlayerOnlinePerAccount", true);
-	boolean[AIMBOT_HOTKEY_ENABLED] = getGlobalBoolean(L, "hotkeyAimbotEnabled", true);
-	boolean[REMOVE_RUNE_CHARGES] = getGlobalBoolean(L, "removeChargesFromRunes", true);
-	boolean[REMOVE_WEAPON_AMMO] = getGlobalBoolean(L, "removeWeaponAmmunition", true);
-	boolean[REMOVE_WEAPON_CHARGES] = getGlobalBoolean(L, "removeWeaponCharges", true);
-	boolean[REMOVE_POTION_CHARGES] = getGlobalBoolean(L, "removeChargesFromPotions", true);
-	boolean[EXPERIENCE_FROM_PLAYERS] = getGlobalBoolean(L, "experienceByKillingPlayers", false);
-	boolean[FREE_PREMIUM] = getGlobalBoolean(L, "freePremium", false);
-	boolean[REPLACE_KICK_ON_LOGIN] = getGlobalBoolean(L, "replaceKickOnLogin", true);
-	boolean[ALLOW_CLONES] = getGlobalBoolean(L, "allowClones", false);
-	boolean[ALLOW_WALKTHROUGH] = getGlobalBoolean(L, "allowWalkthrough", true);
-	boolean[MARKET_PREMIUM] = getGlobalBoolean(L, "premiumToCreateMarketOffer", true);
-	boolean[EMOTE_SPELLS] = getGlobalBoolean(L, "emoteSpells", false);
-	boolean[STAMINA_SYSTEM] = getGlobalBoolean(L, "staminaSystem", true);
-	boolean[WARN_UNSAFE_SCRIPTS] = getGlobalBoolean(L, "warnUnsafeScripts", true);
-	boolean[CONVERT_UNSAFE_SCRIPTS] = getGlobalBoolean(L, "convertUnsafeScripts", true);
-	boolean[CLASSIC_EQUIPMENT_SLOTS] = getGlobalBoolean(L, "classicEquipmentSlots", false);
-	boolean[CLASSIC_ATTACK_SPEED] = getGlobalBoolean(L, "classicAttackSpeed", false);
-	boolean[SCRIPTS_CONSOLE_LOGS] = getGlobalBoolean(L, "showScriptsLogInConsole", true);
-	boolean[SERVER_SAVE_NOTIFY_MESSAGE] = getGlobalBoolean(L, "serverSaveNotifyMessage", true);
-	boolean[SERVER_SAVE_CLEAN_MAP] = getGlobalBoolean(L, "serverSaveCleanMap", false);
-	boolean[SERVER_SAVE_CLOSE] = getGlobalBoolean(L, "serverSaveClose", false);
-	boolean[SERVER_SAVE_SHUTDOWN] = getGlobalBoolean(L, "serverSaveShutdown", true);
-	boolean[ONLINE_OFFLINE_CHARLIST] = getGlobalBoolean(L, "showOnlineStatusInCharlist", false);
-	boolean[YELL_ALLOW_PREMIUM] = getGlobalBoolean(L, "yellAlwaysAllowPremium", false);
-	boolean[PREMIUM_TO_SEND_PRIVATE] = getGlobalBoolean(L, "premiumToSendPrivate", false);
-	boolean[FORCE_MONSTERTYPE_LOAD] = getGlobalBoolean(L, "forceMonsterTypesOnLoad", true);
-	boolean[DEFAULT_WORLD_LIGHT] = getGlobalBoolean(L, "defaultWorldLight", true);
-	boolean[HOUSE_OWNED_BY_ACCOUNT] = getGlobalBoolean(L, "houseOwnedByAccount", false);
-	boolean[CLEAN_PROTECTION_ZONES] = getGlobalBoolean(L, "cleanProtectionZones", false);
-	boolean[HOUSE_DOOR_SHOW_PRICE] = getGlobalBoolean(L, "houseDoorShowPrice", true);
-	boolean[ONLY_INVITED_CAN_MOVE_HOUSE_ITEMS] = getGlobalBoolean(L, "onlyInvitedCanMoveHouseItems", true);
-	boolean[REMOVE_ON_DESPAWN] = getGlobalBoolean(L, "removeOnDespawn", true);
-	boolean[MONSTER_OVERSPAWN] = getGlobalBoolean(L, "monsterOverspawn", false);
+	booleans[ConfigKeysBoolean::ALLOW_CHANGEOUTFIT] = getGlobalBoolean(L, "allowChangeOutfit", true);
+	booleans[ConfigKeysBoolean::ONE_PLAYER_ON_ACCOUNT] = getGlobalBoolean(L, "onePlayerOnlinePerAccount", true);
+	booleans[ConfigKeysBoolean::AIMBOT_HOTKEY_ENABLED] = getGlobalBoolean(L, "hotkeyAimbotEnabled", true);
+	booleans[ConfigKeysBoolean::REMOVE_RUNE_CHARGES] = getGlobalBoolean(L, "removeChargesFromRunes", true);
+	booleans[ConfigKeysBoolean::REMOVE_WEAPON_AMMO] = getGlobalBoolean(L, "removeWeaponAmmunition", true);
+	booleans[ConfigKeysBoolean::REMOVE_WEAPON_CHARGES] = getGlobalBoolean(L, "removeWeaponCharges", true);
+	booleans[ConfigKeysBoolean::REMOVE_POTION_CHARGES] = getGlobalBoolean(L, "removeChargesFromPotions", true);
+	booleans[ConfigKeysBoolean::EXPERIENCE_FROM_PLAYERS] = getGlobalBoolean(L, "experienceByKillingPlayers", false);
+	booleans[ConfigKeysBoolean::FREE_PREMIUM] = getGlobalBoolean(L, "freePremium", false);
+	booleans[ConfigKeysBoolean::REPLACE_KICK_ON_LOGIN] = getGlobalBoolean(L, "replaceKickOnLogin", true);
+	booleans[ConfigKeysBoolean::ALLOW_CLONES] = getGlobalBoolean(L, "allowClones", false);
+	booleans[ConfigKeysBoolean::ALLOW_WALKTHROUGH] = getGlobalBoolean(L, "allowWalkthrough", true);
+	booleans[ConfigKeysBoolean::MARKET_PREMIUM] = getGlobalBoolean(L, "premiumToCreateMarketOffer", true);
+	booleans[ConfigKeysBoolean::EMOTE_SPELLS] = getGlobalBoolean(L, "emoteSpells", false);
+	booleans[ConfigKeysBoolean::STAMINA_SYSTEM] = getGlobalBoolean(L, "staminaSystem", true);
+	booleans[ConfigKeysBoolean::WARN_UNSAFE_SCRIPTS] = getGlobalBoolean(L, "warnUnsafeScripts", true);
+	booleans[ConfigKeysBoolean::CONVERT_UNSAFE_SCRIPTS] = getGlobalBoolean(L, "convertUnsafeScripts", true);
+	booleans[ConfigKeysBoolean::CLASSIC_EQUIPMENT_SLOTS] = getGlobalBoolean(L, "classicEquipmentSlots", false);
+	booleans[ConfigKeysBoolean::CLASSIC_ATTACK_SPEED] = getGlobalBoolean(L, "classicAttackSpeed", false);
+	booleans[ConfigKeysBoolean::SCRIPTS_CONSOLE_LOGS] = getGlobalBoolean(L, "showScriptsLogInConsole", true);
+	booleans[ConfigKeysBoolean::SERVER_SAVE_NOTIFY_MESSAGE] = getGlobalBoolean(L, "serverSaveNotifyMessage", true);
+	booleans[ConfigKeysBoolean::SERVER_SAVE_CLEAN_MAP] = getGlobalBoolean(L, "serverSaveCleanMap", false);
+	booleans[ConfigKeysBoolean::SERVER_SAVE_CLOSE] = getGlobalBoolean(L, "serverSaveClose", false);
+	booleans[ConfigKeysBoolean::SERVER_SAVE_SHUTDOWN] = getGlobalBoolean(L, "serverSaveShutdown", true);
+	booleans[ConfigKeysBoolean::ONLINE_OFFLINE_CHARLIST] = getGlobalBoolean(L, "showOnlineStatusInCharlist", false);
+	booleans[ConfigKeysBoolean::YELL_ALLOW_PREMIUM] = getGlobalBoolean(L, "yellAlwaysAllowPremium", false);
+	booleans[ConfigKeysBoolean::PREMIUM_TO_SEND_PRIVATE] = getGlobalBoolean(L, "premiumToSendPrivate", false);
+	booleans[ConfigKeysBoolean::FORCE_MONSTERTYPE_LOAD] = getGlobalBoolean(L, "forceMonsterTypesOnLoad", true);
+	booleans[ConfigKeysBoolean::DEFAULT_WORLD_LIGHT] = getGlobalBoolean(L, "defaultWorldLight", true);
+	booleans[ConfigKeysBoolean::HOUSE_OWNED_BY_ACCOUNT] = getGlobalBoolean(L, "houseOwnedByAccount", false);
+	booleans[ConfigKeysBoolean::CLEAN_PROTECTION_ZONES] = getGlobalBoolean(L, "cleanProtectionZones", false);
+	booleans[ConfigKeysBoolean::HOUSE_DOOR_SHOW_PRICE] = getGlobalBoolean(L, "houseDoorShowPrice", true);
+	booleans[ConfigKeysBoolean::ONLY_INVITED_CAN_MOVE_HOUSE_ITEMS] =
+	    getGlobalBoolean(L, "onlyInvitedCanMoveHouseItems", true);
+	booleans[ConfigKeysBoolean::REMOVE_ON_DESPAWN] = getGlobalBoolean(L, "removeOnDespawn", true);
+	booleans[ConfigKeysBoolean::MONSTER_OVERSPAWN] = getGlobalBoolean(L, "monsterOverspawn", false);
 
-	string[DEFAULT_PRIORITY] = getGlobalString(L, "defaultPriority", "high");
-	string[SERVER_NAME] = getGlobalString(L, "serverName", "");
-	string[OWNER_NAME] = getGlobalString(L, "ownerName", "");
-	string[OWNER_EMAIL] = getGlobalString(L, "ownerEmail", "");
-	string[URL] = getGlobalString(L, "url", "");
-	string[LOCATION] = getGlobalString(L, "location", "");
-	string[MOTD] = getGlobalString(L, "motd", "");
-	string[WORLD_TYPE] = getGlobalString(L, "worldType", "pvp");
+	strings[ConfigKeysString::DEFAULT_PRIORITY] = getGlobalString(L, "defaultPriority", "high");
+	strings[ConfigKeysString::SERVER_NAME] = getGlobalString(L, "serverName", "");
+	strings[ConfigKeysString::OWNER_NAME] = getGlobalString(L, "ownerName", "");
+	strings[ConfigKeysString::OWNER_EMAIL] = getGlobalString(L, "ownerEmail", "");
+	strings[ConfigKeysString::URL] = getGlobalString(L, "url", "");
+	strings[ConfigKeysString::LOCATION] = getGlobalString(L, "location", "");
+	strings[ConfigKeysString::MOTD] = getGlobalString(L, "motd", "");
+	strings[ConfigKeysString::WORLD_TYPE] = getGlobalString(L, "worldType", "pvp");
 
-	integer[MAX_PLAYERS] = getGlobalNumber(L, "maxPlayers");
-	integer[PZ_LOCKED] = getGlobalNumber(L, "pzLocked", 60000);
-	integer[DEFAULT_DESPAWNRANGE] = Monster::despawnRange = getGlobalNumber(L, "deSpawnRange", 2);
-	integer[DEFAULT_DESPAWNRADIUS] = Monster::despawnRadius = getGlobalNumber(L, "deSpawnRadius", 50);
-	integer[DEFAULT_WALKTOSPAWNRADIUS] = getGlobalNumber(L, "walkToSpawnRadius", 15);
-	integer[RATE_EXPERIENCE] = getGlobalNumber(L, "rateExp", 5);
-	integer[RATE_SKILL] = getGlobalNumber(L, "rateSkill", 3);
-	integer[RATE_LOOT] = getGlobalNumber(L, "rateLoot", 2);
-	integer[RATE_MAGIC] = getGlobalNumber(L, "rateMagic", 3);
-	integer[RATE_SPAWN] = getGlobalNumber(L, "rateSpawn", 1);
-	integer[HOUSE_PRICE] = getGlobalNumber(L, "housePriceEachSQM", 1000);
-	integer[KILLS_TO_RED] = getGlobalNumber(L, "killsToRedSkull", 3);
-	integer[KILLS_TO_BLACK] = getGlobalNumber(L, "killsToBlackSkull", 6);
-	integer[ACTIONS_DELAY_INTERVAL] = getGlobalNumber(L, "timeBetweenActions", 200);
-	integer[EX_ACTIONS_DELAY_INTERVAL] = getGlobalNumber(L, "timeBetweenExActions", 1000);
-	integer[MAX_MESSAGEBUFFER] = getGlobalNumber(L, "maxMessageBuffer", 4);
-	integer[KICK_AFTER_MINUTES] = getGlobalNumber(L, "kickIdlePlayerAfterMinutes", 15);
-	integer[PROTECTION_LEVEL] = getGlobalNumber(L, "protectionLevel", 1);
-	integer[DEATH_LOSE_PERCENT] = getGlobalNumber(L, "deathLosePercent", -1);
-	integer[STATUSQUERY_TIMEOUT] = getGlobalNumber(L, "statusTimeout", 5000);
-	integer[FRAG_TIME] = getGlobalNumber(L, "timeToDecreaseFrags", 24 * 60 * 60);
-	integer[WHITE_SKULL_TIME] = getGlobalNumber(L, "whiteSkullTime", 15 * 60);
-	integer[STAIRHOP_DELAY] = getGlobalNumber(L, "stairJumpExhaustion", 2000);
-	integer[EXP_FROM_PLAYERS_LEVEL_RANGE] = getGlobalNumber(L, "expFromPlayersLevelRange", 75);
-	integer[MAX_PACKETS_PER_SECOND] = getGlobalNumber(L, "maxPacketsPerSecond", 25);
-	integer[SERVER_SAVE_NOTIFY_DURATION] = getGlobalNumber(L, "serverSaveNotifyDuration", 5);
-	integer[YELL_MINIMUM_LEVEL] = getGlobalNumber(L, "yellMinimumLevel", 2);
-	integer[MINIMUM_LEVEL_TO_SEND_PRIVATE] = getGlobalNumber(L, "minimumLevelToSendPrivate", 1);
-	integer[VIP_FREE_LIMIT] = getGlobalNumber(L, "vipFreeLimit", 20);
-	integer[VIP_PREMIUM_LIMIT] = getGlobalNumber(L, "vipPremiumLimit", 100);
-	integer[DEPOT_FREE_LIMIT] = getGlobalNumber(L, "depotFreeLimit", 2000);
-	integer[DEPOT_PREMIUM_LIMIT] = getGlobalNumber(L, "depotPremiumLimit", 15000);
-	integer[QUEST_TRACKER_FREE_LIMIT] = getGlobalNumber(L, "questTrackerFreeLimit", 10);
-	integer[QUEST_TRACKER_PREMIUM_LIMIT] = getGlobalNumber(L, "questTrackerPremiumLimit", 15);
-	integer[STAMINA_REGEN_MINUTE] = getGlobalNumber(L, "timeToRegenMinuteStamina", 3 * 60);
-	integer[STAMINA_REGEN_PREMIUM] = getGlobalNumber(L, "timeToRegenMinutePremiumStamina", 6 * 60);
+	Monster::despawnRange = getGlobalInteger(L, "deSpawnRange", 2);
+	Monster::despawnRadius = getGlobalInteger(L, "deSpawnRadius", 50);
+
+	integers[ConfigKeysInteger::MAX_PLAYERS] = getGlobalInteger(L, "maxPlayers");
+	integers[ConfigKeysInteger::PZ_LOCKED] = getGlobalInteger(L, "pzLocked", 60000);
+	integers[ConfigKeysInteger::DEFAULT_DESPAWNRANGE] = Monster::despawnRange;
+	integers[ConfigKeysInteger::DEFAULT_DESPAWNRADIUS] = Monster::despawnRadius;
+	integers[ConfigKeysInteger::DEFAULT_WALKTOSPAWNRADIUS] = getGlobalInteger(L, "walkToSpawnRadius", 15);
+	integers[ConfigKeysInteger::RATE_EXPERIENCE] = getGlobalInteger(L, "rateExp", 5);
+	integers[ConfigKeysInteger::RATE_SKILL] = getGlobalInteger(L, "rateSkill", 3);
+	integers[ConfigKeysInteger::RATE_LOOT] = getGlobalInteger(L, "rateLoot", 2);
+	integers[ConfigKeysInteger::RATE_MAGIC] = getGlobalInteger(L, "rateMagic", 3);
+	integers[ConfigKeysInteger::RATE_SPAWN] = getGlobalInteger(L, "rateSpawn", 1);
+	integers[ConfigKeysInteger::HOUSE_PRICE] = getGlobalInteger(L, "housePriceEachSQM", 1000);
+	integers[ConfigKeysInteger::KILLS_TO_RED] = getGlobalInteger(L, "killsToRedSkull", 3);
+	integers[ConfigKeysInteger::KILLS_TO_BLACK] = getGlobalInteger(L, "killsToBlackSkull", 6);
+	integers[ConfigKeysInteger::ACTIONS_DELAY_INTERVAL] = getGlobalInteger(L, "timeBetweenActions", 200);
+	integers[ConfigKeysInteger::EX_ACTIONS_DELAY_INTERVAL] = getGlobalInteger(L, "timeBetweenExActions", 1000);
+	integers[ConfigKeysInteger::MAX_MESSAGEBUFFER] = getGlobalInteger(L, "maxMessageBuffer", 4);
+	integers[ConfigKeysInteger::KICK_AFTER_MINUTES] = getGlobalInteger(L, "kickIdlePlayerAfterMinutes", 15);
+	integers[ConfigKeysInteger::PROTECTION_LEVEL] = getGlobalInteger(L, "protectionLevel", 1);
+	integers[ConfigKeysInteger::DEATH_LOSE_PERCENT] = getGlobalInteger(L, "deathLosePercent", -1);
+	integers[ConfigKeysInteger::STATUSQUERY_TIMEOUT] = getGlobalInteger(L, "statusTimeout", 5000);
+	integers[ConfigKeysInteger::FRAG_TIME] = getGlobalInteger(L, "timeToDecreaseFrags", 24 * 60 * 60);
+	integers[ConfigKeysInteger::WHITE_SKULL_TIME] = getGlobalInteger(L, "whiteSkullTime", 15 * 60);
+	integers[ConfigKeysInteger::STAIRHOP_DELAY] = getGlobalInteger(L, "stairJumpExhaustion", 2000);
+	integers[ConfigKeysInteger::EXP_FROM_PLAYERS_LEVEL_RANGE] = getGlobalInteger(L, "expFromPlayersLevelRange", 75);
+	integers[ConfigKeysInteger::MAX_PACKETS_PER_SECOND] = getGlobalInteger(L, "maxPacketsPerSecond", 25);
+	integers[ConfigKeysInteger::SERVER_SAVE_NOTIFY_DURATION] = getGlobalInteger(L, "serverSaveNotifyDuration", 5);
+	integers[ConfigKeysInteger::YELL_MINIMUM_LEVEL] = getGlobalInteger(L, "yellMinimumLevel", 2);
+	integers[ConfigKeysInteger::MINIMUM_LEVEL_TO_SEND_PRIVATE] = getGlobalInteger(L, "minimumLevelToSendPrivate", 1);
+	integers[ConfigKeysInteger::VIP_FREE_LIMIT] = getGlobalInteger(L, "vipFreeLimit", 20);
+	integers[ConfigKeysInteger::VIP_PREMIUM_LIMIT] = getGlobalInteger(L, "vipPremiumLimit", 100);
+	integers[ConfigKeysInteger::DEPOT_FREE_LIMIT] = getGlobalInteger(L, "depotFreeLimit", 2000);
+	integers[ConfigKeysInteger::DEPOT_PREMIUM_LIMIT] = getGlobalInteger(L, "depotPremiumLimit", 15000);
+	integers[ConfigKeysInteger::STAMINA_REGEN_MINUTE] = getGlobalInteger(L, "timeToRegenMinuteStamina", 3 * 60);
+	integers[ConfigKeysInteger::STAMINA_REGEN_PREMIUM] = getGlobalInteger(L, "timeToRegenMinutePremiumStamina", 6 * 60);
 
 	expStages = loadXMLStages();
 	if (expStages.empty()) {
@@ -285,36 +288,37 @@ bool ConfigManager::load()
 	return true;
 }
 
-static std::string dummyStr;
-
-const std::string& ConfigManager::getString(string_config_t what) const
+bool ConfigManager::getBoolean(ConfigKeysBoolean what) const
 {
-	if (what >= LAST_STRING_CONFIG) {
-		std::cout << "[Warning - ConfigManager::getString] Accessing invalid index: " << what << std::endl;
-		return dummyStr;
-	}
-	return string[what];
-}
-
-int32_t ConfigManager::getNumber(integer_config_t what) const
-{
-	if (what >= LAST_INTEGER_CONFIG) {
-		std::cout << "[Warning - ConfigManager::getNumber] Accessing invalid index: " << what << std::endl;
-		return 0;
-	}
-	return integer[what];
-}
-
-bool ConfigManager::getBoolean(boolean_config_t what) const
-{
-	if (what >= LAST_BOOLEAN_CONFIG) {
-		std::cout << "[Warning - ConfigManager::getBoolean] Accessing invalid index: " << what << std::endl;
+	if (what >= ConfigKeysBoolean::LAST) {
+		std::cout << "[Warning - ConfigManager::getBoolean] Accessing invalid index: " << static_cast<int>(what)
+		          << std::endl;
 		return false;
 	}
-	return boolean[what];
+	return booleans[what];
 }
 
-float ConfigManager::getExperienceStage(uint32_t level) const
+std::string_view ConfigManager::getString(ConfigKeysString what) const
+{
+	if (what >= ConfigKeysString::LAST) {
+		std::cout << "[Warning - ConfigManager::getString] Accessing invalid index: " << static_cast<int>(what)
+		          << std::endl;
+		return "";
+	}
+	return strings[what];
+}
+
+int64_t ConfigManager::getInteger(ConfigKeysInteger what) const
+{
+	if (what >= ConfigKeysInteger::LAST) {
+		std::cout << "[Warning - ConfigManager::getInteger] Accessing invalid index: " << static_cast<int>(what)
+		          << std::endl;
+		return 0;
+	}
+	return integers[what];
+}
+
+float ConfigManager::getExperienceStage(const uint32_t level) const
 {
 	auto it = std::find_if(expStages.begin(), expStages.end(), [level](auto&& stage) {
 		auto&& [minLevel, maxLevel, _] = stage;
@@ -322,41 +326,44 @@ float ConfigManager::getExperienceStage(uint32_t level) const
 	});
 
 	if (it == expStages.end()) {
-		return getNumber(ConfigManager::RATE_EXPERIENCE);
+		return getInteger(ConfigKeysInteger::RATE_EXPERIENCE);
 	}
 
 	return std::get<2>(*it);
 }
 
-bool ConfigManager::setString(string_config_t what, std::string_view value)
+bool ConfigManager::setBoolean(ConfigKeysBoolean what, const bool value)
 {
-	if (what >= LAST_STRING_CONFIG) {
-		std::cout << "[Warning - ConfigManager::setString] Accessing invalid index: " << what << std::endl;
+	if (what >= ConfigKeysBoolean::LAST) {
+		std::cout << "[Warning - ConfigManager::setBoolean] Accessing invalid index: " << static_cast<int>(what)
+		          << std::endl;
 		return false;
 	}
 
-	string[what] = value;
+	booleans[what] = value;
 	return true;
 }
 
-bool ConfigManager::setNumber(integer_config_t what, int32_t value)
+bool ConfigManager::setString(ConfigKeysString what, std::string_view value)
 {
-	if (what >= LAST_INTEGER_CONFIG) {
-		std::cout << "[Warning - ConfigManager::setNumber] Accessing invalid index: " << what << std::endl;
+	if (what >= ConfigKeysString::LAST) {
+		std::cout << "[Warning - ConfigManager::setString] Accessing invalid index: " << static_cast<int>(what)
+		          << std::endl;
 		return false;
 	}
 
-	integer[what] = value;
+	strings[what] = value;
 	return true;
 }
 
-bool ConfigManager::setBoolean(boolean_config_t what, bool value)
+bool ConfigManager::setInteger(ConfigKeysInteger what, const int64_t value)
 {
-	if (what >= LAST_BOOLEAN_CONFIG) {
-		std::cout << "[Warning - ConfigManager::setBoolean] Accessing invalid index: " << what << std::endl;
+	if (what >= ConfigKeysInteger::LAST) {
+		std::cout << "[Warning - ConfigManager::setInteger] Accessing invalid index: " << static_cast<int>(what)
+		          << std::endl;
 		return false;
 	}
 
-	boolean[what] = value;
+	integers[what] = value;
 	return true;
 }

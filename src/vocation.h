@@ -12,8 +12,8 @@ class Vocation
 public:
 	explicit Vocation(uint16_t id) : id(id) {}
 
-	const std::string& getVocName() const { return name; }
-	const std::string& getVocDescription() const { return description; }
+	std::string_view getVocName() const { return name; }
+	std::string_view getVocDescription() const { return description; }
 	uint64_t getReqSkillTries(uint8_t skill, uint16_t level);
 	uint64_t getReqMana(uint32_t magLevel);
 

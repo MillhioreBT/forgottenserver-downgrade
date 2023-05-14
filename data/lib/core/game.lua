@@ -9,14 +9,7 @@ function Game.broadcastMessage(message, messageType)
 end
 
 function Game.convertIpToString(ip)
-	local band = bit.band
-	local rshift = bit.rshift
-	return string.format("%d.%d.%d.%d",
-		band(ip, 0xFF),
-		band(rshift(ip, 8), 0xFF),
-		band(rshift(ip, 16), 0xFF),
-		rshift(ip, 24)
-	)
+	return string.format("%d.%d.%d.%d", ip & 0xFF, (ip >> 8) & 0xFF, (ip >> 16) & 0xFF, ip >> 24)
 end
 
 function Game.getReverseDirection(direction)

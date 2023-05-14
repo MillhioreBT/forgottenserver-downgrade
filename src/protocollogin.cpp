@@ -19,7 +19,7 @@
 extern ConfigManager g_config;
 extern Game g_game;
 
-void ProtocolLogin::disconnectClient(const std::string& message)
+void ProtocolLogin::disconnectClient(std::string_view message)
 {
 	auto output = OutputMessagePool::getOutputMessage();
 	output->addByte(0x0A);
@@ -28,7 +28,7 @@ void ProtocolLogin::disconnectClient(const std::string& message)
 	disconnect();
 }
 
-void ProtocolLogin::getCharacterList(const std::string& accountName, const std::string& password)
+void ProtocolLogin::getCharacterList(std::string_view accountName, std::string_view password)
 {
 	Account account;
 	if (!IOLoginData::loginserverAuthentication(accountName, password, account)) {
@@ -38,7 +38,7 @@ void ProtocolLogin::getCharacterList(const std::string& accountName, const std::
 
 	auto output = OutputMessagePool::getOutputMessage();
 
-	const std::string& motd = g_config.getString(ConfigManager::MOTD);
+	auto motd = g_config[ConfigKeysString::MOTD];
 	if (!motd.empty()) {
 		// Add MOTD
 		output->addByte(0x14);
@@ -50,18 +50,19 @@ void ProtocolLogin::getCharacterList(const std::string& accountName, const std::
 
 	uint8_t size = std::min<size_t>(std::numeric_limits<uint8_t>::max(), account.characters.size());
 	output->addByte(size);
+	auto IP = getIP(g_config[ConfigKeysString::IP]);
 	for (uint8_t i = 0; i < size; i++) {
 		output->addString(account.characters[i]);
-		output->addString(g_config.getString(ConfigManager::SERVER_NAME));
-		output->add<uint32_t>(0);
-		output->add<uint16_t>(g_config.getNumber(ConfigManager::GAME_PORT));
+		output->addString(g_config[ConfigKeysString::SERVER_NAME]);
+		output->add<uint32_t>(IP);
+		output->add<uint16_t>(g_config[ConfigKeysInteger::GAME_PORT]);
 	}
 
 	// Add premium days
-	if (g_config.getBoolean(ConfigManager::FREE_PREMIUM)) {
+	if (g_config[ConfigKeysBoolean::FREE_PREMIUM]) {
 		output->add<uint16_t>(0xFFFF); // client displays free premium
 	} else {
-		output->add<uint16_t>(std::max<time_t>(0, account.premiumEndsAt - time(nullptr)) / 86400);
+		output->add<uint16_t>(account.premiumEndsAt - time(nullptr) / 86400);
 	}
 
 	send(output);

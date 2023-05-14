@@ -24,12 +24,12 @@ struct ConnectBlock
 	uint32_t count;
 };
 
-using IpConnectMap = std::map<Connection::Address, ConnectBlock>;
+using IpConnectMap = std::map<uint32_t, ConnectBlock>;
 
 class Ban
 {
 public:
-	bool acceptConnection(const Connection::Address& clientIP);
+	bool acceptConnection(const uint32_t clientIP);
 
 private:
 	IpConnectMap ipConnectMap;
@@ -40,7 +40,7 @@ class IOBan
 {
 public:
 	static bool isAccountBanned(uint32_t accountId, BanInfo& banInfo);
-	static bool isIpBanned(const Connection::Address& clientIP, BanInfo& banInfo);
+	static bool isIpBanned(const uint32_t clientIP, BanInfo& banInfo);
 	static bool isPlayerNamelocked(uint32_t playerId);
 };
 

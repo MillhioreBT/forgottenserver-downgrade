@@ -31,8 +31,8 @@ function Player:onLookInTrade(partner, item, distance)
 	end
 end
 
-function Player:onLookInShop(itemType, count, description)
-	local description = "You see " .. description
+function Player:onLookInShop(itemType, count)
+	local description = "You see "
 	if hasEvent.onLookInShop then
 		description = Event.onLookInShop(self, itemType, count, description)
 	end
@@ -138,4 +138,16 @@ function Player:onNetworkMessage(recvByte, msg)
 	end
 
 	handler(self, msg)
+end
+
+function Player:onUpdateStorage(key, value, oldValue, isLogin)
+	if hasEvent.onUpdateStorage then
+		Event.onUpdateStorage(self, key, value, oldValue, isLogin)
+	end
+end
+
+function Player:onUpdateInventory(item, slot, equip)
+	if hasEvent.onUpdateInventory then
+		Event.onUpdateInventory(self, item, slot, equip)
+	end
 end

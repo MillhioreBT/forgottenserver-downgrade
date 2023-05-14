@@ -59,16 +59,16 @@ bool Groups::load()
 		return false;
 	}
 
-	for (auto groupNode : doc.child("groups").children()) {
+	for (auto& groupNode : doc.child("groups").children()) {
 		Group group;
-		group.id = pugi::cast<uint32_t>(groupNode.attribute("id").value());
+		group.id = pugi::cast<uint16_t>(groupNode.attribute("id").value());
 		group.name = groupNode.attribute("name").as_string();
 		group.access = groupNode.attribute("access").as_bool();
 		group.maxDepotItems = pugi::cast<uint32_t>(groupNode.attribute("maxdepotitems").value());
 		group.maxVipEntries = pugi::cast<uint32_t>(groupNode.attribute("maxvipentries").value());
 		group.flags = pugi::cast<uint64_t>(groupNode.attribute("flags").value());
 		if (pugi::xml_node node = groupNode.child("flags")) {
-			for (auto flagNode : node.children()) {
+			for (auto& flagNode : node.children()) {
 				pugi::xml_attribute attr = flagNode.first_attribute();
 				if (!attr || !attr.as_bool()) {
 					continue;

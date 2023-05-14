@@ -8,22 +8,15 @@
 #include "items.h"
 #include "luascript.h"
 #include "thing.h"
-#include "tools.h"
 
-#include <boost/variant.hpp>
-#include <deque>
-#include <typeinfo>
-
-class Creature;
-class Player;
+class BedItem;
 class Container;
-class Depot;
-class Teleport;
-class TrashHolder;
-class Mailbox;
 class Door;
 class MagicField;
-class BedItem;
+class Mailbox;
+class Player;
+class Teleport;
+class TrashHolder;
 
 enum ITEMPROPERTY
 {
@@ -108,20 +101,20 @@ class ItemAttributes
 public:
 	ItemAttributes() = default;
 
-	void setSpecialDescription(const std::string& desc) { setStrAttr(ITEM_ATTRIBUTE_DESCRIPTION, desc); }
-	const std::string& getSpecialDescription() const { return getStrAttr(ITEM_ATTRIBUTE_DESCRIPTION); }
+	void setSpecialDescription(std::string_view desc) { setStrAttr(ITEM_ATTRIBUTE_DESCRIPTION, desc); }
+	std::string_view getSpecialDescription() const { return getStrAttr(ITEM_ATTRIBUTE_DESCRIPTION); }
 
-	void setText(const std::string& text) { setStrAttr(ITEM_ATTRIBUTE_TEXT, text); }
+	void setText(std::string_view text) { setStrAttr(ITEM_ATTRIBUTE_TEXT, text); }
 	void resetText() { removeAttribute(ITEM_ATTRIBUTE_TEXT); }
-	const std::string& getText() const { return getStrAttr(ITEM_ATTRIBUTE_TEXT); }
+	std::string_view getText() const { return getStrAttr(ITEM_ATTRIBUTE_TEXT); }
 
 	void setDate(int32_t n) { setIntAttr(ITEM_ATTRIBUTE_DATE, n); }
 	void resetDate() { removeAttribute(ITEM_ATTRIBUTE_DATE); }
 	time_t getDate() const { return static_cast<time_t>(getIntAttr(ITEM_ATTRIBUTE_DATE)); }
 
-	void setWriter(const std::string& writer) { setStrAttr(ITEM_ATTRIBUTE_WRITER, writer); }
+	void setWriter(std::string_view writer) { setStrAttr(ITEM_ATTRIBUTE_WRITER, writer); }
 	void resetWriter() { removeAttribute(ITEM_ATTRIBUTE_WRITER); }
-	const std::string& getWriter() const { return getStrAttr(ITEM_ATTRIBUTE_WRITER); }
+	std::string_view getWriter() const { return getStrAttr(ITEM_ATTRIBUTE_WRITER); }
 
 	void setActionId(uint16_t n) { setIntAttr(ITEM_ATTRIBUTE_ACTIONID, n); }
 	uint16_t getActionId() const { return static_cast<uint16_t>(getIntAttr(ITEM_ATTRIBUTE_ACTIONID)); }
@@ -153,7 +146,7 @@ public:
 
 	struct CustomAttribute
 	{
-		typedef boost::variant<boost::blank, std::string, int64_t, double, bool> VariantAttribute;
+		using VariantAttribute = boost::variant<boost::blank, std::string, int64_t, double, bool>;
 		VariantAttribute value;
 
 		CustomAttribute() : value(boost::blank()) {}
@@ -278,16 +271,18 @@ private:
 	static double emptyDouble;
 	static bool emptyBool;
 
-	typedef std::unordered_map<std::string, CustomAttribute> CustomAttributeMap;
+	using CustomAttributeMap = std::unordered_map<std::string, CustomAttribute>;
 
 	struct Attribute
 	{
-		union
+		union Value
 		{
 			int64_t integer;
 			std::string* string;
 			CustomAttributeMap* custom;
-		} value;
+		};
+
+		Value value;
 		itemAttrTypes type;
 
 		explicit Attribute(itemAttrTypes type) : type(type) { memset(&value, 0, sizeof(value)); }
@@ -301,12 +296,12 @@ private:
 			} else if (ItemAttributes::isCustomAttrType(type)) {
 				value.custom = new CustomAttributeMap(*i.value.custom);
 			} else {
-				memset(&value, 0, sizeof(value));
+				std::memset(&value, 0, sizeof(value));
 			}
 		}
 		Attribute(Attribute&& attribute) : value(attribute.value), type(attribute.type)
 		{
-			memset(&attribute.value, 0, sizeof(value));
+			std::memset(&attribute.value, 0, sizeof(value));
 			attribute.type = ITEM_ATTRIBUTE_NONE;
 		}
 		~Attribute()
@@ -334,7 +329,7 @@ private:
 				value = other.value;
 				type = other.type;
 
-				memset(&other.value, 0, sizeof(value));
+				std::memset(&other.value, 0, sizeof(value));
 				other.type = ITEM_ATTRIBUTE_NONE;
 			}
 			return *this;
@@ -350,8 +345,8 @@ private:
 	std::vector<Attribute> attributes;
 	uint32_t attributeBits = 0;
 
-	const std::string& getStrAttr(itemAttrTypes type) const;
-	void setStrAttr(itemAttrTypes type, const std::string& value);
+	std::string_view getStrAttr(itemAttrTypes type) const;
+	void setStrAttr(itemAttrTypes type, std::string_view value);
 
 	int64_t getIntAttr(itemAttrTypes type) const;
 	void setIntAttr(itemAttrTypes type, int64_t value);
@@ -385,7 +380,7 @@ private:
 	template <typename R>
 	void setCustomAttribute(std::string& key, R value)
 	{
-		toLowerCaseString(key);
+		boost::algorithm::to_lower(key);
 		if (hasAttribute(ITEM_ATTRIBUTE_CUSTOM)) {
 			removeCustomAttribute(key);
 		} else {
@@ -396,7 +391,7 @@ private:
 
 	void setCustomAttribute(std::string& key, CustomAttribute& value)
 	{
-		toLowerCaseString(key);
+		boost::algorithm::to_lower(key);
 		if (hasAttribute(ITEM_ATTRIBUTE_CUSTOM)) {
 			removeCustomAttribute(key);
 		} else {
@@ -414,7 +409,7 @@ private:
 	const CustomAttribute* getCustomAttribute(const std::string& key)
 	{
 		if (const CustomAttributeMap* customAttrMap = getCustomAttributeMap()) {
-			auto it = customAttrMap->find(asLowerCaseString(key));
+			auto it = customAttrMap->find(boost::algorithm::to_lower_copy<std::string>(key));
 			if (it != customAttrMap->end()) {
 				return &(it->second);
 			}
@@ -431,7 +426,7 @@ private:
 	bool removeCustomAttribute(const std::string& key)
 	{
 		if (CustomAttributeMap* customAttrMap = getCustomAttributeMap()) {
-			auto it = customAttrMap->find(asLowerCaseString(key));
+			auto it = customAttrMap->find(boost::algorithm::to_lower_copy<std::string>(key));
 			if (it != customAttrMap->end()) {
 				customAttrMap->erase(it);
 				return true;
@@ -497,14 +492,14 @@ public:
 	virtual BedItem* getBed() { return nullptr; }
 	virtual const BedItem* getBed() const { return nullptr; }
 
-	const std::string& getStrAttr(itemAttrTypes type) const
+	std::string_view getStrAttr(itemAttrTypes type) const
 	{
 		if (!attributes) {
-			return ItemAttributes::emptyString;
+			return "";
 		}
 		return attributes->getStrAttr(type);
 	}
-	void setStrAttr(itemAttrTypes type, const std::string& value) { getAttributes()->setStrAttr(type, value); }
+	void setStrAttr(itemAttrTypes type, std::string_view value) { getAttributes()->setStrAttr(type, value); }
 
 	int64_t getIntAttr(itemAttrTypes type) const
 	{
@@ -573,20 +568,20 @@ public:
 		return getAttributes()->removeCustomAttribute(key);
 	}
 
-	void setSpecialDescription(const std::string& desc) { setStrAttr(ITEM_ATTRIBUTE_DESCRIPTION, desc); }
-	const std::string& getSpecialDescription() const { return getStrAttr(ITEM_ATTRIBUTE_DESCRIPTION); }
+	void setSpecialDescription(std::string_view desc) { setStrAttr(ITEM_ATTRIBUTE_DESCRIPTION, desc); }
+	std::string_view getSpecialDescription() const { return getStrAttr(ITEM_ATTRIBUTE_DESCRIPTION); }
 
-	void setText(const std::string& text) { setStrAttr(ITEM_ATTRIBUTE_TEXT, text); }
+	void setText(std::string_view text) { setStrAttr(ITEM_ATTRIBUTE_TEXT, text); }
 	void resetText() { removeAttribute(ITEM_ATTRIBUTE_TEXT); }
-	const std::string& getText() const { return getStrAttr(ITEM_ATTRIBUTE_TEXT); }
+	std::string_view getText() const { return getStrAttr(ITEM_ATTRIBUTE_TEXT); }
 
 	void setDate(int32_t n) { setIntAttr(ITEM_ATTRIBUTE_DATE, n); }
 	void resetDate() { removeAttribute(ITEM_ATTRIBUTE_DATE); }
 	time_t getDate() const { return static_cast<time_t>(getIntAttr(ITEM_ATTRIBUTE_DATE)); }
 
-	void setWriter(const std::string& writer) { setStrAttr(ITEM_ATTRIBUTE_WRITER, writer); }
+	void setWriter(std::string_view writer) { setStrAttr(ITEM_ATTRIBUTE_WRITER, writer); }
 	void resetWriter() { removeAttribute(ITEM_ATTRIBUTE_WRITER); }
-	const std::string& getWriter() const { return getStrAttr(ITEM_ATTRIBUTE_WRITER); }
+	std::string_view getWriter() const { return getStrAttr(ITEM_ATTRIBUTE_WRITER); }
 
 	void setActionId(uint16_t n)
 	{
@@ -676,8 +671,6 @@ public:
 		return items[id].decayTo;
 	}
 
-	static std::string getDescription(const ItemType& it, int32_t lookDistance, const Item* item = nullptr,
-	                                  int32_t subType = -1, bool addArticle = true);
 	static std::string getNameDescription(const ItemType& it, const Item* item = nullptr, int32_t subType = -1,
 	                                      bool addArticle = true);
 	static std::string getWeightDescription(const ItemType& it, uint32_t weight, uint32_t count = 1);
@@ -785,21 +778,21 @@ public:
 	}
 	bool hasWalkStack() const { return items[id].walkStack; }
 
-	const std::string& getName() const
+	std::string_view getName() const
 	{
 		if (hasAttribute(ITEM_ATTRIBUTE_NAME)) {
 			return getStrAttr(ITEM_ATTRIBUTE_NAME);
 		}
 		return items[id].name;
 	}
-	const std::string getPluralName() const
+	std::string_view getPluralName() const
 	{
 		if (hasAttribute(ITEM_ATTRIBUTE_PLURALNAME)) {
 			return getStrAttr(ITEM_ATTRIBUTE_PLURALNAME);
 		}
-		return items[id].getPluralName();
+		return items[id].pluralName;
 	}
-	const std::string& getArticle() const
+	std::string_view getArticle() const
 	{
 		if (hasAttribute(ITEM_ATTRIBUTE_ARTICLE)) {
 			return getStrAttr(ITEM_ATTRIBUTE_ARTICLE);

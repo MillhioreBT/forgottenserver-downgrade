@@ -32,11 +32,10 @@ bool Database::connect()
 	mysql_options(handle, MYSQL_OPT_RECONNECT, &reconnect);
 
 	// connects to database
-	if (!mysql_real_connect(
-	        handle, g_config.getString(ConfigManager::MYSQL_HOST).c_str(),
-	        g_config.getString(ConfigManager::MYSQL_USER).c_str(),
-	        g_config.getString(ConfigManager::MYSQL_PASS).c_str(), g_config.getString(ConfigManager::MYSQL_DB).c_str(),
-	        g_config.getNumber(ConfigManager::SQL_PORT), g_config.getString(ConfigManager::MYSQL_SOCK).c_str(), 0)) {
+	if (!mysql_real_connect(handle, g_config[ConfigKeysString::MYSQL_HOST].data(),
+	                        g_config[ConfigKeysString::MYSQL_USER].data(),
+	                        g_config[ConfigKeysString::MYSQL_PASS].data(), g_config[ConfigKeysString::MYSQL_DB].data(),
+	                        g_config[ConfigKeysInteger::SQL_PORT], g_config[ConfigKeysString::MYSQL_SOCK].data(), 0)) {
 		std::cout << std::endl << "MySQL Error Message: " << mysql_error(handle) << std::endl;
 		return false;
 	}
@@ -82,14 +81,14 @@ bool Database::commit()
 	return true;
 }
 
-bool Database::executeQuery(const std::string& query)
+bool Database::executeQuery(std::string_view query)
 {
 	bool success = true;
 
 	// executes the query
 	databaseLock.lock();
 
-	while (mysql_real_query(handle, query.c_str(), query.length()) != 0) {
+	while (mysql_real_query(handle, query.data(), query.length()) != 0) {
 		std::cout << "[Error - mysql_real_query] Query: " << query.substr(0, 256) << std::endl
 		          << "Message: " << mysql_error(handle) << std::endl;
 		auto error = mysql_errno(handle);
@@ -111,12 +110,12 @@ bool Database::executeQuery(const std::string& query)
 	return success;
 }
 
-DBResult_ptr Database::storeQuery(const std::string& query)
+DBResult_ptr Database::storeQuery(std::string_view query)
 {
 	databaseLock.lock();
 
 retry:
-	while (mysql_real_query(handle, query.c_str(), query.length()) != 0) {
+	while (mysql_real_query(handle, query.data(), query.length()) != 0) {
 		std::cout << "[Error - mysql_real_query] Query: " << query << std::endl
 		          << "Message: " << mysql_error(handle) << std::endl;
 		auto error = mysql_errno(handle);
@@ -190,7 +189,7 @@ DBResult::DBResult(MYSQL_RES* res)
 
 DBResult::~DBResult() { mysql_free_result(handle); }
 
-std::string DBResult::getString(const std::string& s) const
+std::string_view DBResult::getString(const std::string& s) const
 {
 	auto it = listNames.find(s);
 	if (it == listNames.end()) {
@@ -199,10 +198,10 @@ std::string DBResult::getString(const std::string& s) const
 	}
 
 	if (row[it->second] == nullptr) {
-		return std::string();
+		return {};
 	}
 
-	return std::string(row[it->second]);
+	return row[it->second];
 }
 
 const char* DBResult::getStream(const std::string& s, unsigned long& size) const
@@ -231,9 +230,9 @@ bool DBResult::next()
 	return row != nullptr;
 }
 
-DBInsert::DBInsert(std::string query) : query(std::move(query)) { this->length = this->query.length(); }
+DBInsert::DBInsert(std::string_view query) : query{query} { this->length = this->query.length(); }
 
-bool DBInsert::addRow(const std::string& row)
+bool DBInsert::addRow(std::string_view row)
 {
 	// adds new row to buffer
 	const size_t rowLength = row.length();

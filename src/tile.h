@@ -108,7 +108,7 @@ public:
 		}
 		return *getBeginDownItem();
 	}
-	void addDownItemCount(int32_t increment) { downItemCount += increment; }
+	void addDownItemCount(int16_t increment) { downItemCount += increment; }
 
 private:
 	uint16_t downItemCount = 0;
@@ -276,6 +276,8 @@ public:
 	CreatureVector* getCreatures() override { return &creatures; }
 	const CreatureVector* getCreatures() const override { return &creatures; }
 	CreatureVector* makeCreatures() override { return &creatures; }
+
+	using Tile::internalAddThing;
 };
 
 // For blocking tiles, where we very rarely actually have items
@@ -319,6 +321,8 @@ public:
 		}
 		return creatures.get();
 	}
+
+	using Tile::internalAddThing;
 };
 
 #endif

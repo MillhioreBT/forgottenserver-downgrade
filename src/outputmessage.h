@@ -21,12 +21,10 @@ public:
 
 	void writeMessageLength() { add_header(info.length); }
 
-	void addCryptoHeader(checksumMode_t mode, uint32_t& sequence)
+	void addCryptoHeader(const bool addChecksum)
 	{
-		if (mode == CHECKSUM_ADLER) {
+		if (addChecksum) {
 			add_header(adlerChecksum(&buffer[outputBufferStart], info.length));
-		} else if (mode == CHECKSUM_SEQUENCE) {
-			add_header(sequence++);
 		}
 
 		writeMessageLength();

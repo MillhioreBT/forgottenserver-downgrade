@@ -13,7 +13,6 @@
 #include "globalevent.h"
 #include "monster.h"
 #include "movement.h"
-#include "quests.h"
 #include "raids.h"
 #include "scheduler.h"
 #include "spells.h"
@@ -103,9 +102,6 @@ void sighupHandler()
 	g_weapons->reload();
 	g_weapons->loadDefaults();
 	std::cout << "Reloaded weapons." << std::endl;
-
-	g_game.quests.reload();
-	std::cout << "Reloaded quests." << std::endl;
 
 	g_globalEvents->reload();
 	std::cout << "Reloaded globalevents." << std::endl;

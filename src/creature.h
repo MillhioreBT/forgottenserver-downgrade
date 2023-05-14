@@ -67,7 +67,6 @@ public:
 
 	bool isInRange(const Position& startPos, const Position& testPos, const FindPathParams& fpp) const;
 
-private:
 	Position targetPos;
 };
 
@@ -284,7 +283,7 @@ public:
 	virtual void onAttackedCreatureDisappear(bool) {}
 	virtual void onFollowCreatureDisappear(bool) {}
 
-	virtual void onCreatureSay(Creature*, SpeakClasses, const std::string&) {}
+	virtual void onCreatureSay(Creature*, SpeakClasses, std::string_view) {}
 
 	virtual void onPlacedCreature() {}
 

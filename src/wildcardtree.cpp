@@ -40,7 +40,7 @@ WildcardTreeNode* WildcardTreeNode::addChild(char ch, bool breakpoint)
 	return child;
 }
 
-void WildcardTreeNode::insert(const std::string& str)
+void WildcardTreeNode::insert(std::string_view str)
 {
 	WildcardTreeNode* cur = this;
 
@@ -52,7 +52,7 @@ void WildcardTreeNode::insert(const std::string& str)
 	cur->addChild(str[length], true);
 }
 
-void WildcardTreeNode::remove(const std::string& str)
+void WildcardTreeNode::remove(std::string_view str)
 {
 	WildcardTreeNode* cur = this;
 
@@ -86,10 +86,10 @@ void WildcardTreeNode::remove(const std::string& str)
 	} while (true);
 }
 
-ReturnValue WildcardTreeNode::findOne(const std::string& query, std::string& result) const
+ReturnValue WildcardTreeNode::findOne(std::string_view query, std::string& result) const
 {
 	const WildcardTreeNode* cur = this;
-	for (char pos : query) {
+	for (auto pos : query) {
 		cur = cur->getChild(pos);
 		if (!cur) {
 			return RETURNVALUE_PLAYERWITHTHISNAMEISNOTONLINE;

@@ -121,17 +121,15 @@ bool Mailbox::getReceiver(Item* item, std::string& name, uint32_t& depotId) cons
 		return false;
 	}
 
-	const std::string& text = item->getText();
+	auto text = item->getText();
 	if (text.empty()) {
 		return false;
 	}
 
-	std::string townName;
-	std::istringstream iss(item->getText(), std::istringstream::in);
-	getline(iss, name, '\n');
-	getline(iss, townName, '\n');
+	name = getFirstLine(text);
+	boost::algorithm::trim(name);
+	std::string townName = getStringLine(text, 2);
 
-	trimString(name);
 	Town* town = g_game.map.towns.getTown(townName);
 	if (town) {
 		depotId = town->getID();

@@ -8,6 +8,7 @@
 #include "combat.h"
 #include "configmanager.h"
 #include "game.h"
+#include "luavariant.h"
 #include "pugicast.h"
 
 extern Game g_game;
@@ -166,7 +167,7 @@ bool Weapon::configureEvent(const pugi::xml_node& node)
 	}
 
 	if ((attr = node.attribute("action"))) {
-		action = getWeaponAction(asLowerCaseString(attr.as_string()));
+		action = getWeaponAction(boost::algorithm::to_lower_copy<std::string>(attr.as_string()));
 		if (action == WEAPONACTION_NONE) {
 			std::cout << "[Warning - Weapon::configureEvent] Unknown action " << attr.as_string() << std::endl;
 		}
@@ -181,21 +182,21 @@ bool Weapon::configureEvent(const pugi::xml_node& node)
 	}
 
 	std::list<std::string> vocStringList;
-	for (auto vocationNode : node.children()) {
+	for (auto& vocationNode : node.children()) {
 		if (!(attr = vocationNode.attribute("name"))) {
 			continue;
 		}
 
 		int32_t vocationId = g_vocations.getVocationId(attr.as_string());
 		if (vocationId != -1) {
-			vocWeaponMap[vocationId] = true;
-			int32_t promotedVocation = g_vocations.getPromotedVocation(vocationId);
+			vocationWeaponSet.insert(static_cast<uint16_t>(vocationId));
+			uint16_t promotedVocation = g_vocations.getPromotedVocation(static_cast<uint16_t>(vocationId));
 			if (promotedVocation != VOCATION_NONE) {
-				vocWeaponMap[promotedVocation] = true;
+				vocationWeaponSet.insert(promotedVocation);
 			}
 
 			if (vocationNode.attribute("showInDescription").as_bool(true)) {
-				vocStringList.push_back(asLowerCaseString(attr.as_string()));
+				vocStringList.push_back(boost::algorithm::to_lower_copy<std::string>(attr.as_string()));
 			}
 		}
 	}
@@ -261,45 +262,43 @@ int32_t Weapon::playerWeaponCheck(Player* player, Creature* target, uint8_t shoo
 		return 0;
 	}
 
-	if (!player->hasFlag(PlayerFlag_IgnoreWeaponCheck)) {
-		if (!enabled) {
-			return 0;
-		}
-
-		if (player->getMana() < getManaCost(player)) {
-			return 0;
-		}
-
-		if (player->getHealth() < getHealthCost(player)) {
-			return 0;
-		}
-
-		if (player->getSoul() < soul) {
-			return 0;
-		}
-
-		if (isPremium() && !player->isPremium()) {
-			return 0;
-		}
-
-		if (!vocWeaponMap.empty()) {
-			if (vocWeaponMap.find(player->getVocationId()) == vocWeaponMap.end()) {
-				return 0;
-			}
-		}
-
-		int32_t damageModifier = 100;
-		if (player->getLevel() < getReqLevel()) {
-			damageModifier = (isWieldedUnproperly() ? damageModifier / 2 : 0);
-		}
-
-		if (player->getMagicLevel() < getReqMagLv()) {
-			damageModifier = (isWieldedUnproperly() ? damageModifier / 2 : 0);
-		}
-		return damageModifier;
+	if (player->hasFlag(PlayerFlag_IgnoreWeaponCheck)) {
+		return 100;
 	}
 
-	return 100;
+	if (!enabled) {
+		return 0;
+	}
+
+	if (player->getMana() < getManaCost(player)) {
+		return 0;
+	}
+
+	if (player->getHealth() < getHealthCost(player)) {
+		return 0;
+	}
+
+	if (player->getSoul() < soul) {
+		return 0;
+	}
+
+	if (isPremium() && !player->isPremium()) {
+		return 0;
+	}
+
+	if (!hasVocationWeaponSet(player->getVocationId())) {
+		return 0;
+	}
+
+	int32_t damageModifier = 100;
+	if (player->getLevel() < getReqLevel()) {
+		damageModifier = (isWieldedUnproperly() ? damageModifier / 2 : 0);
+	}
+
+	if (player->getMagicLevel() < getReqMagLv()) {
+		damageModifier = (isWieldedUnproperly() ? damageModifier / 2 : 0);
+	}
+	return damageModifier;
 }
 
 bool Weapon::useWeapon(Player* player, Item* item, Creature* target) const
@@ -347,8 +346,7 @@ void Weapon::internalUseWeapon(Player* player, Item* item, Creature* target, int
 {
 	if (scripted) {
 		LuaVariant var;
-		var.type = VARIANT_NUMBER;
-		var.number = target->getID();
+		var.setNumber(target->getID());
 		executeUseWeapon(player, var);
 	} else {
 		CombatDamage damage;
@@ -374,8 +372,7 @@ void Weapon::internalUseWeapon(Player* player, Item* item, Tile* tile) const
 {
 	if (scripted) {
 		LuaVariant var;
-		var.type = VARIANT_TARGETPOSITION;
-		var.pos = tile->getPosition();
+		var.setTargetPosition(tile->getPosition());
 		executeUseWeapon(player, var);
 	} else {
 		Combat::postCombatEffects(player, tile->getPosition(), params);
@@ -417,14 +414,14 @@ void Weapon::onUsedWeapon(Player* player, Item* item, Tile* destTile) const
 
 	switch (action) {
 		case WEAPONACTION_REMOVECOUNT:
-			if (g_config.getBoolean(ConfigManager::REMOVE_WEAPON_AMMO)) {
+			if (g_config[ConfigKeysBoolean::REMOVE_WEAPON_AMMO]) {
 				Weapon::decrementItemCount(item);
 			}
 			break;
 
 		case WEAPONACTION_REMOVECHARGE: {
 			uint16_t charges = item->getCharges();
-			if (charges != 0 && g_config.getBoolean(ConfigManager::REMOVE_WEAPON_CHARGES)) {
+			if (charges != 0 && g_config[ConfigKeysBoolean::REMOVE_WEAPON_CHARGES]) {
 				g_game.transformItem(item, item->getID(), charges - 1);
 			}
 			break;
@@ -882,7 +879,7 @@ bool WeaponWand::configureEvent(const pugi::xml_node& node)
 		return true;
 	}
 
-	std::string tmpStrValue = asLowerCaseString(attr.as_string());
+	std::string tmpStrValue = boost::algorithm::to_lower_copy<std::string>(attr.as_string());
 	if (tmpStrValue == "earth") {
 		params.combatType = COMBAT_EARTHDAMAGE;
 	} else if (tmpStrValue == "ice") {

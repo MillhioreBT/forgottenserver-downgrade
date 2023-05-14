@@ -4,7 +4,9 @@
 #ifndef FS_LUASCRIPT_H
 #define FS_LUASCRIPT_H
 
-#include <lua.hpp>
+#include "database.h"
+#include "enums.h"
+#include "position.h"
 
 #if LUA_VERSION_NUM >= 502
 #ifndef LUA_COMPAT_ALL
@@ -16,38 +18,27 @@
 #endif
 #endif
 
-#include "database.h"
-#include "enums.h"
-#include "outfit.h"
-#include "position.h"
-
-class Thing;
-class Creature;
-class Player;
-class Item;
-class Container;
 class AreaCombat;
 class Combat;
-using Combat_ptr = std::shared_ptr<Combat>;
-class Condition;
-class Npc;
-class Monster;
+class Container;
+class Creature;
+class Cylinder;
 class InstantSpell;
+class Item;
+class LuaScriptInterface;
+class LuaVariant;
+class Npc;
+class Player;
+class Thing;
+struct LootBlock;
+struct Outfit;
+
+using Combat_ptr = std::shared_ptr<Combat>;
 
 enum
 {
 	EVENT_ID_LOADING = 1,
 	EVENT_ID_USER = 1000,
-};
-
-enum LuaVariantType_t
-{
-	VARIANT_NONE,
-
-	VARIANT_NUMBER,
-	VARIANT_POSITION,
-	VARIANT_TARGETPOSITION,
-	VARIANT_STRING,
 };
 
 enum LuaDataType
@@ -63,14 +54,6 @@ enum LuaDataType
 	LuaData_Tile,
 };
 
-struct LuaVariant
-{
-	LuaVariantType_t type = VARIANT_NONE;
-	std::string text;
-	Position pos;
-	uint32_t number = 0;
-};
-
 struct LuaTimerEventDesc
 {
 	int32_t scriptId = -1;
@@ -81,12 +64,6 @@ struct LuaTimerEventDesc
 	LuaTimerEventDesc() = default;
 	LuaTimerEventDesc(LuaTimerEventDesc&& other) = default;
 };
-
-class LuaScriptInterface;
-class Cylinder;
-class Game;
-
-struct LootBlock;
 
 class ScriptEnvironment
 {
@@ -133,7 +110,6 @@ public:
 	void removeItemByUID(uint32_t uid);
 
 private:
-	using VariantVector = std::vector<const LuaVariant*>;
 	using StorageMap = std::map<uint32_t, int32_t>;
 	using DBResultMap = std::map<uint32_t, DBResult_ptr>;
 
@@ -161,21 +137,21 @@ private:
 
 #define reportErrorFunc(L, a) LuaScriptInterface::reportError(__FUNCTION__, a, L, true)
 
-enum ErrorCode_t
+enum class LuaErrorCode
 {
-	LUA_ERROR_PLAYER_NOT_FOUND,
-	LUA_ERROR_CREATURE_NOT_FOUND,
-	LUA_ERROR_ITEM_NOT_FOUND,
-	LUA_ERROR_THING_NOT_FOUND,
-	LUA_ERROR_TILE_NOT_FOUND,
-	LUA_ERROR_HOUSE_NOT_FOUND,
-	LUA_ERROR_COMBAT_NOT_FOUND,
-	LUA_ERROR_CONDITION_NOT_FOUND,
-	LUA_ERROR_AREA_NOT_FOUND,
-	LUA_ERROR_CONTAINER_NOT_FOUND,
-	LUA_ERROR_VARIANT_NOT_FOUND,
-	LUA_ERROR_VARIANT_UNKNOWN,
-	LUA_ERROR_SPELL_NOT_FOUND,
+	PLAYER_NOT_FOUND,
+	CREATURE_NOT_FOUND,
+	ITEM_NOT_FOUND,
+	THING_NOT_FOUND,
+	TILE_NOT_FOUND,
+	HOUSE_NOT_FOUND,
+	COMBAT_NOT_FOUND,
+	CONDITION_NOT_FOUND,
+	AREA_NOT_FOUND,
+	CONTAINER_NOT_FOUND,
+	VARIANT_NOT_FOUND,
+	VARIANT_UNKNOWN,
+	SPELL_NOT_FOUND,
 };
 
 class LuaScriptInterface
@@ -193,7 +169,7 @@ public:
 
 	int32_t loadFile(std::string_view file, Npc* npc = nullptr);
 
-	const std::string& getFileById(int32_t scriptId);
+	std::string_view getFileById(int32_t scriptId);
 	int32_t getEvent(std::string_view eventName);
 	int32_t getEvent();
 	int32_t getMetaEvent(std::string_view globalName, std::string_view eventName);
@@ -212,7 +188,7 @@ public:
 		scriptEnv[scriptEnvIndex--].resetEnv();
 	}
 
-	static void reportError(const char* function, const std::string& error_desc, lua_State* L = nullptr,
+	static void reportError(const char* function, std::string_view error_desc, lua_State* L = nullptr,
 	                        bool stack_trace = false);
 
 	std::string_view getInterfaceName() const { return interfaceName; }
@@ -308,11 +284,9 @@ public:
 	template <typename T>
 	static T getInteger(lua_State* L, int32_t arg, T defaultValue)
 	{
-		const auto parameters = lua_gettop(L);
-		if (parameters == 0 || arg > parameters) {
+		if (lua_isinteger(L, arg) == 0) {
 			return defaultValue;
 		}
-
 		return getInteger<T>(L, arg);
 	}
 
@@ -360,11 +334,9 @@ public:
 	template <typename T>
 	static T getNumber(lua_State* L, int32_t arg, T defaultValue)
 	{
-		const auto parameters = lua_gettop(L);
-		if (parameters == 0 || arg > parameters) {
+		if (lua_isnumber(L, arg) == 0) {
 			return defaultValue;
 		}
-
 		return getNumber<T>(L, arg);
 	}
 	template <class T>
@@ -402,7 +374,6 @@ public:
 	static Position getPosition(lua_State* L, int32_t arg);
 	static Outfit_t getOutfit(lua_State* L, int32_t arg);
 	static Outfit getOutfitClass(lua_State* L, int32_t arg);
-	static LuaVariant getVariant(lua_State* L, int32_t arg);
 	static InstantSpell* getInstantSpell(lua_State* L, int32_t arg);
 
 	static Thing* getThing(lua_State* L, int32_t arg);
@@ -445,6 +416,7 @@ public:
 	static std::string getFieldString(lua_State* L, int32_t arg, std::string_view key);
 
 	static LuaDataType getUserdataType(lua_State* L, int32_t arg);
+	static std::optional<uint8_t> getBlessingId(lua_State* L, int32_t arg);
 
 	// Is
 	static bool isNumber(lua_State* L, int32_t arg) { return lua_type(L, arg) == LUA_TNUMBER; }
@@ -487,7 +459,7 @@ public:
 		lua_setfield(L, -2, index);
 	}
 
-	static std::string escapeString(std::string_view string);
+	static std::string escapeString(std::string string);
 
 	static const luaL_Reg luaConfigManagerTable[4];
 	static const luaL_Reg luaDatabaseTable[9];
@@ -500,9 +472,9 @@ protected:
 
 	void registerFunctions();
 
-	void registerMethod(const std::string& globalName, const std::string& methodName, lua_CFunction func);
+	void registerMethod(std::string_view globalName, std::string_view methodName, lua_CFunction func);
 
-	static std::string getErrorDesc(ErrorCode_t code);
+	static std::string_view getErrorDesc(LuaErrorCode code);
 
 	lua_State* luaState = nullptr;
 
@@ -514,14 +486,14 @@ protected:
 
 private:
 	void registerClass(const std::string& className, const std::string& baseClass, lua_CFunction newFunction = nullptr);
-	void registerTable(const std::string& tableName);
-	void registerMetaMethod(const std::string& className, const std::string& methodName, lua_CFunction func);
-	void registerGlobalMethod(const std::string& functionName, lua_CFunction func);
-	void registerVariable(const std::string& tableName, const std::string& name, lua_Number value);
-	void registerGlobalVariable(const std::string& name, lua_Number value);
-	void registerGlobalBoolean(const std::string& name, bool value);
+	void registerTable(std::string_view tableName);
+	void registerMetaMethod(std::string_view className, std::string_view methodName, lua_CFunction func);
+	void registerGlobalMethod(std::string_view functionName, lua_CFunction func);
+	void registerVariable(std::string_view tableName, std::string_view name, lua_Number value);
+	void registerGlobalVariable(std::string_view name, lua_Number value);
+	void registerGlobalBoolean(std::string_view name, bool value);
 
-	static std::string getStackTrace(lua_State* L, const std::string& error_desc);
+	static std::string getStackTrace(lua_State* L, std::string_view error_desc);
 
 	static bool getArea(lua_State* L, std::vector<uint32_t>& vec, uint32_t& rows);
 
@@ -617,6 +589,7 @@ private:
 	static int luaGameGetNpcCount(lua_State* L);
 	static int luaGameGetMonsterTypes(lua_State* L);
 	static int luaGameGetCurrencyItems(lua_State* L);
+	static int luaGameGetItemTypeByClientId(lua_State* L);
 
 	static int luaGameGetTowns(lua_State* L);
 	static int luaGameGetHouses(lua_State* L);
@@ -784,7 +757,6 @@ private:
 	static int luaItemTransform(lua_State* L);
 	static int luaItemDecay(lua_State* L);
 
-	static int luaItemGetDescription(lua_State* L);
 	static int luaItemGetSpecialDescription(lua_State* L);
 
 	static int luaItemHasProperty(lua_State* L);
@@ -796,7 +768,6 @@ private:
 	static int luaContainerGetSize(lua_State* L);
 	static int luaContainerGetCapacity(lua_State* L);
 	static int luaContainerGetEmptySlots(lua_State* L);
-	static int luaContainerGetContentDescription(lua_State* L);
 	static int luaContainerGetItems(lua_State* L);
 	static int luaContainerGetItemHoldingCount(lua_State* L);
 	static int luaContainerGetItemCountById(lua_State* L);
@@ -1052,6 +1023,11 @@ private:
 	static int luaPlayerHasSecureMode(lua_State* L);
 	static int luaPlayerGetFightMode(lua_State* L);
 
+	// OfflinePlayer
+	static int luaOfflinePlayerCreate(lua_State* L);
+
+	static int luaOfflinePlayerRemove(lua_State* L);
+
 	// Monster
 	static int luaMonsterCreate(lua_State* L);
 
@@ -1175,6 +1151,7 @@ private:
 	static int luaHouseGetPayRentWarnings(lua_State* L);
 	static int luaHouseSetPayRentWarnings(lua_State* L);
 
+	static int luaHouseGetOwnerName(lua_State* L);
 	static int luaHouseGetOwnerGuid(lua_State* L);
 	static int luaHouseSetOwnerGuid(lua_State* L);
 	static int luaHouseStartTrade(lua_State* L);
@@ -1579,6 +1556,17 @@ private:
 
 	// exclusively for wands & distance weapons
 	static int luaWeaponShootType(lua_State* L);
+
+	// XML
+	static int luaCreateXmlDocument(lua_State* L);
+	static int luaDeleteXmlDocument(lua_State* L);
+	static int luaXmlDocumentChild(lua_State* L);
+
+	static int luaDeleteXmlNode(lua_State* L);
+	static int luaXmlNodeAttribute(lua_State* L);
+	static int luaXmlNodeName(lua_State* L);
+	static int luaXmlNodeFirstChild(lua_State* L);
+	static int luaXmlNodeNextSibling(lua_State* L);
 
 	//
 	std::string lastLuaError;

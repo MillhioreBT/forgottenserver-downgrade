@@ -46,7 +46,7 @@ public:
 	 * @param query command
 	 * @return true on success, false on error
 	 */
-	bool executeQuery(const std::string& query);
+	bool executeQuery(std::string_view query);
 
 	/**
 	 * Queries database.
@@ -55,7 +55,7 @@ public:
 	 *
 	 * @return results object (nullptr on error)
 	 */
-	DBResult_ptr storeQuery(const std::string& query);
+	DBResult_ptr storeQuery(std::string_view query);
 
 	/**
 	 * Escapes string for query.
@@ -146,7 +146,7 @@ public:
 		return data;
 	}
 
-	std::string getString(const std::string& s) const;
+	std::string_view getString(const std::string& s) const;
 	const char* getStream(const std::string& s, unsigned long& size) const;
 
 	bool hasNext() const;
@@ -167,8 +167,8 @@ private:
 class DBInsert
 {
 public:
-	explicit DBInsert(std::string query);
-	bool addRow(const std::string& row);
+	explicit DBInsert(std::string_view query);
+	bool addRow(std::string_view row);
 	bool addRow(std::ostringstream& row);
 	bool execute();
 

@@ -56,7 +56,7 @@ enum tradestate_t : uint8_t
 
 struct VIPEntry
 {
-	VIPEntry(uint32_t guid, std::string name) : guid(guid), name(std::move(name)) {}
+	VIPEntry(uint32_t guid, std::string_view name) : guid{guid}, name{name} {}
 
 	uint32_t guid;
 	std::string name;
@@ -89,6 +89,7 @@ using MuteCountMap = std::map<uint32_t, uint32_t>;
 
 static constexpr int32_t PLAYER_MAX_SPEED = 1500;
 static constexpr int32_t PLAYER_MIN_SPEED = 10;
+static constexpr int32_t PLAYER_MAX_BLESSINGS = 5;
 
 class Player final : public Creature, public Cylinder
 {
@@ -113,13 +114,13 @@ public:
 	static MuteCountMap muteCountMap;
 
 	const std::string& getName() const override { return name; }
-	void setName(const std::string& name) { this->name = name; }
+	void setName(std::string_view name) { this->name = name; }
 	const std::string& getNameDescription() const override { return name; }
 	std::string getDescription(int32_t lookDistance) const override;
 
 	CreatureType_t getType() const override { return CREATURETYPE_PLAYER; }
 
-	void sendFYIBox(const std::string& message)
+	void sendFYIBox(std::string_view message)
 	{
 		if (client) {
 			client->sendFYIBox(message);
@@ -211,7 +212,7 @@ public:
 			client->disconnect();
 		}
 	}
-	Connection::Address getIP() const;
+	uint32_t getIP() const;
 
 	void addContainer(uint8_t cid, Container* container);
 	void closeContainer(uint8_t cid);
@@ -371,6 +372,7 @@ public:
 	void onFollowCreature(const Creature* creature) override;
 
 	// walk events
+	using Creature::onWalk;
 	void onWalk(Direction& dir) override;
 	void onWalkAborted() override;
 	void onWalkComplete() override;
@@ -403,8 +405,14 @@ public:
 	void doAttacking(uint32_t interval) override;
 	bool hasExtraSwing() override { return lastAttack > 0 && ((OTSYS_TIME() - lastAttack) >= getAttackSpeed()); }
 
-	uint16_t getSpecialSkill(uint8_t skill) const { return std::max<int32_t>(0, varSpecialSkills[skill]); }
-	uint16_t getSkillLevel(uint8_t skill) const { return std::max<int32_t>(0, skills[skill].level + varSkills[skill]); }
+	uint16_t getSpecialSkill(uint8_t skill) const
+	{
+		return static_cast<uint16_t>(std::max<int32_t>(0, varSpecialSkills[skill]));
+	}
+	uint16_t getSkillLevel(uint8_t skill) const
+	{
+		return static_cast<uint16_t>(std::max<int32_t>(0, skills[skill].level + varSkills[skill]));
+	}
 	uint16_t getBaseSkill(uint8_t skill) const { return skills[skill].level; }
 	uint8_t getSkillPercent(uint8_t skill) const { return skills[skill].percent; }
 
@@ -559,14 +567,14 @@ public:
 			}
 		}
 	}
-	void sendCreatureSay(const Creature* creature, SpeakClasses type, const std::string& text,
+	void sendCreatureSay(const Creature* creature, SpeakClasses type, std::string_view text,
 	                     const Position* pos = nullptr)
 	{
 		if (client) {
 			client->sendCreatureSay(creature, type, text, pos);
 		}
 	}
-	void sendPrivateMessage(const Player* speaker, SpeakClasses type, const std::string& text)
+	void sendPrivateMessage(const Player* speaker, SpeakClasses type, std::string_view text)
 	{
 		if (client) {
 			client->sendPrivateMessage(speaker, type, text);
@@ -862,18 +870,6 @@ public:
 			client->sendAddMarker(pos, markType, desc);
 		}
 	}
-	void sendQuestLog()
-	{
-		if (client) {
-			client->sendQuestLog();
-		}
-	}
-	void sendQuestLine(const Quest* quest)
-	{
-		if (client) {
-			client->sendQuestLine(quest);
-		}
-	}
 	void sendFightModes()
 	{
 		if (client) {
@@ -999,7 +995,6 @@ private:
 	uint64_t manaSpent = 0;
 	uint64_t lastAttack = 0;
 	uint64_t bankBalance = 0;
-	uint64_t lastQuestlogUpdate = 0;
 	int64_t lastFailedFollow = 0;
 	int64_t skullTicks = 0;
 	int64_t lastWalkthroughAttempt = 0;
@@ -1007,7 +1002,7 @@ private:
 	int64_t lastPong;
 	int64_t nextAction = 0;
 
-	Connection::Address lastIP = {};
+	uint32_t lastIP = 0;
 	BedItem* bedItem = nullptr;
 	Guild* guild = nullptr;
 	GuildRank_ptr guildRank = nullptr;
@@ -1056,7 +1051,7 @@ private:
 	int16_t lastDepotId = -1;
 
 	uint8_t soul = 0;
-	std::bitset<6> blessings;
+	std::bitset<PLAYER_MAX_BLESSINGS + 1> blessings;
 	uint8_t levelPercent = 0;
 	uint8_t magLevelPercent = 0;
 

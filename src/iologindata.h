@@ -15,11 +15,11 @@ class IOLoginData
 public:
 	static Account loadAccount(uint32_t accno);
 
-	static bool loginserverAuthentication(const std::string& name, const std::string& password, Account& account);
+	static bool loginserverAuthentication(std::string_view name, std::string_view password, Account& account);
 	static std::pair<uint32_t, uint32_t> gameworldAuthentication(std::string_view accountName,
 	                                                             std::string_view password,
 	                                                             std::string_view characterName);
-	static uint32_t getAccountIdByPlayerName(const std::string& playerName);
+	static uint32_t getAccountIdByPlayerName(std::string_view playerName);
 	static uint32_t getAccountIdByPlayerId(uint32_t playerId);
 
 	static AccountType_t getAccountType(uint32_t accountId);
@@ -28,12 +28,12 @@ public:
 	static bool preloadPlayer(Player* player);
 
 	static bool loadPlayerById(Player* player, uint32_t id);
-	static bool loadPlayerByName(Player* player, const std::string& name);
+	static bool loadPlayerByName(Player* player, std::string_view name);
 	static bool loadPlayer(Player* player, DBResult_ptr result);
 	static bool savePlayer(Player* player);
-	static uint32_t getGuidByName(const std::string& name);
+	static uint32_t getGuidByName(std::string_view name);
 	static bool getGuidByNameEx(uint32_t& guid, bool& specialVip, std::string& name);
-	static std::string getNameByGuid(uint32_t guid);
+	static std::string_view getNameByGuid(uint32_t guid);
 	static bool formatPlayerName(std::string& name);
 	static void increaseBankBalance(uint32_t guid, uint64_t bankBalance);
 	static bool hasBiddedOnHouse(uint32_t guid);

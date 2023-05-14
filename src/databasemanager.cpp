@@ -16,13 +16,13 @@ bool DatabaseManager::optimizeTables()
 
 	DBResult_ptr result = db.storeQuery(fmt::format(
 	    "SELECT `TABLE_NAME` FROM `information_schema`.`TABLES` WHERE `TABLE_SCHEMA` = {:s} AND `DATA_FREE` > 0",
-	    db.escapeString(g_config.getString(ConfigManager::MYSQL_DB))));
+	    db.escapeString(g_config[ConfigKeysString::MYSQL_DB])));
 	if (!result) {
 		return false;
 	}
 
 	do {
-		std::string tableName = result->getString("TABLE_NAME");
+		auto tableName = result->getString("TABLE_NAME");
 		std::cout << "> Optimizing table " << tableName << "..." << std::flush;
 
 		if (db.executeQuery(fmt::format("OPTIMIZE TABLE `{:s}`", tableName))) {
@@ -40,7 +40,7 @@ bool DatabaseManager::tableExists(std::string_view tableName)
 	return db
 	           .storeQuery(fmt::format(
 	               "SELECT `TABLE_NAME` FROM `information_schema`.`tables` WHERE `TABLE_SCHEMA` = {:s} AND `TABLE_NAME` = {:s} LIMIT 1",
-	               db.escapeString(g_config.getString(ConfigManager::MYSQL_DB)), db.escapeString(tableName)))
+	               db.escapeString(g_config[ConfigKeysString::MYSQL_DB]), db.escapeString(tableName)))
 	           .get() != nullptr;
 }
 
@@ -49,7 +49,7 @@ bool DatabaseManager::isDatabaseSetup()
 	Database& db = Database::getInstance();
 	return db.storeQuery(
 	             fmt::format("SELECT `TABLE_NAME` FROM `information_schema`.`tables` WHERE `TABLE_SCHEMA` = {:s}",
-	                         db.escapeString(g_config.getString(ConfigManager::MYSQL_DB))))
+	                         db.escapeString(g_config[ConfigKeysString::MYSQL_DB])))
 	           .get() != nullptr;
 }
 

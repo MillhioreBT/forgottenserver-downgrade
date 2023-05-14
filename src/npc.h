@@ -63,7 +63,7 @@ public:
 	void onCreatureAppear(Creature* creature);
 	void onCreatureDisappear(Creature* creature);
 	void onCreatureMove(Creature* creature, const Position& oldPos, const Position& newPos);
-	void onCreatureSay(Creature* creature, SpeakClasses, const std::string& text);
+	void onCreatureSay(Creature* creature, SpeakClasses, std::string_view text);
 	void onPlayerTrade(Player* player, int32_t callback, uint16_t itemId, uint8_t count, uint8_t amount,
 	                   bool ignore = false, bool inBackpacks = false);
 	void onPlayerCloseChannel(Player* player);
@@ -122,8 +122,8 @@ public:
 
 	CreatureType_t getType() const override { return CREATURETYPE_NPC; }
 
-	void doSay(const std::string& text);
-	void doSayToPlayer(Player* player, const std::string& text);
+	void doSay(std::string_view text);
+	void doSayToPlayer(Player* player, std::string_view text);
 
 	bool doMoveTo(const Position& pos, int32_t minTargetDist = 1, int32_t maxTargetDist = 1, bool fullPathSearch = true,
 	              bool clearSight = true, int32_t maxSearchDist = 0);
@@ -150,6 +150,8 @@ public:
 
 	static uint32_t npcAutoID;
 
+	using Creature::onWalk;
+
 private:
 	explicit Npc(const std::string& name);
 
@@ -158,7 +160,7 @@ private:
 	void onCreatureMove(Creature* creature, const Tile* newTile, const Position& newPos, const Tile* oldTile,
 	                    const Position& oldPos, bool teleport) override;
 
-	void onCreatureSay(Creature* creature, SpeakClasses type, const std::string& text) override;
+	void onCreatureSay(Creature* creature, SpeakClasses type, std::string_view text) override;
 	void onThink(uint32_t interval) override;
 	std::string getDescription(int32_t lookDistance) const override;
 

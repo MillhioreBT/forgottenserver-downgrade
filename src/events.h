@@ -5,12 +5,18 @@
 #define FS_EVENTS_H
 
 #include "const.h"
+#include "creature.h"
 #include "luascript.h"
 
-class Party;
 class ItemType;
 class NetworkMessage;
+class Party;
 class Tile;
+
+enum class EventInfoId
+{
+	CREATURE_ONHEAR
+};
 
 class Events
 {
@@ -46,6 +52,8 @@ class Events
 		int32_t playerOnLoseExperience = -1;
 		int32_t playerOnGainSkillTries = -1;
 		int32_t playerOnNetworkMessage = -1;
+		int32_t playerOnUpdateStorage = -1;
+		int32_t playerOnUpdateInventory = -1;
 
 		// Monster
 		int32_t monsterOnDropLoot = -1;
@@ -61,7 +69,7 @@ public:
 	bool eventCreatureOnChangeOutfit(Creature* creature, const Outfit_t& outfit);
 	ReturnValue eventCreatureOnAreaCombat(Creature* creature, Tile* tile, bool aggressive);
 	ReturnValue eventCreatureOnTargetCombat(Creature* creature, Creature* target);
-	void eventCreatureOnHear(Creature* creature, Creature* speaker, const std::string& words, SpeakClasses type);
+	void eventCreatureOnHear(Creature* creature, Creature* speaker, std::string_view words, SpeakClasses type);
 
 	// Party
 	bool eventPartyOnJoin(Party* party, Player* player);
@@ -74,18 +82,16 @@ public:
 	                       int32_t lookDistance);
 	void eventPlayerOnLookInBattleList(Player* player, Creature* creature, int32_t lookDistance);
 	void eventPlayerOnLookInTrade(Player* player, Player* partner, Item* item, int32_t lookDistance);
-	bool eventPlayerOnLookInShop(Player* player, const ItemType* itemType, uint8_t count,
-	                             const std::string& description);
+	bool eventPlayerOnLookInShop(Player* player, const ItemType* itemType, uint8_t count);
 	bool eventPlayerOnMoveItem(Player* player, Item* item, uint16_t count, const Position& fromPosition,
 	                           const Position& toPosition, Cylinder* fromCylinder, Cylinder* toCylinder);
 	void eventPlayerOnItemMoved(Player* player, Item* item, uint16_t count, const Position& fromPosition,
 	                            const Position& toPosition, Cylinder* fromCylinder, Cylinder* toCylinder);
 	bool eventPlayerOnMoveCreature(Player* player, Creature* creature, const Position& fromPosition,
 	                               const Position& toPosition);
-	void eventPlayerOnReportRuleViolation(Player* player, const std::string& targetName, uint8_t reportType,
-	                                      uint8_t reportReason, const std::string& comment,
-	                                      const std::string& translation);
-	bool eventPlayerOnReportBug(Player* player, const std::string& message);
+	void eventPlayerOnReportRuleViolation(Player* player, std::string_view targetName, uint8_t reportType,
+	                                      uint8_t reportReason, std::string_view comment, std::string_view translation);
+	bool eventPlayerOnReportBug(Player* player, std::string_view message);
 	bool eventPlayerOnTurn(Player* player, Direction direction);
 	bool eventPlayerOnTradeRequest(Player* player, Player* target, Item* item);
 	bool eventPlayerOnTradeAccept(Player* player, Player* target, Item* item, Item* targetItem);
@@ -94,10 +100,23 @@ public:
 	void eventPlayerOnLoseExperience(Player* player, uint64_t& exp);
 	void eventPlayerOnGainSkillTries(Player* player, skills_t skill, uint64_t& tries);
 	void eventPlayerOnNetworkMessage(Player* player, uint8_t recvByte, NetworkMessage* msg);
+	void eventPlayerOnUpdateStorage(Player* player, const uint32_t key, const int32_t value, const int32_t oldValue,
+	                                bool isLogin);
+	void eventPlayerOnUpdateInventory(Player* player, Item* item, const slots_t slot, const bool equip);
 
 	// Monster
 	void eventMonsterOnDropLoot(Monster* monster, Container* corpse);
 	bool eventMonsterOnSpawn(Monster* monster, const Position& position, bool startup, bool artificial);
+
+	int32_t getScriptId(EventInfoId eventInfoId)
+	{
+		switch (eventInfoId) {
+			case EventInfoId::CREATURE_ONHEAR:
+				return info.creatureOnHear;
+			default:
+				return -1;
+		}
+	};
 
 private:
 	LuaScriptInterface scriptInterface;

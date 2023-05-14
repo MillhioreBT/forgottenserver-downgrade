@@ -45,14 +45,14 @@ bool XTEA_decrypt(NetworkMessage& msg, const xtea::round_keys& key)
 
 } // namespace
 
-void Protocol::onSendMessage(const OutputMessage_ptr& msg)
+void Protocol::onSendMessage(const OutputMessage_ptr& msg) const
 {
 	if (!rawMessages) {
 		msg->writeMessageLength();
 
 		if (encryptionEnabled) {
 			XTEA_encrypt(*msg, key);
-			msg->addCryptoHeader(checksumMode, sequenceNumber);
+			msg->addCryptoHeader(checksumEnabled);
 		}
 	}
 }
@@ -80,7 +80,7 @@ OutputMessage_ptr Protocol::getOutputBuffer(int32_t size)
 
 bool Protocol::RSA_decrypt(NetworkMessage& msg)
 {
-	if ((msg.getLength() - msg.getBufferPosition()) < 128) {
+	if ((msg.getLength() - msg.getBufferPosition()) != 128) {
 		return false;
 	}
 
@@ -88,11 +88,21 @@ bool Protocol::RSA_decrypt(NetworkMessage& msg)
 	return msg.getByte() == 0;
 }
 
-Connection::Address Protocol::getIP() const
+uint32_t Protocol::getIP() const
 {
 	if (auto connection = getConnection()) {
 		return connection->getIP();
 	}
 
-	return {};
+	return 0;
+}
+
+uint32_t Protocol::getIP(std::string_view s) const
+{
+	boost::system::error_code error;
+	if (auto ip = boost::asio::ip::make_address_v4(s, error); !error) {
+		return htonl(ip.to_ulong());
+	}
+
+	return 0;
 }

@@ -25,15 +25,15 @@ public:
 
 	bool configureEvent(const pugi::xml_node& node) override;
 
-	const std::string& getWords() const { return words; }
+	std::string_view getWords() const { return words; }
 	const std::vector<std::string>& getWordsMap() const { return wordsMap; }
 	void setWords(std::string word)
 	{
 		words = word;
 		wordsMap.push_back(word);
 	}
-	std::string getSeparator() const { return separator; }
-	void setSeparator(std::string sep) { separator = sep; }
+	std::string_view getSeparator() const { return separator; }
+	void setSeparator(std::string_view sep) { separator = sep; }
 
 	// scripting
 	bool executeSay(Player* player, std::string_view words, std::string_view param, SpeakClasses type) const;

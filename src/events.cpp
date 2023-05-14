@@ -7,9 +7,6 @@
 
 #include "item.h"
 #include "player.h"
-#include "tools.h"
-
-#include <set>
 
 Events::Events() : scriptInterface("Event Interface") { scriptInterface.initState(); }
 
@@ -33,7 +30,7 @@ bool Events::load()
 		const std::string& className = eventNode.attribute("class").as_string();
 		auto res = classes.insert(className);
 		if (res.second) {
-			const std::string& lowercase = asLowerCaseString(className);
+			const std::string& lowercase = boost::algorithm::to_lower_copy<std::string>(className);
 			if (scriptInterface.loadFile("data/events/scripts/" + lowercase + ".lua") != 0) {
 				std::cout << "[Warning - Events::load] Can not load script: " << lowercase << ".lua" << std::endl;
 				std::cout << scriptInterface.getLastLuaError() << std::endl;
@@ -101,6 +98,10 @@ bool Events::load()
 				info.playerOnGainSkillTries = event;
 			} else if (methodName == "onNetworkMessage") {
 				info.playerOnNetworkMessage = event;
+			} else if (methodName == "onUpdateStorage") {
+				info.playerOnUpdateStorage = event;
+			} else if (methodName == "onUpdateInventory") {
+				info.playerOnUpdateInventory = event;
 			} else {
 				std::cout << "[Warning - Events::load] Unknown player method: " << methodName << std::endl;
 			}
@@ -258,7 +259,7 @@ ReturnValue Events::eventCreatureOnTargetCombat(Creature* creature, Creature* ta
 	return returnValue;
 }
 
-void Events::eventCreatureOnHear(Creature* creature, Creature* speaker, const std::string& words, SpeakClasses type)
+void Events::eventCreatureOnHear(Creature* creature, Creature* speaker, std::string_view words, SpeakClasses type)
 {
 	// Creature:onHear(speaker, words, type)
 	if (info.creatureOnHear == -1) {
@@ -501,10 +502,9 @@ void Events::eventPlayerOnLookInTrade(Player* player, Player* partner, Item* ite
 	scriptInterface.callVoidFunction(4);
 }
 
-bool Events::eventPlayerOnLookInShop(Player* player, const ItemType* itemType, uint8_t count,
-                                     const std::string& description)
+bool Events::eventPlayerOnLookInShop(Player* player, const ItemType* itemType, uint8_t count)
 {
-	// Player:onLookInShop(itemType, count, description) or Player.onLookInShop(self, itemType, count, description)
+	// Player:onLookInShop(itemType, count) or Player.onLookInShop(self, itemType, count)
 	if (info.playerOnLookInShop == -1) {
 		return true;
 	}
@@ -527,9 +527,8 @@ bool Events::eventPlayerOnLookInShop(Player* player, const ItemType* itemType, u
 	LuaScriptInterface::setMetatable(L, -1, "ItemType");
 
 	lua_pushinteger(L, count);
-	LuaScriptInterface::pushString(L, description);
 
-	return scriptInterface.callFunction(4);
+	return scriptInterface.callFunction(3);
 }
 
 bool Events::eventPlayerOnMoveItem(Player* player, Item* item, uint16_t count, const Position& fromPosition,
@@ -636,9 +635,9 @@ bool Events::eventPlayerOnMoveCreature(Player* player, Creature* creature, const
 	return scriptInterface.callFunction(4);
 }
 
-void Events::eventPlayerOnReportRuleViolation(Player* player, const std::string& targetName, uint8_t reportType,
-                                              uint8_t reportReason, const std::string& comment,
-                                              const std::string& translation)
+void Events::eventPlayerOnReportRuleViolation(Player* player, std::string_view targetName, uint8_t reportType,
+                                              uint8_t reportReason, std::string_view comment,
+                                              std::string_view translation)
 {
 	// Player:onReportRuleViolation(targetName, reportType, reportReason, comment, translation)
 	if (info.playerOnReportRuleViolation == -1) {
@@ -670,7 +669,7 @@ void Events::eventPlayerOnReportRuleViolation(Player* player, const std::string&
 	scriptInterface.callVoidFunction(6);
 }
 
-bool Events::eventPlayerOnReportBug(Player* player, const std::string& message)
+bool Events::eventPlayerOnReportBug(Player* player, std::string_view message)
 {
 	// Player:onReportBug(message)
 	if (info.playerOnReportBug == -1) {
@@ -956,6 +955,66 @@ void Events::eventPlayerOnNetworkMessage(Player* player, uint8_t recvByte, Netwo
 	LuaScriptInterface::setMetatable(L, -1, "NetworkMessage");
 
 	scriptInterface.callVoidFunction(3);
+}
+
+void Events::eventPlayerOnUpdateStorage(Player* player, const uint32_t key, const int32_t value, const int32_t oldValue,
+                                        bool isLogin)
+{
+	// Player:onUpdateStorage(key, value, oldValue, isLogin)
+	if (info.playerOnUpdateStorage == -1) {
+		return;
+	}
+
+	if (!scriptInterface.reserveScriptEnv()) {
+		std::cout << "[Error - Events::eventPlayerOnUpdateStorage] Call stack overflow" << std::endl;
+		return;
+	}
+
+	ScriptEnvironment* env = scriptInterface.getScriptEnv();
+	env->setScriptId(info.playerOnUpdateStorage, &scriptInterface);
+
+	lua_State* L = scriptInterface.getLuaState();
+	scriptInterface.pushFunction(info.playerOnUpdateStorage);
+
+	LuaScriptInterface::pushUserdata<Player>(L, player);
+	LuaScriptInterface::setMetatable(L, -1, "Player");
+
+	lua_pushinteger(L, key);
+	lua_pushinteger(L, value);
+	lua_pushinteger(L, oldValue);
+	LuaScriptInterface::pushBoolean(L, isLogin);
+
+	scriptInterface.callVoidFunction(5);
+}
+
+void Events::eventPlayerOnUpdateInventory(Player* player, Item* item, const slots_t slot, const bool equip)
+{
+	// Player:onUpdateInventory(item, slot, equip)
+	if (info.playerOnUpdateInventory == -1) {
+		return;
+	}
+
+	if (!scriptInterface.reserveScriptEnv()) {
+		std::cout << "[Error - Events::eventPlayerOnUpdateInventory] Call stack overflow" << std::endl;
+		return;
+	}
+
+	ScriptEnvironment* env = scriptInterface.getScriptEnv();
+	env->setScriptId(info.playerOnUpdateInventory, &scriptInterface);
+
+	lua_State* L = scriptInterface.getLuaState();
+	scriptInterface.pushFunction(info.playerOnUpdateInventory);
+
+	LuaScriptInterface::pushUserdata<Player>(L, player);
+	LuaScriptInterface::setMetatable(L, -1, "Player");
+
+	LuaScriptInterface::pushUserdata<Item>(L, item);
+	LuaScriptInterface::setItemMetatable(L, -1, item);
+
+	lua_pushinteger(L, slot);
+	LuaScriptInterface::pushBoolean(L, equip);
+
+	scriptInterface.callVoidFunction(4);
 }
 
 void Events::eventMonsterOnDropLoot(Monster* monster, Container* corpse)

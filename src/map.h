@@ -4,20 +4,14 @@
 #ifndef FS_MAP_H
 #define FS_MAP_H
 
-#include "fileloader.h"
+#include "otpch.h"
+
 #include "house.h"
-#include "item.h"
 #include "position.h"
 #include "spawn.h"
-#include "tile.h"
-#include "tools.h"
 #include "town.h"
 
 class Creature;
-class Player;
-class Game;
-class Tile;
-class Map;
 
 static constexpr int32_t MAP_MAX_LAYERS = 16;
 
@@ -200,8 +194,9 @@ public:
 	 * Place a creature on the map
 	 * \param centerPos The position to place the creature
 	 * \param creature Creature to place on the map
-	 * \param extendedPos If true, the creature will in first-hand be placed 2 tiles away
-	 * \param forceLogin If true, placing the creature will not fail because of obstacles (creatures/chests)
+	 * \param extendedPos If true, the creature will in first-hand be placed 2
+	 * tiles away \param forceLogin If true, placing the creature will not fail
+	 * because of obstacles (creatures/chests)
 	 */
 	bool placeCreature(const Position& centerPos, Creature* creature, bool extendedPos = false,
 	                   bool forceLogin = false);
@@ -221,9 +216,9 @@ public:
 	 *	\param toPos Destination point
 	 *	\param rangex maximum allowed range horizontally
 	 *	\param rangey maximum allowed range vertically
-	 *	\param checkLineOfSight checks if there is any blocking objects in the way
-	 *	\param sameFloor checks if the destination is on same floor
-	 *	\returns The result if you can throw there or not
+	 *	\param checkLineOfSight checks if there is any blocking objects in the
+	 *way \param sameFloor checks if the destination is on same floor \returns
+	 *The result if you can throw there or not
 	 */
 	bool canThrowObjectTo(const Position& fromPos, const Position& toPos, bool checkLineOfSight = true,
 	                      bool sameFloor = false, int32_t rangex = Map::maxClientViewportX,
@@ -238,11 +233,10 @@ public:
 
 	/**
 	 * Checks if path is clear from fromPos to toPos
-	 * Notice: This only checks a straight line if the path is clear, for path finding use getPathTo.
-	 *	\param fromPos from Source point
-	 *	\param toPos Destination point
-	 *	\param sameFloor checks if the destination is on same floor
-	 *	\returns The result if there is no obstacles
+	 * Notice: This only checks a straight line if the path is clear, for path
+	 *finding use getPathTo. \param fromPos from Source point \param toPos
+	 *Destination point \param sameFloor checks if the destination is on same
+	 *floor \returns The result if there is no obstacles
 	 */
 	bool isSightClear(const Position& fromPos, const Position& toPos, bool sameFloor = false) const;
 	bool checkSightLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint8_t z) const;
@@ -269,8 +263,8 @@ private:
 
 	QTreeNode root;
 
-	std::string spawnfile;
-	std::string housefile;
+	std::filesystem::path spawnfile;
+	std::filesystem::path housefile;
 
 	uint32_t width = 0;
 	uint32_t height = 0;
@@ -284,4 +278,4 @@ private:
 	friend class IOMap;
 };
 
-#endif
+#endif // FS_MAP_H

@@ -19,7 +19,7 @@ public:
 
 	virtual void parsePacket(NetworkMessage&) {}
 
-	virtual void onSendMessage(const OutputMessage_ptr& msg);
+	virtual void onSendMessage(const OutputMessage_ptr& msg) const;
 	void onRecvMessage(NetworkMessage& msg);
 	virtual void onRecvFirstMessage(NetworkMessage& msg) = 0;
 	virtual void onConnect() {}
@@ -28,7 +28,8 @@ public:
 
 	Connection_ptr getConnection() const { return connection.lock(); }
 
-	Connection::Address getIP() const;
+	uint32_t getIP() const;
+	uint32_t getIP(std::string_view s) const;
 
 	// Use this function for autosend messages only
 	OutputMessage_ptr getOutputBuffer(int32_t size);
@@ -51,7 +52,7 @@ protected:
 	}
 	void enableXTEAEncryption() { encryptionEnabled = true; }
 	void setXTEAKey(const xtea::key& key) { this->key = xtea::expand_key(key); }
-	void setChecksumMode(checksumMode_t newMode) { checksumMode = newMode; }
+	void disableChecksum() { checksumEnabled = false; }
 
 	static bool RSA_decrypt(NetworkMessage& msg);
 
@@ -66,10 +67,9 @@ private:
 
 	const ConnectionWeak_ptr connection;
 	xtea::round_keys key;
-	uint32_t sequenceNumber = 0;
 	bool encryptionEnabled = false;
-	checksumMode_t checksumMode = CHECKSUM_ADLER;
+	bool checksumEnabled = true;
 	bool rawMessages = false;
 };
 
-#endif // FS_PROTOCOL_H
+#endif

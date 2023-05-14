@@ -103,7 +103,7 @@ bool Raids::startup()
 	setLastRaidEnd(OTSYS_TIME());
 
 	checkRaidsEvent =
-	    g_scheduler.addEvent(createSchedulerTask(CHECK_RAIDS_INTERVAL * 1000, std::bind(&Raids::checkRaids, this)));
+	    g_scheduler.addEvent(createSchedulerTask(CHECK_RAIDS_INTERVAL * 1000, [this]() { checkRaids(); }));
 
 	started = true;
 	return started;
@@ -132,7 +132,7 @@ void Raids::checkRaids()
 	}
 
 	checkRaidsEvent =
-	    g_scheduler.addEvent(createSchedulerTask(CHECK_RAIDS_INTERVAL * 1000, std::bind(&Raids::checkRaids, this)));
+	    g_scheduler.addEvent(createSchedulerTask(CHECK_RAIDS_INTERVAL * 1000, [this]() { checkRaids(); }));
 }
 
 void Raids::clear()
@@ -227,7 +227,7 @@ void Raid::startRaid()
 	if (raidEvent) {
 		state = RAIDSTATE_EXECUTING;
 		nextEventEvent = g_scheduler.addEvent(
-		    createSchedulerTask(raidEvent->getDelay(), std::bind(&Raid::executeRaidEvent, this, raidEvent)));
+		    createSchedulerTask(raidEvent->getDelay(), [=, this]() { executeRaidEvent(raidEvent); }));
 	}
 }
 
@@ -240,8 +240,8 @@ void Raid::executeRaidEvent(RaidEvent* raidEvent)
 		if (newRaidEvent) {
 			uint32_t ticks = static_cast<uint32_t>(
 			    std::max<int32_t>(RAID_MINTICKS, newRaidEvent->getDelay() - raidEvent->getDelay()));
-			nextEventEvent = g_scheduler.addEvent(
-			    createSchedulerTask(ticks, std::bind(&Raid::executeRaidEvent, this, newRaidEvent)));
+			nextEventEvent =
+			    g_scheduler.addEvent(createSchedulerTask(ticks, [=, this]() { executeRaidEvent(newRaidEvent); }));
 		} else {
 			resetRaid();
 		}
@@ -301,7 +301,7 @@ bool AnnounceEvent::configureRaidEvent(const pugi::xml_node& eventNode)
 
 	pugi::xml_attribute typeAttribute = eventNode.attribute("type");
 	if (typeAttribute) {
-		std::string tmpStrValue = asLowerCaseString(typeAttribute.as_string());
+		std::string tmpStrValue = boost::algorithm::to_lower_copy<std::string>(typeAttribute.as_string());
 		if (tmpStrValue == "warning") {
 			messageType = MESSAGE_STATUS_WARNING;
 		} else if (tmpStrValue == "event") {
@@ -419,12 +419,12 @@ bool AreaSpawnEvent::configureRaidEvent(const pugi::xml_node& eventNode)
 			return false;
 		}
 
-		fromPos.x = std::max<int32_t>(0, centerPos.getX() - radius);
-		fromPos.y = std::max<int32_t>(0, centerPos.getY() - radius);
+		fromPos.x = static_cast<uint16_t>(std::max<int32_t>(0, centerPos.getX() - radius));
+		fromPos.y = static_cast<uint16_t>(std::max<int32_t>(0, centerPos.getY() - radius));
 		fromPos.z = centerPos.z;
 
-		toPos.x = std::min<int32_t>(0xFFFF, centerPos.getX() + radius);
-		toPos.y = std::min<int32_t>(0xFFFF, centerPos.getY() + radius);
+		toPos.x = static_cast<uint16_t>(std::min<int32_t>(0xFFFF, centerPos.getX() + radius));
+		toPos.y = static_cast<uint16_t>(std::min<int32_t>(0xFFFF, centerPos.getY() + radius));
 		toPos.z = centerPos.z;
 	} else {
 		if ((attr = eventNode.attribute("fromx"))) {
@@ -442,7 +442,7 @@ bool AreaSpawnEvent::configureRaidEvent(const pugi::xml_node& eventNode)
 		}
 
 		if ((attr = eventNode.attribute("fromz"))) {
-			fromPos.z = pugi::cast<uint16_t>(attr.value());
+			fromPos.z = pugi::cast<uint8_t>(attr.value());
 		} else {
 			std::cout << "[Error] Raid: fromz tag missing for areaspawn event." << std::endl;
 			return false;
@@ -463,14 +463,14 @@ bool AreaSpawnEvent::configureRaidEvent(const pugi::xml_node& eventNode)
 		}
 
 		if ((attr = eventNode.attribute("toz"))) {
-			toPos.z = pugi::cast<uint16_t>(attr.value());
+			toPos.z = pugi::cast<uint8_t>(attr.value());
 		} else {
 			std::cout << "[Error] Raid: toz tag missing for areaspawn event." << std::endl;
 			return false;
 		}
 	}
 
-	for (auto monsterNode : eventNode.children()) {
+	for (auto& monsterNode : eventNode.children()) {
 		const char* name;
 
 		if ((attr = monsterNode.attribute("name"))) {
@@ -522,8 +522,9 @@ bool AreaSpawnEvent::executeEvent()
 
 			bool success = false;
 			for (int32_t tries = 0; tries < MAXIMUM_TRIES_PER_MONSTER; tries++) {
-				Tile* tile = g_game.map.getTile(uniform_random(fromPos.x, toPos.x), uniform_random(fromPos.y, toPos.y),
-				                                uniform_random(fromPos.z, toPos.z));
+				Tile* tile = g_game.map.getTile(static_cast<uint16_t>(uniform_random(fromPos.x, toPos.x)),
+				                                static_cast<uint16_t>(uniform_random(fromPos.y, toPos.y)),
+				                                static_cast<uint16_t>(uniform_random(fromPos.z, toPos.z)));
 				if (tile && !tile->isMoveableBlocking() && !tile->hasFlag(TILESTATE_PROTECTIONZONE) &&
 				    tile->getTopCreature() == nullptr &&
 				    g_game.placeCreature(monster, tile->getPosition(), false, true)) {

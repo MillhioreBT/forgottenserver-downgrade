@@ -74,7 +74,6 @@ TalkActionResult_t TalkActions::playerSaySpell(Player* player, SpeakClasses type
 	size_t wordsLength = words.length();
 	for (auto it = talkActions.begin(); it != talkActions.end();) {
 		std::string_view talkactionWords = it->first;
-		size_t talkactionLength = talkactionWords.length();
 		if (!caseInsensitiveStartsWith(words, talkactionWords)) {
 			++it;
 			continue;
@@ -87,9 +86,9 @@ TalkActionResult_t TalkActions::playerSaySpell(Player* player, SpeakClasses type
 				++it;
 				continue;
 			}
-			trim_left(param, ' ');
+			boost::algorithm::trim_left(param);
 
-			std::string separator = it->second.getSeparator();
+			auto separator = it->second.getSeparator();
 			if (separator != " ") {
 				if (!param.empty()) {
 					if (param != separator) {
@@ -134,7 +133,7 @@ bool TalkAction::configureEvent(const pugi::xml_node& node)
 		separator = pugi::cast<char>(separatorAttribute.value());
 	}
 
-	for (auto word : explodeString(wordsAttribute.as_string(), ";")) {
+	for (auto& word : explodeString(wordsAttribute.as_string(), ";")) {
 		setWords(word);
 	}
 	return true;

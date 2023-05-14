@@ -163,7 +163,8 @@ bool MoveEvents::registerEvent(Event_ptr event, const pugi::xml_node& node)
 			return false;
 		}
 
-		Position pos(posList[0], posList[1], posList[2]);
+		Position pos(static_cast<uint16_t>(posList[0]), static_cast<uint16_t>(posList[1]),
+		             static_cast<uint8_t>(posList[2]));
 		addEvent(std::move(*moveEvent), pos, positionMap);
 	} else {
 		return false;
@@ -554,7 +555,7 @@ bool MoveEvent::configureEvent(const pugi::xml_node& node)
 		return false;
 	}
 
-	std::string tmpStr = asLowerCaseString(eventAttr.as_string());
+	std::string tmpStr = boost::algorithm::to_lower_copy<std::string>(eventAttr.as_string());
 	if (tmpStr == "stepin") {
 		eventType = MOVE_EVENT_STEP_IN;
 	} else if (tmpStr == "stepout") {
@@ -576,7 +577,7 @@ bool MoveEvent::configureEvent(const pugi::xml_node& node)
 	if (eventType == MOVE_EVENT_EQUIP || eventType == MOVE_EVENT_DEEQUIP) {
 		pugi::xml_attribute slotAttribute = node.attribute("slot");
 		if (slotAttribute) {
-			tmpStr = asLowerCaseString(slotAttribute.as_string());
+			tmpStr = boost::algorithm::to_lower_copy<std::string>(slotAttribute.as_string());
 			if (tmpStr == "head") {
 				slot = SLOTP_HEAD;
 			} else if (tmpStr == "necklace") {
@@ -633,7 +634,7 @@ bool MoveEvent::configureEvent(const pugi::xml_node& node)
 
 		// Gather vocation information
 		std::list<std::string> vocStringList;
-		for (auto vocationNode : node.children()) {
+		for (auto& vocationNode : node.children()) {
 			pugi::xml_attribute vocationNameAttribute = vocationNode.attribute("name");
 			if (!vocationNameAttribute) {
 				continue;
@@ -641,14 +642,15 @@ bool MoveEvent::configureEvent(const pugi::xml_node& node)
 
 			int32_t vocationId = g_vocations.getVocationId(vocationNameAttribute.as_string());
 			if (vocationId != -1) {
-				vocEquipMap[vocationId] = true;
+				vocationEquipSet.insert(static_cast<uint16_t>(vocationId));
 				if (vocationNode.attribute("showInDescription").as_bool(true)) {
-					vocStringList.push_back(asLowerCaseString(vocationNameAttribute.as_string()));
+					vocStringList.push_back(
+					    boost::algorithm::to_lower_copy<std::string>(vocationNameAttribute.as_string()));
 				}
 			}
 		}
 
-		if (!vocEquipMap.empty()) {
+		if (!vocationEquipSet.empty()) {
 			wieldInfo |= WIELDINFO_VOCREQ;
 		}
 
@@ -677,7 +679,7 @@ uint32_t MoveEvent::StepInField(Creature* creature, Item* item, const Position&)
 		return 1;
 	}
 
-	return LUA_ERROR_ITEM_NOT_FOUND;
+	return static_cast<uint32_t>(LuaErrorCode::ITEM_NOT_FOUND);
 }
 
 uint32_t MoveEvent::StepOutField(Creature*, Item*, const Position&) { return 1; }
@@ -693,7 +695,7 @@ uint32_t MoveEvent::AddItemField(Item* item, Item*, const Position&)
 		}
 		return 1;
 	}
-	return LUA_ERROR_ITEM_NOT_FOUND;
+	return static_cast<uint32_t>(LuaErrorCode::ITEM_NOT_FOUND);
 }
 
 uint32_t MoveEvent::RemoveItemField(Item*, Item*, const Position&) { return 1; }
@@ -701,8 +703,7 @@ uint32_t MoveEvent::RemoveItemField(Item*, Item*, const Position&) { return 1; }
 ReturnValue MoveEvent::EquipItem(MoveEvent* moveEvent, Player* player, Item* item, slots_t slot, bool isCheck)
 {
 	if (!player->hasFlag(PlayerFlag_IgnoreWeaponCheck) && moveEvent->getWieldInfo() != 0) {
-		const VocEquipMap& vocEquipMap = moveEvent->getVocEquipMap();
-		if (!vocEquipMap.empty() && vocEquipMap.find(player->getVocationId()) == vocEquipMap.end()) {
+		if (!moveEvent->hasVocationEquipSet(player->getVocationId())) {
 			return RETURNVALUE_YOUDONTHAVEREQUIREDPROFESSION;
 		}
 

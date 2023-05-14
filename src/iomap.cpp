@@ -148,7 +148,7 @@ bool IOMap::loadMap(Map* map, const std::string& fileName)
 	return true;
 }
 
-bool IOMap::parseMapDataAttributes(OTB::Loader& loader, const OTB::Node& mapNode, Map& map, const std::string& fileName)
+bool IOMap::parseMapDataAttributes(OTB::Loader& loader, const OTB::Node& mapNode, Map& map, std::string_view fileName)
 {
 	PropStream propStream;
 	if (!loader.getProps(mapNode, propStream)) {

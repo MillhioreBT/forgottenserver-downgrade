@@ -6,21 +6,7 @@
 
 #include "networkmessage.h"
 
-enum ConnectionState_t
-{
-	CONNECTION_STATE_DISCONNECTED,
-	CONNECTION_STATE_REQUEST_CHARLIST,
-	CONNECTION_STATE_GAMEWORLD_AUTH,
-	CONNECTION_STATE_GAME,
-	CONNECTION_STATE_PENDING
-};
-
-enum checksumMode_t
-{
-	CHECKSUM_DISABLED,
-	CHECKSUM_ADLER,
-	CHECKSUM_SEQUENCE
-};
+#include <unordered_set>
 
 static constexpr int32_t CONNECTION_WRITE_TIMEOUT = 30;
 static constexpr int32_t CONNECTION_READ_TIMEOUT = 30;
@@ -61,7 +47,6 @@ private:
 class Connection : public std::enable_shared_from_this<Connection>
 {
 public:
-	using Address = boost::asio::ip::address;
 	// non-copyable
 	Connection(const Connection&) = delete;
 	Connection& operator=(const Connection&) = delete;
@@ -89,7 +74,7 @@ public:
 
 	void send(const OutputMessage_ptr& msg);
 
-	const Address& getIP() const { return remoteAddress; };
+	uint32_t getIP();
 
 private:
 	void parseHeader(const boost::system::error_code& error);
@@ -118,14 +103,12 @@ private:
 	Protocol_ptr protocol;
 
 	boost::asio::ip::tcp::socket socket;
-	Address remoteAddress;
+
 	time_t timeConnected;
 	uint32_t packetsSent = 0;
 
-	ConnectionState_t connectionState = CONNECTION_STATE_PENDING;
+	bool closed = false;
 	bool receivedFirst = false;
-	bool receivedName = false;
-	bool receivedLastChar = false;
 };
 
-#endif // FS_CONNECTION_H
+#endif

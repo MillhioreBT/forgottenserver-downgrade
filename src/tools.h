@@ -16,13 +16,6 @@ void printXMLError(const std::string& where, const std::string& fileName, const 
 std::string transformToSHA1(std::string_view input);
 std::string generateToken(const std::string& key, uint32_t ticks);
 
-void replaceString(std::string& str, const std::string& sought, const std::string& replacement);
-void trim_right(std::string& source, char t);
-void trim_left(std::string& source, char t);
-void toLowerCaseString(std::string& source);
-std::string asLowerCaseString(std::string source);
-std::string asUpperCaseString(std::string source);
-
 // checks that str1 is equivalent to str2 ignoring letter case
 bool caseInsensitiveEqual(std::string_view str1, std::string_view str2);
 
@@ -45,12 +38,12 @@ Direction getDirection(const std::string& string);
 Position getNextPosition(Direction direction, Position pos);
 Direction getDirectionTo(const Position& from, const Position& to);
 
-std::string getFirstLine(const std::string& str);
+std::string getFirstLine(std::string_view str);
+std::string getStringLine(std::string_view str, const int lineNumber);
 
 std::string formatDate(time_t time);
 std::string formatDateShort(time_t time);
-
-void trimString(std::string& str);
+std::string convertIPToString(uint32_t ip);
 
 MagicEffectClasses getMagicEffect(const std::string& strValue);
 ShootType_t getShootType(const std::string& strValue);
@@ -65,7 +58,7 @@ uint32_t adlerChecksum(const uint8_t* data, size_t length);
 
 std::string ucfirst(std::string str);
 std::string ucwords(std::string str);
-bool booleanString(const std::string& str);
+bool booleanString(std::string_view str);
 
 std::string getWeaponName(WeaponType_t weaponType);
 
@@ -77,10 +70,10 @@ uint8_t clientFluidToServer(uint8_t clientFluid);
 
 itemAttrTypes stringToItemAttribute(const std::string& str);
 
-const char* getReturnMessage(ReturnValue value);
+std::string_view getReturnMessage(ReturnValue value);
 
 int64_t OTSYS_TIME();
 
-SpellGroup_t stringToSpellGroup(const std::string& value);
+SpellGroup_t stringToSpellGroup(std::string_view value);
 
 #endif

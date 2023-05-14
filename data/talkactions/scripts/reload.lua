@@ -43,7 +43,7 @@ local reloadTypes = {
 	["raids"] = RELOAD_TYPE_RAIDS,
 
 	["spell"] = RELOAD_TYPE_SPELLS,
-	["spells"] =  RELOAD_TYPE_SPELLS,
+	["spells"] = RELOAD_TYPE_SPELLS,
 
 	["talk"] = RELOAD_TYPE_TALKACTIONS,
 	["talkaction"] = RELOAD_TYPE_TALKACTIONS,
@@ -53,7 +53,7 @@ local reloadTypes = {
 	["weapons"] = RELOAD_TYPE_WEAPONS,
 
 	["scripts"] = RELOAD_TYPE_SCRIPTS,
-	["libs"] = RELOAD_TYPE_GLOBAL
+	["libs"] = RELOAD_TYPE_GLOBAL,
 }
 
 function onSay(player, words, param)
@@ -74,11 +74,16 @@ function onSay(player, words, param)
 	end
 
 	-- need to clear EventCallback.data or we end up having duplicated events on /reload scripts
-	if table.contains({RELOAD_TYPE_SCRIPTS, RELOAD_TYPE_ALL}, reloadType) then
-		EventCallback:clear()
+	if table.contains({ RELOAD_TYPE_SCRIPTS, RELOAD_TYPE_ALL }, reloadType) then
+		Event:clear()
+		Game.clearQuests()
 	end
 
 	Game.reload(reloadType)
+	if reloadType == RELOAD_TYPE_GLOBAL then
+		-- we need to reload the scripts as well
+		Game.reload(RELOAD_TYPE_SCRIPTS)
+	end
 	player:sendTextMessage(MESSAGE_STATUS_CONSOLE_BLUE, string.format("Reloaded %s.", param:lower()))
 	return false
 end

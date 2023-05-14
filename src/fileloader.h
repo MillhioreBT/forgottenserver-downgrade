@@ -73,7 +73,7 @@ public:
 			return false;
 		}
 
-		memcpy(&ret, p, sizeof(T));
+		std::memcpy(&ret, p, sizeof(T));
 		p += sizeof(T);
 		return true;
 	}
@@ -90,7 +90,7 @@ public:
 		}
 
 		char* str = new char[strLen + 1];
-		memcpy(str, p, strLen);
+		std::memcpy(str, p, strLen);
 		str[strLen] = 0;
 		ret.assign(str, strLen);
 		delete[] str;
@@ -137,7 +137,7 @@ public:
 		std::copy(addr, addr + sizeof(T), std::back_inserter(buffer));
 	}
 
-	void writeString(const std::string& str)
+	void writeString(std::string_view str)
 	{
 		size_t strLength = str.size();
 		if (strLength > std::numeric_limits<uint16_t>::max()) {

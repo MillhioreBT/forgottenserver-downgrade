@@ -23,9 +23,9 @@ Attr_ReadValue BedItem::readAttr(AttrTypes_t attr, PropStream& propStream)
 			}
 
 			if (guid != 0) {
-				std::string name = IOLoginData::getNameByGuid(guid);
+				auto name = IOLoginData::getNameByGuid(guid);
 				if (!name.empty()) {
-					setSpecialDescription(name + " is sleeping there.");
+					setSpecialDescription(fmt::format("{} is sleeping there.", name));
 					g_game.setBedSleeper(this, guid);
 					sleeperGUID = guid;
 				}
@@ -145,9 +145,8 @@ bool BedItem::sleep(Player* player)
 	g_game.addMagicEffect(player->getPosition(), CONST_ME_SLEEP);
 
 	// kick player after he sees himself walk onto the bed and it change id
-	uint32_t playerId = player->getID();
-	g_scheduler.addEvent(
-	    createSchedulerTask(SCHEDULER_MINTICKS, std::bind(&Game::kickPlayer, &g_game, playerId, false)));
+	g_scheduler.addEvent(createSchedulerTask(SCHEDULER_MINTICKS,
+	                                         [playerID = player->getID()]() { g_game.kickPlayer(playerID, false); }));
 
 	// change self and partner's appearance
 	updateAppearance(player);

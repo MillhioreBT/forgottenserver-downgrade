@@ -12,7 +12,7 @@
 
 extern Game g_game;
 
-void ProtocolOld::disconnectClient(const std::string& message)
+void ProtocolOld::disconnectClient(std::string_view message)
 {
 	auto output = OutputMessagePool::getOutputMessage();
 	output->addByte(0x0A);
@@ -52,7 +52,7 @@ void ProtocolOld::onRecvFirstMessage(NetworkMessage& msg)
 	setXTEAKey(std::move(key));
 
 	if (version <= 822) {
-		setChecksumMode(CHECKSUM_DISABLED);
+		disableChecksum();
 	}
 
 	disconnectClient(fmt::format("Only clients with protocol {:s} allowed!", CLIENT_VERSION_STR));

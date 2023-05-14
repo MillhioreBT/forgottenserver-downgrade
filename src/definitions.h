@@ -5,8 +5,8 @@
 #define FS_DEFINITIONS_H
 
 static constexpr auto STATUS_SERVER_NAME = "The Forgotten Server";
-static constexpr auto STATUS_SERVER_VERSION = "1.5 (Nekiro, MillhioreBT)";
-static constexpr auto STATUS_SERVER_DEVELOPERS = "Mark Samman";
+static constexpr auto STATUS_SERVER_VERSION = "1.5";
+static constexpr auto STATUS_SERVER_DEVELOPERS = "Mark Samman, Nekiro, MillhioreBT, ranisalt, EPuncker";
 
 static constexpr auto CLIENT_VERSION_MIN = 860;
 static constexpr auto CLIENT_VERSION_MAX = 860;

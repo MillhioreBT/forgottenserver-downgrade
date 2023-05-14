@@ -367,7 +367,7 @@ void Tile::onAddTileItem(Item* item)
 		spectator->onAddTileItem(this, cylinderMapPos);
 	}
 
-	if ((!hasFlag(TILESTATE_PROTECTIONZONE) || g_config.getBoolean(ConfigManager::CLEAN_PROTECTION_ZONES)) &&
+	if ((!hasFlag(TILESTATE_PROTECTIONZONE) || g_config[ConfigKeysBoolean::CLEAN_PROTECTION_ZONES]) &&
 	    item->isCleanable()) {
 		if (!dynamic_cast<HouseTile*>(this)) {
 			g_game.addTileToClean(this);
@@ -415,7 +415,7 @@ void Tile::onRemoveTileItem(const SpectatorVec& spectators, const std::vector<in
 		spectator->onRemoveTileItem(this, cylinderMapPos, iType, item);
 	}
 
-	if (!hasFlag(TILESTATE_PROTECTIONZONE) || g_config.getBoolean(ConfigManager::CLEAN_PROTECTION_ZONES)) {
+	if (!hasFlag(TILESTATE_PROTECTIONZONE) || g_config[ConfigKeysBoolean::CLEAN_PROTECTION_ZONES]) {
 		auto items = getItemList();
 		if (!items || items->empty()) {
 			g_game.removeTileToClean(this);
@@ -924,7 +924,7 @@ void Tile::updateThing(Thing* thing, uint16_t itemId, uint32_t count)
 	const ItemType& newType = Item::items[itemId];
 	resetTileFlags(item);
 	item->setID(itemId);
-	item->setSubType(count);
+	item->setSubType(static_cast<uint16_t>(count));
 	setTileFlags(item);
 	onUpdateTileItem(item, oldType, item, newType);
 }

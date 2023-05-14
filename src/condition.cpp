@@ -188,7 +188,8 @@ Condition* Condition::createCondition(ConditionId_t id, ConditionType_t type, in
 			return new ConditionOutfit(id, type, ticks, buff, subId, aggressive);
 
 		case CONDITION_LIGHT:
-			return new ConditionLight(id, type, ticks, buff, subId, param & 0xFF, (param & 0xFF00) >> 8, aggressive);
+			return new ConditionLight(id, type, ticks, buff, subId, static_cast<uint8_t>(param & 0xFF),
+			                          static_cast<uint8_t>((param & 0xFF00) >> 8), aggressive);
 
 		case CONDITION_REGENERATION:
 			return new ConditionRegeneration(id, type, ticks, buff, subId, aggressive);
@@ -200,7 +201,7 @@ Condition* Condition::createCondition(ConditionId_t id, ConditionType_t type, in
 			return new ConditionAttributes(id, type, ticks, buff, subId, aggressive);
 
 		case CONDITION_DRUNK:
-			return new ConditionDrunk(id, type, ticks, buff, subId, param, aggressive);
+			return new ConditionDrunk(id, type, ticks, buff, subId, static_cast<uint8_t>(param), aggressive);
 
 		case CONDITION_INFIGHT:
 		case CONDITION_EXHAUST_WEAPON:
@@ -1769,11 +1770,11 @@ bool ConditionLight::setParam(ConditionParam_t param, int32_t value)
 
 	switch (param) {
 		case CONDITION_PARAM_LIGHT_LEVEL:
-			lightInfo.level = value;
+			lightInfo.level = static_cast<uint8_t>(value);
 			return true;
 
 		case CONDITION_PARAM_LIGHT_COLOR:
-			lightInfo.color = value;
+			lightInfo.color = static_cast<uint8_t>(value);
 			return true;
 
 		default:
@@ -1798,16 +1799,16 @@ int32_t ConditionLight::getParam(ConditionParam_t param)
 bool ConditionLight::unserializeProp(ConditionAttr_t attr, PropStream& propStream)
 {
 	if (attr == CONDITIONATTR_LIGHTCOLOR) {
-		uint32_t value;
-		if (!propStream.read<uint32_t>(value)) {
+		uint8_t value;
+		if (!propStream.read<uint8_t>(value)) {
 			return false;
 		}
 
 		lightInfo.color = value;
 		return true;
 	} else if (attr == CONDITIONATTR_LIGHTLEVEL) {
-		uint32_t value;
-		if (!propStream.read<uint32_t>(value)) {
+		uint8_t value;
+		if (!propStream.read<uint8_t>(value)) {
 			return false;
 		}
 
@@ -1878,7 +1879,7 @@ bool ConditionDrunk::setParam(ConditionParam_t param, int32_t value)
 
 	switch (param) {
 		case CONDITION_PARAM_DRUNKENNESS: {
-			drunkenness = value;
+			drunkenness = static_cast<uint8_t>(value);
 			return true;
 		}
 

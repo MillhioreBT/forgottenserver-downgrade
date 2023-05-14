@@ -8,47 +8,13 @@
 #include "configmanager.h"
 #include "events.h"
 #include "game.h"
+#include "matrixarea.h"
 #include "weapons.h"
 
 extern Game g_game;
 extern Weapons* g_weapons;
 extern ConfigManager g_config;
 extern Events* g_events;
-
-namespace {
-
-MatrixArea createArea(const std::vector<uint32_t>& vec, uint32_t rows)
-{
-	uint32_t cols;
-	if (rows == 0) {
-		cols = 0;
-	} else {
-		cols = vec.size() / rows;
-	}
-
-	MatrixArea area{rows, cols};
-
-	uint32_t x = 0;
-	uint32_t y = 0;
-
-	for (uint32_t value : vec) {
-		if (value == 1 || value == 3) {
-			area(y, x) = true;
-		}
-
-		if (value == 2 || value == 3) {
-			area.setCenter(y, x);
-		}
-
-		++x;
-
-		if (cols == x) {
-			x = 0;
-			++y;
-		}
-	}
-	return area;
-}
 
 std::vector<Tile*> getList(const MatrixArea& area, const Position& targetPos, const Direction dir)
 {
@@ -72,7 +38,7 @@ std::vector<Tile*> getList(const MatrixArea& area, const Position& targetPos, co
 				}
 			}
 		}
-		tmpPos.x -= area.getCols();
+		tmpPos.x -= static_cast<uint16_t>(area.getCols());
 	}
 	return vec;
 }
@@ -94,8 +60,6 @@ std::vector<Tile*> getCombatArea(const Position& centerPos, const Position& targ
 	}
 	return {tile};
 }
-
-} // namespace
 
 CombatDamage Combat::getCombatDamage(Creature* creature, Creature* target) const
 {
@@ -131,6 +95,8 @@ CombatDamage Combat::getCombatDamage(Creature* creature, Creature* target) const
 	}
 	return damage;
 }
+
+void Combat::setArea(AreaCombat* area) { this->area.reset(area); }
 
 CombatType_t Combat::ConditionToDamageType(ConditionType_t type)
 {
@@ -305,7 +271,7 @@ bool Combat::isInPvpZone(const Creature* attacker, const Creature* target)
 
 bool Combat::isProtected(const Player* attacker, const Player* target)
 {
-	uint32_t protectionLevel = g_config.getNumber(ConfigManager::PROTECTION_LEVEL);
+	const int64_t protectionLevel = g_config[ConfigKeysInteger::PROTECTION_LEVEL];
 	if (target->getLevel() < protectionLevel || attacker->getLevel() < protectionLevel) {
 		return true;
 	}
@@ -449,7 +415,7 @@ bool Combat::setParam(CombatParam_t param, uint32_t value)
 		}
 
 		case COMBAT_PARAM_CREATEITEM: {
-			params.itemId = value;
+			params.itemId = static_cast<uint16_t>(value);
 			return true;
 		}
 
@@ -1167,7 +1133,7 @@ void ValueCallback::getMinMaxValues(Player* player, CombatDamage& damage) const
 		LuaScriptInterface::reportError(nullptr, LuaScriptInterface::popString(L));
 	} else {
 		damage.primary.value =
-		    normal_random(LuaScriptInterface::getInteger<int32_t>(L, -2), LuaScriptInterface::getInteger<int32_t>(L, -1));
+		    normal_random(LuaScriptInterface::getNumber<int32_t>(L, -2), LuaScriptInterface::getNumber<int32_t>(L, -1));
 		lua_pop(L, 2);
 	}
 
@@ -1253,60 +1219,6 @@ void TargetCallback::onTargetCombat(Creature* creature, Creature* target) const
 	}
 
 	scriptInterface->resetScriptEnv();
-}
-
-//**********************************************************//
-
-MatrixArea MatrixArea::flip() const
-{
-	Container newArr(arr.size());
-	for (uint32_t i = 0; i < rows; ++i) {
-		// assign rows, top to bottom, to the current rows, bottom to top
-		newArr[std::slice(i * cols, cols, 1)] = arr[std::slice((rows - i - 1) * cols, cols, 1)];
-	}
-	return {{cols - center.first - 1, center.second}, rows, cols, std::move(newArr)};
-}
-
-MatrixArea MatrixArea::mirror() const
-{
-	Container newArr(arr.size());
-	for (uint32_t i = 0; i < cols; ++i) {
-		// assign cols, left to right, to the current rows, right to left
-		newArr[std::slice(i, cols, rows)] = arr[std::slice(cols - i - 1, cols, rows)];
-	}
-	return {{center.first, rows - center.second - 1}, rows, cols, std::move(newArr)};
-}
-
-MatrixArea MatrixArea::transpose() const
-{
-	return {{center.second, center.first}, rows, cols, arr[std::gslice(0, {cols, rows}, {1, cols})]};
-}
-
-MatrixArea MatrixArea::rotate90() const
-{
-	Container newArr(arr.size());
-	for (uint32_t i = 0; i < rows; ++i) {
-		// assign rows, top to bottom, to the current cols, right to left
-		newArr[std::slice(i, cols, rows)] = arr[std::slice((rows - i - 1) * cols, cols, 1)];
-	}
-	return {{rows - center.second - 1, center.first}, cols, rows, std::move(newArr)};
-}
-
-MatrixArea MatrixArea::rotate180() const
-{
-	Container newArr(arr.size());
-	std::reverse_copy(std::begin(arr), std::end(arr), std::begin(newArr));
-	return {{cols - center.first - 1, rows - center.second - 1}, rows, cols, std::move(newArr)};
-}
-
-MatrixArea MatrixArea::rotate270() const
-{
-	Container newArr(arr.size());
-	for (uint32_t i = 0; i < cols; ++i) {
-		// assign cols, left to right, to the current rows, bottom to top
-		newArr[std::slice(i * rows, rows, 1)] = arr[std::slice(cols - i - 1, rows, cols)];
-	}
-	return {{center.second, cols - center.first - 1}, cols, rows, std::move(newArr)};
 }
 
 const MatrixArea& AreaCombat::getArea(const Position& centerPos, const Position& targetPos) const
@@ -1458,7 +1370,7 @@ void AreaCombat::setupExtArea(const std::vector<uint32_t>& vec, uint32_t rows)
 	areas.resize(8);
 	areas[DIRECTION_NORTHEAST] = area.mirror();
 	areas[DIRECTION_SOUTHWEST] = area.flip();
-	areas[DIRECTION_SOUTHEAST] = area.transpose();
+	areas[DIRECTION_SOUTHEAST] = area.rotate180();
 	areas[DIRECTION_NORTHWEST] = std::move(area);
 }
 

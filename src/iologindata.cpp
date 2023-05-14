@@ -30,7 +30,7 @@ Account IOLoginData::loadAccount(uint32_t accno)
 	return account;
 }
 
-std::string decodeSecret(const std::string& secret)
+std::string decodeSecret(std::string_view secret)
 {
 	// simple base32 decoding
 	std::string key;
@@ -59,7 +59,7 @@ std::string decodeSecret(const std::string& secret)
 	return key;
 }
 
-bool IOLoginData::loginserverAuthentication(const std::string& name, const std::string& password, Account& account)
+bool IOLoginData::loginserverAuthentication(std::string_view name, std::string_view password, Account& account)
 {
 	Database& db = Database::getInstance();
 
@@ -84,7 +84,7 @@ bool IOLoginData::loginserverAuthentication(const std::string& name, const std::
 	    "SELECT `name` FROM `players` WHERE `account_id` = {:d} AND `deletion` = 0 ORDER BY `name` ASC", account.id));
 	if (result) {
 		do {
-			account.characters.push_back(result->getString("name"));
+			account.characters.push_back(std::string{result->getString("name")});
 		} while (result->next());
 	}
 	return true;
@@ -103,6 +103,7 @@ std::pair<uint32_t, uint32_t> IOLoginData::gameworldAuthentication(std::string_v
 	}
 
 	if (transformToSHA1(password) != result->getString("password")) {
+		// fmt::print("{} != {}\n", transformToSHA1(password), result->getString("password"));
 		return {};
 	}
 
@@ -112,7 +113,7 @@ std::pair<uint32_t, uint32_t> IOLoginData::gameworldAuthentication(std::string_v
 	return std::make_pair(accountId, characterId);
 }
 
-uint32_t IOLoginData::getAccountIdByPlayerName(const std::string& playerName)
+uint32_t IOLoginData::getAccountIdByPlayerName(std::string_view playerName)
 {
 	Database& db = Database::getInstance();
 
@@ -153,7 +154,7 @@ void IOLoginData::setAccountType(uint32_t accountId, AccountType_t accountType)
 
 void IOLoginData::updateOnlineStatus(uint32_t guid, bool login)
 {
-	if (g_config.getBoolean(ConfigManager::ALLOW_CLONES)) {
+	if (g_config[ConfigKeysBoolean::ALLOW_CLONES]) {
 		return;
 	}
 
@@ -200,7 +201,7 @@ bool IOLoginData::loadPlayerById(Player* player, uint32_t id)
 	        id)));
 }
 
-bool IOLoginData::loadPlayerByName(Player* player, const std::string& name)
+bool IOLoginData::loadPlayerByName(Player* player, std::string_view name)
 {
 	Database& db = Database::getInstance();
 	return loadPlayer(
@@ -431,6 +432,7 @@ bool IOLoginData::loadPlayer(Player* player, DBResult_ptr result)
 			int32_t pid = pair.second;
 			if (pid >= CONST_SLOT_FIRST && pid <= CONST_SLOT_LAST) {
 				player->internalAddThing(pid, item);
+				player->postAddNotification(item, nullptr, pid);
 			} else {
 				ItemMap::const_iterator it2 = itemMap.find(pid);
 				if (it2 == itemMap.end()) {
@@ -608,9 +610,8 @@ bool IOLoginData::savePlayer(Player* player)
 	}
 
 	if (result->getNumber<uint16_t>("save") == 0) {
-		return db.executeQuery(
-		    fmt::format("UPDATE `players` SET `lastlogin` = {:d}, `lastip` = INET6_ATON('{:s}') WHERE `id` = {:d}",
-		                player->lastLoginSaved, player->lastIP.to_string(), player->getGUID()));
+		return db.executeQuery(fmt::format("UPDATE `players` SET `lastlogin` = {:d}, `lastip` = {:d} WHERE `id` = {:d}",
+		                                   player->lastLoginSaved, player->lastIP, player->getGUID()));
 	}
 
 	// serialize conditions
@@ -659,8 +660,8 @@ bool IOLoginData::savePlayer(Player* player)
 		query << "`lastlogin` = " << player->lastLoginSaved << ',';
 	}
 
-	if (!player->lastIP.is_unspecified()) {
-		query << "`lastip` = INET6_ATON('" << player->lastIP.to_string() << "'),";
+	if (player->lastIP != 0) {
+		query << "`lastip` = " << player->lastIP << ",";
 	}
 
 	query << "`conditions` = " << db.escapeBlob(conditions, conditionsSize) << ',';
@@ -723,7 +724,7 @@ bool IOLoginData::savePlayer(Player* player)
 	}
 
 	DBInsert spellsQuery("INSERT INTO `player_spells` (`player_id`, `name` ) VALUES ");
-	for (const std::string& spellName : player->learnedInstantSpellList) {
+	for (std::string_view spellName : player->learnedInstantSpellList) {
 		if (!spellsQuery.addRow(fmt::format("{:d}, {:s}", player->getGUID(), db.escapeString(spellName)))) {
 			return false;
 		}
@@ -829,17 +830,17 @@ bool IOLoginData::savePlayer(Player* player)
 	return transaction.commit();
 }
 
-std::string IOLoginData::getNameByGuid(uint32_t guid)
+std::string_view IOLoginData::getNameByGuid(uint32_t guid)
 {
 	DBResult_ptr result =
 	    Database::getInstance().storeQuery(fmt::format("SELECT `name` FROM `players` WHERE `id` = {:d}", guid));
 	if (!result) {
-		return std::string();
+		return {};
 	}
 	return result->getString("name");
 }
 
-uint32_t IOLoginData::getGuidByName(const std::string& name)
+uint32_t IOLoginData::getGuidByName(std::string_view name)
 {
 	Database& db = Database::getInstance();
 

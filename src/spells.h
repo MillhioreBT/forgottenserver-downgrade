@@ -6,17 +6,18 @@
 
 #include "actions.h"
 #include "baseevents.h"
-#include "luascript.h"
 #include "player.h"
 #include "talkaction.h"
+#include "vocation.h"
 
 class InstantSpell;
 class RuneSpell;
 class Spell;
 
-using VocSpellMap = std::map<uint16_t, bool>;
 using InstantSpell_ptr = std::unique_ptr<InstantSpell>;
 using RuneSpell_ptr = std::unique_ptr<RuneSpell>;
+
+extern Vocations g_vocations;
 
 class Spells final : public BaseEvents
 {
@@ -28,12 +29,12 @@ public:
 	Spells(const Spells&) = delete;
 	Spells& operator=(const Spells&) = delete;
 
-	Spell* getSpellByName(const std::string& name);
+	Spell* getSpellByName(std::string_view name);
 	RuneSpell* getRuneSpell(uint32_t id);
-	RuneSpell* getRuneSpellByName(const std::string& name);
+	RuneSpell* getRuneSpellByName(std::string_view name);
 
-	InstantSpell* getInstantSpell(const std::string& words);
-	InstantSpell* getInstantSpellByName(const std::string& name);
+	InstantSpell* getInstantSpell(std::string_view words);
+	InstantSpell* getInstantSpellByName(std::string_view name);
 
 	TalkActionResult_t playerSaySpell(Player* player, std::string& words);
 
@@ -103,8 +104,8 @@ public:
 	Spell() = default;
 
 	bool configureSpell(const pugi::xml_node& node);
-	const std::string& getName() const { return name; }
-	void setName(std::string n) { name = n; }
+	std::string_view getName() const { return name; }
+	void setName(std::string_view newName) { name = newName; }
 	uint8_t getId() const { return spellId; }
 	void setId(uint8_t id) { spellId = id; }
 
@@ -131,8 +132,18 @@ public:
 	bool isLearnable() const { return learnable; }
 	void setLearnable(bool l) { learnable = l; }
 
-	const VocSpellMap& getVocMap() const { return vocSpellMap; }
-	void addVocMap(uint16_t n, bool b) { vocSpellMap[n] = b; }
+	const auto& getVocationSpellMap() const { return vocationSpellMap; }
+	void addVocationSpellMap(const std::string& vocationName, bool showInDescription)
+	{
+		int32_t vocationId = g_vocations.getVocationId(vocationName);
+		if (vocationId != -1) {
+			vocationSpellMap[static_cast<uint16_t>(vocationId)] = showInDescription;
+		}
+	}
+	bool hasVocationSpellMap(uint16_t vocationId) const
+	{
+		return vocationSpellMap.empty() || vocationSpellMap.contains(vocationId);
+	}
 
 	const SpellGroup_t getGroup() const { return group; }
 	void setGroup(SpellGroup_t g) { group = g; }
@@ -173,7 +184,7 @@ protected:
 	bool playerInstantSpellCheck(Player* player, const Position& toPos);
 	bool playerRuneSpellCheck(Player* player, const Position& toPos);
 
-	VocSpellMap vocSpellMap;
+	std::map<uint16_t, bool> vocationSpellMap;
 
 	SpellGroup_t group = SPELLGROUP_NONE;
 	SpellGroup_t secondaryGroup = SPELLGROUP_NONE;
