@@ -1,4 +1,4 @@
-# Nekiro's 8.60 Downgrade
+# TFS Nekiro's Downgrade - 860
 ## by 𝓜𝓲𝓵𝓵𝓱𝓲𝓸𝓻𝓮 𝓑𝓣
 
 This downgrade is not download and run distribution, monsters and spells are probably not 100% correct.
