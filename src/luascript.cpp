@@ -875,12 +875,58 @@ Creature* LuaScriptInterface::getCreature(lua_State* L, int32_t arg)
 	return g_game.getCreatureByID(getInteger<uint32_t>(L, arg));
 }
 
+void LuaScriptInterface::getCreatures(lua_State* L, int32_t arg, SpectatorVec& spectators)
+{
+	if (!isTable(L, arg)) {
+		return;
+	}
+
+	lua_pushnil(L);
+	while (lua_next(L, arg) != 0) {
+		if (isUserdata(L, -1)) {
+			if (auto creature = getUserdata<Creature>(L, -1)) {
+				spectators.emplace_back(creature);
+			}
+		} else if (isInteger(L, -1)) {
+			if (auto creature = g_game.getCreatureByID(getInteger<uint32_t>(L, -1))) {
+				spectators.emplace_back(creature);
+			}
+		}
+		lua_pop(L, 1);
+	}
+
+	lua_pop(L, 1);
+}
+
 Player* LuaScriptInterface::getPlayer(lua_State* L, int32_t arg)
 {
 	if (isUserdata(L, arg)) {
 		return getUserdata<Player>(L, arg);
 	}
 	return g_game.getPlayerByID(getInteger<uint32_t>(L, arg));
+}
+
+void LuaScriptInterface::getPlayers(lua_State* L, int32_t arg, SpectatorVec& spectators)
+{
+	if (!isTable(L, arg)) {
+		return;
+	}
+
+	lua_pushnil(L);
+	while (lua_next(L, arg) != 0) {
+		if (isUserdata(L, -1)) {
+			if (auto player = getUserdata<Player>(L, -1)) {
+				spectators.emplace_back(player);
+			}
+		} else if (isInteger(L, -1)) {
+			if (auto player = g_game.getPlayerByID(getInteger<uint32_t>(L, -1))) {
+				spectators.emplace_back(player);
+			}
+		}
+		lua_pop(L, 1);
+	}
+
+	lua_pop(L, 1);
 }
 
 std::string LuaScriptInterface::getFieldString(lua_State* L, int32_t arg, std::string_view key)
@@ -4827,13 +4873,10 @@ int LuaScriptInterface::luaPositionIsSightClear(lua_State* L)
 
 int LuaScriptInterface::luaPositionSendMagicEffect(lua_State* L)
 {
-	// position:sendMagicEffect(magicEffect[, player = nullptr])
+	// position:sendMagicEffect(magicEffect[, players = {}])
 	SpectatorVec spectators;
 	if (lua_gettop(L) >= 3) {
-		Player* player = getPlayer(L, 3);
-		if (player) {
-			spectators.emplace_back(player);
-		}
+		getPlayers(L, 3, spectators);
 	}
 
 	MagicEffectClasses magicEffect = getInteger<MagicEffectClasses>(L, 2);
@@ -4850,13 +4893,10 @@ int LuaScriptInterface::luaPositionSendMagicEffect(lua_State* L)
 
 int LuaScriptInterface::luaPositionSendDistanceEffect(lua_State* L)
 {
-	// position:sendDistanceEffect(positionEx, distanceEffect[, player = nullptr])
+	// position:sendDistanceEffect(positionEx, distanceEffect[, players = {}])
 	SpectatorVec spectators;
 	if (lua_gettop(L) >= 4) {
-		Player* player = getPlayer(L, 4);
-		if (player) {
-			spectators.emplace_back(player);
-		}
+		getPlayers(L, 4, spectators);
 	}
 
 	ShootType_t distanceEffect = getInteger<ShootType_t>(L, 3);
@@ -7691,7 +7731,7 @@ int LuaScriptInterface::luaCreatureTeleportTo(lua_State* L)
 
 int LuaScriptInterface::luaCreatureSay(lua_State* L)
 {
-	// creature:say(text[, type = TALKTYPE_MONSTER_SAY[, ghost = false[, target = nullptr[, position]]]])
+	// creature:say(text[, type = TALKTYPE_MONSTER_SAY[, ghost = false[, targets = {}[, position]]]])
 	int parameters = lua_gettop(L);
 
 	Position position;
@@ -7702,11 +7742,6 @@ int LuaScriptInterface::luaCreatureSay(lua_State* L)
 			pushBoolean(L, false);
 			return 1;
 		}
-	}
-
-	Creature* target = nullptr;
-	if (parameters >= 5) {
-		target = getCreature(L, 5);
 	}
 
 	bool ghost = getBoolean(L, 4, false);
@@ -7720,8 +7755,8 @@ int LuaScriptInterface::luaCreatureSay(lua_State* L)
 	}
 
 	SpectatorVec spectators;
-	if (target) {
-		spectators.emplace_back(target);
+	if (parameters >= 5) {
+		getCreatures(L, 5, spectators);
 	}
 
 	// Prevent infinity echo on event onHear

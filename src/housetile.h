@@ -13,6 +13,8 @@ class HouseTile final : public DynamicTile
 public:
 	HouseTile(uint16_t x, uint16_t y, uint8_t z, House* house);
 
+	using Tile::internalAddThing;
+
 	// cylinder implementations
 	ReturnValue queryAdd(int32_t index, const Thing& thing, uint32_t count, uint32_t flags,
 	                     Creature* actor = nullptr) const override;
@@ -23,7 +25,6 @@ public:
 	                        Creature* actor = nullptr) const override;
 
 	void addThing(int32_t index, Thing* thing) override;
-	using Tile::internalAddThing;
 	void internalAddThing(uint32_t index, Thing* thing) override;
 
 	House* getHouse() { return house; }

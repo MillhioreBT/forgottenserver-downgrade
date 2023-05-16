@@ -19,6 +19,7 @@
 #endif
 
 class AreaCombat;
+class SpectatorVec;
 class Combat;
 class Container;
 class Creature;
@@ -379,7 +380,9 @@ public:
 
 	static Thing* getThing(lua_State* L, int32_t arg);
 	static Creature* getCreature(lua_State* L, int32_t arg);
+	static void getCreatures(lua_State* L, int32_t arg, SpectatorVec& spectators);
 	static Player* getPlayer(lua_State* L, int32_t arg);
+	static void getPlayers(lua_State* L, int32_t arg, SpectatorVec& spectators);
 
 	template <typename T>
 	static typename std::enable_if<std::is_enum<T>::value || std::is_integral<T>::value, T>::type getField(

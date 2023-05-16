@@ -96,14 +96,15 @@ TalkActionResult_t TalkActions::playerSaySpell(Player* player, SpeakClasses type
 			}
 		}
 
-		if (it->second.fromLua) {
-			if (it->second.getNeedAccess() && !player->getGroup()->access) {
-				return TALKACTION_CONTINUE;
-			}
+		if (it->second.getNeedAccess() && !player->isAccessPlayer()) {
+			std::cout << player->getGroup()->access << std::endl;
+			return TALKACTION_CONTINUE;
+		}
 
-			if (player->getAccountType() < it->second.getRequiredAccountType()) {
-				return TALKACTION_CONTINUE;
-			}
+		if (player->getAccountType() < it->second.getRequiredAccountType()) {
+			std::cout << static_cast<uint16_t>(player->getAccountType()) << " - "
+			          << static_cast<uint16_t>(it->second.getRequiredAccountType()) << std::endl;
+			return TALKACTION_CONTINUE;
 		}
 
 		if (it->second.executeSay(player, words, param, type)) {
@@ -130,12 +131,12 @@ bool TalkAction::configureEvent(const pugi::xml_node& node)
 
 	pugi::xml_attribute accessAttribute = node.attribute("access");
 	if (accessAttribute) {
-		needAccess = pugi::cast<bool>(accessAttribute.value());
+		needAccess = accessAttribute.as_bool();
 	}
 
 	pugi::xml_attribute accountTypeAttribute = node.attribute("accountType");
 	if (accountTypeAttribute) {
-		requiredAccountType = static_cast<AccountType_t>(pugi::cast<uint8_t>(accountTypeAttribute.value()));
+		requiredAccountType = static_cast<AccountType_t>(pugi::cast<int32_t>(accountTypeAttribute.value()));
 	}
 
 	for (const auto& word : explodeString(wordsAttribute.as_string(), ";")) {

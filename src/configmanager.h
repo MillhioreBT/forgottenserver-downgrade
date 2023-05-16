@@ -45,6 +45,7 @@ enum class ConfigKeysBoolean
 	ONLY_INVITED_CAN_MOVE_HOUSE_ITEMS,
 	REMOVE_ON_DESPAWN,
 	MONSTER_OVERSPAWN,
+	SHOW_HPMPCHANGE_PREFIX,
 
 	LAST /* this must be the last one */
 };
@@ -114,6 +115,9 @@ enum class ConfigKeysInteger
 	DEPOT_PREMIUM_LIMIT,
 	STAMINA_REGEN_MINUTE,
 	STAMINA_REGEN_PREMIUM,
+	HEALTH_GAIN_COLOUR,
+	MANA_GAIN_COLOUR,
+	MANA_LOSS_COLOUR,
 
 	LAST /* this must be the last one */
 };

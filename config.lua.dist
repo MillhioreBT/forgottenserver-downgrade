@@ -97,6 +97,9 @@ forceMonsterTypesOnLoad = true
 cleanProtectionZones = false
 luaItemDesc = false
 showPlayerLogInConsole = true
+healthGainColour = 95
+manaGainColour = 5
+manaLossColour = 5
 
 -- VIP and Depot limits
 -- NOTE: you can set custom limits per group in data/XML/groups.xml

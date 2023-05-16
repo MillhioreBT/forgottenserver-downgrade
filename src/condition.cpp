@@ -5,9 +5,11 @@
 
 #include "condition.h"
 
+#include "configmanager.h"
 #include "game.h"
 
 extern Game g_game;
+extern ConfigManager g_config;
 
 bool Condition::setParam(ConditionParam_t param, int32_t value)
 {
@@ -888,7 +890,8 @@ bool ConditionRegeneration::executeCondition(Creature* creature, int32_t interva
 				TextMessage message(MESSAGE_STATUS_DEFAULT, "You were healed for " + healString);
 				player->sendTextMessage(message);
 
-				g_game.addAnimatedText(std::to_string(realHealthGain), player->getPosition(), TEXTCOLOR_MAYABLUE);
+				g_game.addAnimatedText(fmt::format("{:+d}", realHealthGain), player->getPosition(),
+				                       static_cast<TextColor_t>(g_config[ConfigKeysInteger::HEALTH_GAIN_COLOUR]));
 
 				SpectatorVec spectators;
 				g_game.map.getSpectators(spectators, player->getPosition(), false, true);
@@ -919,7 +922,8 @@ bool ConditionRegeneration::executeCondition(Creature* creature, int32_t interva
 				TextMessage message(MESSAGE_STATUS_DEFAULT, "You gained " + manaGainString + " mana.");
 				player->sendTextMessage(message);
 
-				g_game.addAnimatedText(std::to_string(realManaGain), player->getPosition(), TEXTCOLOR_BLUE);
+				g_game.addAnimatedText(fmt::format("{:+d}", realManaGain), player->getPosition(),
+				                       static_cast<TextColor_t>(g_config[ConfigKeysInteger::MANA_GAIN_COLOUR]));
 
 				SpectatorVec spectators;
 				g_game.map.getSpectators(spectators, player->getPosition(), false, true);

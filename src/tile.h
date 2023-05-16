@@ -265,6 +265,8 @@ public:
 		}
 	}
 
+	using Tile::internalAddThing;
+
 	// non-copyable
 	DynamicTile(const DynamicTile&) = delete;
 	DynamicTile& operator=(const DynamicTile&) = delete;
@@ -276,8 +278,6 @@ public:
 	CreatureVector* getCreatures() override { return &creatures; }
 	const CreatureVector* getCreatures() const override { return &creatures; }
 	CreatureVector* makeCreatures() override { return &creatures; }
-
-	using Tile::internalAddThing;
 };
 
 // For blocking tiles, where we very rarely actually have items
@@ -297,6 +297,8 @@ public:
 			}
 		}
 	}
+
+	using Tile::internalAddThing;
 
 	// non-copyable
 	StaticTile(const StaticTile&) = delete;
@@ -321,8 +323,6 @@ public:
 		}
 		return creatures.get();
 	}
-
-	using Tile::internalAddThing;
 };
 
 #endif

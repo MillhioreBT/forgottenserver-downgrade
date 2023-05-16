@@ -425,7 +425,7 @@ bool Monsters::deserializeSpell(const pugi::xml_node& node, spellBlock_t& sb, co
 			}
 
 			if ((attr = node.attribute("drunkenness"))) {
-				drunkenness = pugi::cast<uint8_t>(attr.value());
+				drunkenness = static_cast<uint8_t>(pugi::cast<int32_t>(attr.value()));
 			}
 
 			Condition* condition =
