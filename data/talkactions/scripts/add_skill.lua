@@ -15,7 +15,8 @@ local function getSkillId(skillName)
 		return SKILL_FIST
 	elseif skillName:sub(1, 1) == "m" then
 		return SKILL_MAGLEVEL
-	elseif skillName == "level" or skillName:sub(1, 1) == "l" or skillName:sub(1, 1) == "e" then
+	elseif skillName == "level" or skillName:sub(1, 1) == "l" or
+		skillName:sub(1, 1) == "e" then
 		return SKILL_LEVEL
 	end
 
@@ -23,14 +24,6 @@ local function getSkillId(skillName)
 end
 
 function onSay(player, words, param)
-	if not player:getGroup():getAccess() then
-		return true
-	end
-
-	if player:getAccountType() < ACCOUNT_TYPE_GOD then
-		return false
-	end
-
 	local split = param:splitTrimmed(",")
 	if not split[2] then
 		player:sendCancelMessage("Insufficient parameters.")
@@ -44,9 +37,7 @@ function onSay(player, words, param)
 	end
 
 	local count = 1
-	if split[3] then
-		count = tonumber(split[3])
-	end
+	if split[3] then count = tonumber(split[3]) end
 
 	local skillId = getSkillId(split[2])
 	if not skillId then

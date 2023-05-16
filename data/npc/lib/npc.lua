@@ -3,14 +3,13 @@ dofile('data/npc/lib/npcsystem/npcsystem.lua')
 
 function msgcontains(message, keyword)
 	local message, keyword = message:lower(), keyword:lower()
-	if message == keyword then
-		return true
-	end
+	if message == keyword then return true end
 
 	return message:find(keyword) and not message:find('(%w+)' .. keyword)
 end
 
-function doNpcSellItem(cid, itemid, amount, subType, ignoreCap, inBackpacks, backpack)
+function doNpcSellItem(cid, itemid, amount, subType, ignoreCap, inBackpacks,
+                       backpack)
 	local amount = amount or 1
 	local subType = subType or 0
 	local item = 0
@@ -21,7 +20,9 @@ function doNpcSellItem(cid, itemid, amount, subType, ignoreCap, inBackpacks, bac
 		else
 			stuff = Game.createItem(itemid, math.min(100, amount))
 		end
-		return Player(cid):addItemEx(stuff, ignoreCap) ~= RETURNVALUE_NOERROR and 0 or amount, 0
+		return
+			Player(cid):addItemEx(stuff, ignoreCap) ~= RETURNVALUE_NOERROR and 0 or
+				amount, 0
 	end
 
 	local a = 0
@@ -47,9 +48,7 @@ function doNpcSellItem(cid, itemid, amount, subType, ignoreCap, inBackpacks, bac
 
 	for i = 1, amount do -- normal method for non-stackable items
 		local item = Game.createItem(itemid, subType)
-		if Player(cid):addItemEx(item, ignoreCap) ~= RETURNVALUE_NOERROR then
-			break
-		end
+		if Player(cid):addItemEx(item, ignoreCap) ~= RETURNVALUE_NOERROR then break end
 		a = i
 	end
 	return a, 0
@@ -66,7 +65,8 @@ end
 function doCreatureSayWithDelay(cid, text, type, delay, e, pcid)
 	if Player(pcid):isPlayer() then
 		e.done = false
-		e.event = addEvent(func, delay < 1 and 1000 or delay, cid, text, type, e, pcid)
+		e.event =
+			addEvent(func, delay < 1 and 1000 or delay, cid, text, type, e, pcid)
 	end
 end
 
@@ -83,9 +83,7 @@ end
 
 function doPlayerBuyItemContainer(cid, containerid, itemid, count, cost, charges)
 	local player = Player(cid)
-	if not player:removeTotalMoney(cost) then
-		return false
-	end
+	if not player:removeTotalMoney(cost) then return false end
 
 	for i = 1, count do
 		local container = Game.createItem(containerid, 1)
@@ -93,9 +91,7 @@ function doPlayerBuyItemContainer(cid, containerid, itemid, count, cost, charges
 			container:addItem(itemid, charges)
 		end
 
-		if player:addItemEx(container, true) ~= RETURNVALUE_NOERROR then
-			return false
-		end
+		if player:addItemEx(container, true) ~= RETURNVALUE_NOERROR then return false end
 	end
 	return true
 end
@@ -104,7 +100,8 @@ function getCount(string)
 	local b, e = string:find("%d+")
 	local tonumber = tonumber(string:sub(b, e))
 	if tonumber > 2 ^ 32 - 1 then
-		print("Warning: Casting value to 32bit to prevent crash\n"..debug.traceback())
+		print("Warning: Casting value to 32bit to prevent crash\n" ..
+			      debug.traceback())
 	end
 	return b and e and math.min(2 ^ 32 - 1, tonumber) or -1
 end
@@ -113,20 +110,17 @@ function Player.getTotalMoney(self)
 	return self:getMoney() + self:getBankBalance()
 end
 
-function isValidMoney(money)
-	return isNumber(money) and money > 0
-end
+function isValidMoney(money) return isNumber(money) and money > 0 end
 
 function getMoneyCount(string)
 	local b, e = string:find("%d+")
 	local tonumber = tonumber(string:sub(b, e))
 	if tonumber > 2 ^ 32 - 1 then
-		print("Warning: Casting value to 32bit to prevent crash\n"..debug.traceback())
+		print("Warning: Casting value to 32bit to prevent crash\n" ..
+			      debug.traceback())
 	end
 	local money = b and e and math.min(2 ^ 32 - 1, tonumber) or -1
-	if isValidMoney(money) then
-		return money
-	end
+	if isValidMoney(money) then return money end
 	return -1
 end
 

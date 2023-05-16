@@ -26,18 +26,12 @@ local reloadTypes = {
 	["monster"] = RELOAD_TYPE_MONSTERS,
 	["monsters"] = RELOAD_TYPE_MONSTERS,
 
-	["mount"] = RELOAD_TYPE_MOUNTS,
-	["mounts"] = RELOAD_TYPE_MOUNTS,
-
 	["move"] = RELOAD_TYPE_MOVEMENTS,
 	["movement"] = RELOAD_TYPE_MOVEMENTS,
 	["movements"] = RELOAD_TYPE_MOVEMENTS,
 
 	["npc"] = RELOAD_TYPE_NPCS,
 	["npcs"] = RELOAD_TYPE_NPCS,
-
-	["quest"] = RELOAD_TYPE_QUESTS,
-	["quests"] = RELOAD_TYPE_QUESTS,
 
 	["raid"] = RELOAD_TYPE_RAIDS,
 	["raids"] = RELOAD_TYPE_RAIDS,
@@ -53,18 +47,10 @@ local reloadTypes = {
 	["weapons"] = RELOAD_TYPE_WEAPONS,
 
 	["scripts"] = RELOAD_TYPE_SCRIPTS,
-	["libs"] = RELOAD_TYPE_GLOBAL,
+	["libs"] = RELOAD_TYPE_GLOBAL
 }
 
 function onSay(player, words, param)
-	if not player:getGroup():getAccess() then
-		return true
-	end
-
-	if player:getAccountType() < ACCOUNT_TYPE_GOD then
-		return false
-	end
-
 	logCommand(player, words, param)
 
 	local reloadType = reloadTypes[param:lower()]
@@ -74,7 +60,7 @@ function onSay(player, words, param)
 	end
 
 	-- need to clear EventCallback.data or we end up having duplicated events on /reload scripts
-	if table.contains({ RELOAD_TYPE_SCRIPTS, RELOAD_TYPE_ALL }, reloadType) then
+	if table.contains({RELOAD_TYPE_SCRIPTS, RELOAD_TYPE_ALL}, reloadType) then
 		Event:clear()
 		Game.clearQuests()
 	end
@@ -84,6 +70,7 @@ function onSay(player, words, param)
 		-- we need to reload the scripts as well
 		Game.reload(RELOAD_TYPE_SCRIPTS)
 	end
-	player:sendTextMessage(MESSAGE_STATUS_CONSOLE_BLUE, string.format("Reloaded %s.", param:lower()))
+	player:sendTextMessage(MESSAGE_STATUS_CONSOLE_BLUE,
+	                       string.format("Reloaded %s.", param:lower()))
 	return false
 end

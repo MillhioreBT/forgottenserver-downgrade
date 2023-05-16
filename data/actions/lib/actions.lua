@@ -7,21 +7,21 @@ local groundIds = {354, 355} -- pick usable ground
 local sandIds = {231, 9059} -- desert sand
 local holeId = { -- usable rope holes, for rope spots see global.lua
 	294, 369, 370, 383, 392, 408, 409, 410, 427, 428, 429, 430, 462, 469, 470, 482,
-	484, 485, 489, 924, 1369, 3135, 3136, 4835, 4837, 7933, 7938, 8170, 8249, 8250,
-	8251, 8252, 8254, 8255, 8256, 8276, 8277, 8279, 8281, 8284, 8285, 8286, 8323,
-	8567, 8585, 8595, 8596, 8972, 9606, 9625
+ 484, 485, 489, 924, 1369, 3135, 3136, 4835, 4837, 7933, 7938, 8170, 8249, 8250,
+ 8251, 8252, 8254, 8255, 8256, 8276, 8277, 8279, 8281, 8284, 8285, 8286, 8323,
+ 8567, 8585, 8595, 8596, 8972, 9606, 9625
 }
 local holes = {468, 481, 483, 7932} -- holes opened by shovel
-local fruits = {2673, 2674, 2675, 2676, 2677, 2678, 2679, 2680, 2681, 2682, 2684, 2685, 5097, 8839, 8840, 8841} -- fruits to make decorated cake with knife
+local fruits = {
+	2673, 2674, 2675, 2676, 2677, 2678, 2679, 2680, 2681, 2682, 2684, 2685, 5097,
+ 8839, 8840, 8841
+} -- fruits to make decorated cake with knife
 
 function destroyItem(player, target, toPosition)
-	if type(target) ~= "userdata" or not target:isItem() then
-		return false
-	end
+	if type(target) ~= "userdata" or not target:isItem() then return false end
 
-	if target:hasAttribute(ITEM_ATTRIBUTE_UNIQUEID) or target:hasAttribute(ITEM_ATTRIBUTE_ACTIONID) then
-		return false
-	end
+	if target:hasAttribute(ITEM_ATTRIBUTE_UNIQUEID) or
+		target:hasAttribute(ITEM_ATTRIBUTE_ACTIONID) then return false end
 
 	if toPosition.x == CONTAINER_POSITION then
 		player:sendCancelMessage(RETURNVALUE_NOTPOSSIBLE)
@@ -29,23 +29,17 @@ function destroyItem(player, target, toPosition)
 	end
 
 	local destroyId = ItemType(target.itemid):getDestroyId()
-	if destroyId == 0 then
-		return false
-	end
+	if destroyId == 0 then return false end
 
 	if math.random(7) == 1 then
 		local item = Game.createItem(destroyId, 1, toPosition)
-		if item then
-			item:decay()
-		end
+		if item then item:decay() end
 
 		-- Move items outside the container
 		if target:isContainer() then
 			for i = target:getSize() - 1, 0, -1 do
 				local containerItem = target:getItem(i)
-				if containerItem then
-					containerItem:moveTo(toPosition)
-				end
+				if containerItem then containerItem:moveTo(toPosition) end
 			end
 		end
 
@@ -58,9 +52,7 @@ end
 
 function onUseMachete(player, item, fromPosition, target, toPosition, isHotkey)
 	local targetId = target.itemid
-	if not targetId then
-		return true
-	end
+	if not targetId then return true end
 
 	if table.contains(wildGrowth, targetId) then
 		toPosition:sendMagicEffect(CONST_ME_POFF)
@@ -98,16 +90,13 @@ function onUsePick(player, item, fromPosition, target, toPosition, isHotkey)
 	end
 
 	local tile = Tile(toPosition)
-	if not tile then
-		return false
-	end
+	if not tile then return false end
 
 	local ground = tile:getGround()
-	if not ground then
-		return false
-	end
+	if not ground then return false end
 
-	if table.contains(groundIds, ground.itemid) and ground.actionid == actionIds.pickHole then
+	if table.contains(groundIds, ground.itemid) and ground.actionid ==
+		actionIds.pickHole then
 		ground:transform(392)
 		ground:decay()
 		toPosition:sendMagicEffect(CONST_ME_POFF)
@@ -130,17 +119,13 @@ end
 
 function onUseRope(player, item, fromPosition, target, toPosition, isHotkey)
 	local tile = Tile(toPosition)
-	if not tile then
-		return false
-	end
+	if not tile then return false end
 
 	local ground = tile:getGround()
 
 	if ground and table.contains(ropeSpots, ground:getId()) then
 		tile = Tile(toPosition:moveUpstairs())
-		if not tile then
-			return false
-		end
+		if not tile then return false end
 
 		if tile:hasFlag(TILESTATE_PROTECTIONZONE) and player:isPzLocked() then
 			player:sendCancelMessage(RETURNVALUE_PLAYERISPZLOCKED)
@@ -154,14 +139,10 @@ function onUseRope(player, item, fromPosition, target, toPosition, isHotkey)
 	if table.contains(holeId, target.itemid) then
 		toPosition.z = toPosition.z + 1
 		tile = Tile(toPosition)
-		if not tile then
-			return false
-		end
+		if not tile then return false end
 
 		local thing = tile:getTopVisibleThing()
-		if not thing then
-			return true
-		end
+		if not thing then return true end
 
 		if thing:isPlayer() then
 			if Tile(toPosition:moveUpstairs()):queryAdd(thing) ~= RETURNVALUE_NOERROR then
@@ -181,20 +162,15 @@ end
 
 function onUseShovel(player, item, fromPosition, target, toPosition, isHotkey)
 	local tile = Tile(toPosition)
-	if not tile then
-		return false
-	end
+	if not tile then return false end
 
 	local ground = tile:getGround()
-	if not ground then
-		return false
-	end
+	if not ground then return false end
 
 	local groundId = ground:getId()
 	if table.contains(holes, groundId) then
 		ground:transform(groundId + 1)
 		ground:decay()
-
 		toPosition.z = toPosition.z + 1
 		tile:relocateTo(toPosition)
 		player:addAchievementProgress("The Undertaker", 500)
@@ -222,9 +198,7 @@ function onUseShovel(player, item, fromPosition, target, toPosition, isHotkey)
 end
 
 function onUseScythe(player, item, fromPosition, target, toPosition, isHotkey)
-	if not table.contains({2550, 10513}, item.itemid) then
-		return false
-	end
+	if not table.contains({2550, 10513}, item.itemid) then return false end
 
 	if target.itemid == 2739 then -- wheat
 		target:transform(2737)
@@ -244,17 +218,14 @@ function onUseScythe(player, item, fromPosition, target, toPosition, isHotkey)
 end
 
 function onUseCrowbar(player, item, fromPosition, target, toPosition, isHotkey)
-	if not table.contains({2416, 10515}, item.itemid) then
-		return false
-	end
+	if not table.contains({2416, 10515}, item.itemid) then return false end
 
 	return destroyItem(player, target, toPosition)
 end
 
-function onUseKitchenKnife(player, item, fromPosition, target, toPosition, isHotkey)
-	if not table.contains({2566, 10511, 10515}, item.itemid) then
-		return false
-	end
+function onUseKitchenKnife(player, item, fromPosition, target, toPosition,
+                           isHotkey)
+	if not table.contains({2566, 10511, 10515}, item.itemid) then return false end
 
 	if table.contains(fruits, target.itemid) and player:removeItem(6278, 1) then
 		target:remove(1)

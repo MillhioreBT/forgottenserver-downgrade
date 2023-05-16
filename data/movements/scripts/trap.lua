@@ -19,17 +19,15 @@ local traps = {
 
 function onStepIn(creature, item, position, fromPosition)
 	local trap = traps[item.itemid]
-	if not trap then
-		return true
-	end
+	if not trap then return true end
 
 	if creature:isMonster() or creature:isPlayer() then
-		doTargetCombat(0, creature, trap.type or COMBAT_PHYSICALDAMAGE, trap.damage[1], trap.damage[2], CONST_ME_NONE, true, false, false)
+		doTargetCombat(0, creature, trap.type or COMBAT_PHYSICALDAMAGE,
+		               trap.damage[1], trap.damage[2], CONST_ME_NONE, true, false,
+		               false)
 	end
 
-	if trap.transformTo then
-		item:transform(trap.transformTo)
-	end
+	if trap.transformTo then item:transform(trap.transformTo) end
 	return true
 end
 

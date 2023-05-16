@@ -311,16 +311,16 @@ public:
 
 	void sendGuildMotd(uint32_t playerId);
 	void kickPlayer(uint32_t playerId, bool displayEffect);
-	void playerReportBug(uint32_t playerId, const std::string& message);
-	void playerDebugAssert(uint32_t playerId, const std::string& assertLine, const std::string& date,
-	                       const std::string& description, const std::string& comment);
-	void playerReportRuleViolation(uint32_t playerId, const std::string& targetName, uint8_t reportType,
-	                               uint8_t reportReason, const std::string& comment, const std::string& translation);
+	void playerReportBug(uint32_t playerId, std::string_view message);
+	void playerDebugAssert(uint32_t playerId, std::string_view assertLine, std::string_view date,
+	                       std::string_view description, std::string_view comment);
+	void playerReportRuleViolation(uint32_t playerId, std::string_view targetName, uint8_t reportType,
+	                               uint8_t reportReason, std::string_view comment, std::string_view translation);
 
 	bool internalStartTrade(Player* player, Player* tradePartner, Item* tradeItem);
 	void internalCloseTrade(Player* player, bool sendCancel = true);
-	bool playerBroadcastMessage(Player* player, const std::string& text) const;
-	void broadcastMessage(const std::string& text, MessageClasses type) const;
+	bool playerBroadcastMessage(Player* player, std::string_view text) const;
+	void broadcastMessage(std::string_view text, MessageClasses type) const;
 
 	// Implementation of player invoked events
 	void playerMoveThing(uint32_t playerId, const Position& fromPos, uint16_t spriteId, uint8_t fromStackPos,
@@ -335,8 +335,8 @@ public:
 	                    const Position& toPos, uint8_t count, Item* item, Cylinder* toCylinder);
 	void playerMove(uint32_t playerId, Direction direction);
 	void playerCreatePrivateChannel(uint32_t playerId);
-	void playerChannelInvite(uint32_t playerId, const std::string& name);
-	void playerChannelExclude(uint32_t playerId, const std::string& name);
+	void playerChannelInvite(uint32_t playerId, std::string_view name);
+	void playerChannelExclude(uint32_t playerId, std::string_view name);
 	void playerRequestChannels(uint32_t playerId);
 	void playerOpenChannel(uint32_t playerId, uint16_t channelId);
 	void playerCloseChannel(uint32_t playerId, uint16_t channelId);
@@ -354,8 +354,8 @@ public:
 	void playerMoveUpContainer(uint32_t playerId, uint8_t cid);
 	void playerUpdateContainer(uint32_t playerId, uint8_t cid);
 	void playerRotateItem(uint32_t playerId, const Position& pos, uint8_t stackPos, const uint16_t spriteId);
-	void playerWriteItem(uint32_t playerId, uint32_t windowTextId, const std::string& text);
-	void playerUpdateHouseWindow(uint32_t playerId, uint8_t listId, uint32_t windowTextId, const std::string& text);
+	void playerWriteItem(uint32_t playerId, uint32_t windowTextId, std::string_view text);
+	void playerUpdateHouseWindow(uint32_t playerId, uint8_t listId, uint32_t windowTextId, std::string_view text);
 	void playerRequestTrade(uint32_t playerId, const Position& pos, uint8_t stackPos, uint32_t tradePlayerId,
 	                        uint16_t spriteId);
 	void playerAcceptTrade(uint32_t playerId);
@@ -373,12 +373,12 @@ public:
 	void playerSetFightModes(uint32_t playerId, fightMode_t fightMode, bool chaseMode, bool secureMode);
 	void playerLookAt(uint32_t playerId, const Position& pos, uint8_t stackPos);
 	void playerLookInBattleList(uint32_t playerId, uint32_t creatureId);
-	void playerRequestAddVip(uint32_t playerId, const std::string& name);
+	void playerRequestAddVip(uint32_t playerId, std::string_view name);
 	void playerRequestRemoveVip(uint32_t playerId, uint32_t guid);
 	void playerTurn(uint32_t playerId, Direction dir);
 	void playerRequestOutfit(uint32_t playerId);
-	void playerSay(uint32_t playerId, uint16_t channelId, SpeakClasses type, const std::string& receiver,
-	               const std::string& text);
+	void playerSay(uint32_t playerId, uint16_t channelId, SpeakClasses type, std::string_view receiver,
+	               std::string_view text);
 	void playerChangeOutfit(uint32_t playerId, Outfit_t outfit);
 	void playerInviteToParty(uint32_t playerId, uint32_t invitedId);
 	void playerJoinParty(uint32_t playerId, uint32_t leaderId);
@@ -387,7 +387,7 @@ public:
 	void playerLeaveParty(uint32_t playerId);
 	void playerEnableSharedPartyExperience(uint32_t playerId, bool sharedExpActive);
 
-	void parsePlayerExtendedOpcode(uint32_t playerId, uint8_t opcode, const std::string& buffer);
+	void parsePlayerExtendedOpcode(uint32_t playerId, uint8_t opcode, std::string_view buffer);
 	void parsePlayerNetworkMessage(uint32_t playerId, uint8_t recvByte, NetworkMessage* msg);
 
 	void cleanup();
@@ -430,8 +430,8 @@ public:
 	// animation help functions
 	void addCreatureHealth(const Creature* target);
 	static void addCreatureHealth(const SpectatorVec& spectators, const Creature* target);
-	void addAnimatedText(const std::string& message, const Position& pos, TextColor_t color);
-	static void addAnimatedText(const SpectatorVec& list, const std::string& message, const Position& pos,
+	void addAnimatedText(std::string_view message, const Position& pos, TextColor_t color);
+	static void addAnimatedText(const SpectatorVec& list, std::string_view message, const Position& pos,
 	                            TextColor_t color);
 	void addMagicEffect(const Position& pos, uint8_t effect);
 	static void addMagicEffect(const SpectatorVec& spectators, const Position& pos, uint8_t effect);
@@ -451,7 +451,7 @@ public:
 
 	void loadMotdNum();
 	void saveMotdNum() const;
-	const std::string& getMotdHash() const { return motdHash; }
+	std::string_view getMotdHash() const { return motdHash; }
 	uint32_t getMotdNum() const { return motdNum; }
 	void incrementMotdNum() { motdNum++; }
 

@@ -2457,6 +2457,10 @@ void LuaScriptInterface::registerFunctions()
 	registerMethod("Player", "hasSecureMode", LuaScriptInterface::luaPlayerHasSecureMode);
 	registerMethod("Player", "getFightMode", LuaScriptInterface::luaPlayerGetFightMode);
 
+	registerMethod("Player", "getIdleTime", LuaScriptInterface::luaPlayerGetIdleTime);
+
+	registerMethod("Player", "sendCreatureSquare", LuaScriptInterface::luaPlayerSendCreatureSquare);
+
 	// OfflinePlayer
 	registerClass("OfflinePlayer", "Player", LuaScriptInterface::luaOfflinePlayerCreate);
 	registerMetaMethod("OfflinePlayer", "__gc", LuaScriptInterface::luaOfflinePlayerRemove);
@@ -2505,6 +2509,8 @@ void LuaScriptInterface::registerFunctions()
 	registerMethod("Npc", "isNpc", LuaScriptInterface::luaNpcIsNpc);
 
 	registerMethod("Npc", "setMasterPos", LuaScriptInterface::luaNpcSetMasterPos);
+
+	registerMethod("Npc", "getSpectators", LuaScriptInterface::luaNpcGetSpectators);
 
 	// Guild
 	registerClass("Guild", "", LuaScriptInterface::luaGuildCreate);
@@ -6709,7 +6715,7 @@ int LuaScriptInterface::luaContainerAddItem(lua_State* L)
 		}
 	}
 
-	uint32_t count = getInteger<uint32_t>(L, 3, 1);
+	uint16_t count = getInteger<uint16_t>(L, 3, 1);
 	const ItemType& it = Item::items[itemId];
 	if (it.stackable) {
 		count = std::min<uint16_t>(count, 100);
@@ -8037,7 +8043,7 @@ int LuaScriptInterface::luaPlayerGetDepotChest(lua_State* L)
 	bool autoCreate = getBoolean(L, 3, false);
 	DepotChest* depotChest = player->getDepotChest(depotId, autoCreate);
 	if (depotChest) {
-		player->setLastDepotId(depotId); // FIXME: workaround for #2251
+		player->setLastDepotId(static_cast<uint16_t>(depotId)); // FIXME: workaround for #2251
 		pushUserdata<Item>(L, depotChest);
 		setItemMetatable(L, -1, depotChest);
 	} else {
@@ -8484,7 +8490,7 @@ int LuaScriptInterface::luaPlayerSetVocation(lua_State* L)
 	if (isInteger(L, 2)) {
 		vocation = g_vocations.getVocation(getInteger<uint16_t>(L, 2));
 	} else if (isString(L, 2)) {
-		vocation = g_vocations.getVocation(g_vocations.getVocationId(getString(L, 2)));
+		vocation = g_vocations.getVocation(static_cast<uint16_t>(g_vocations.getVocationId(getString(L, 2))));
 	} else if (isUserdata(L, 2)) {
 		vocation = getUserdata<Vocation>(L, 2);
 	} else {
@@ -8878,7 +8884,7 @@ int LuaScriptInterface::luaPlayerAddItem(lua_State* L)
 			subType -= stackCount;
 		}
 
-		Item* item = Item::CreateItem(itemId, stackCount);
+		Item* item = Item::CreateItem(itemId, static_cast<uint16_t>(stackCount));
 		if (!item) {
 			if (!hasTable) {
 				lua_pushnil(L);
@@ -9067,9 +9073,9 @@ int LuaScriptInterface::luaPlayerShowTextDialog(lua_State* L)
 	item->setParent(player);
 	player->windowTextId++;
 	player->writeItem = item;
-	player->maxWriteLen = length;
-	player->sendTextWindow(item, length, canWrite);
-	pushBoolean(L, true);
+	player->maxWriteLen = static_cast<uint16_t>(length);
+	player->sendTextWindow(item, static_cast<uint16_t>(length), canWrite);
+	lua_pushinteger(L, player->windowTextId);
 	return 1;
 }
 
@@ -9110,7 +9116,6 @@ int LuaScriptInterface::luaPlayerSendTextMessage(lua_State* L)
 
 	player->sendTextMessage(message);
 	pushBoolean(L, true);
-
 	return 1;
 }
 
@@ -9431,7 +9436,9 @@ int LuaScriptInterface::luaPlayerCanLearnSpell(lua_State* L)
 	} else if (player->getMagicLevel() < spell->getMagicLevel()) {
 		pushBoolean(L, false);
 	} else if (!spell->hasVocationSpellMap(player->getVocationId())) {
-
+		pushBoolean(L, false);
+	} else {
+		pushBoolean(L, true);
 	}
 	return 1;
 }
@@ -9798,6 +9805,40 @@ int LuaScriptInterface::luaPlayerGetFightMode(lua_State* L)
 	} else {
 		lua_pushnil(L);
 	}
+	return 1;
+}
+
+int LuaScriptInterface::luaPlayerGetIdleTime(lua_State* L)
+{
+	// player:getIdleTime()
+	const Player* player = getUserdata<const Player>(L, 1);
+	if (!player) {
+		lua_pushnil(L);
+		return 1;
+	}
+
+	lua_pushinteger(L, player->getIdleTime());
+	return 1;
+}
+
+int LuaScriptInterface::luaPlayerSendCreatureSquare(lua_State* L)
+{
+	// player:sendCreatureSquare(creature, color)
+	Player* player = getUserdata<Player>(L, 1);
+	if (!player) {
+		lua_pushnil(L);
+		return 1;
+	}
+
+	auto creature = getCreature(L, 2);
+	if (!creature) {
+		reportErrorFunc(L, getErrorDesc(LuaErrorCode::CREATURE_NOT_FOUND));
+		pushBoolean(L, false);
+		return 1;
+	}
+
+	player->sendCreatureSquare(creature, getInteger<SquareColor_t>(L, 3));
+	pushBoolean(L, true);
 	return 1;
 }
 
@@ -10269,6 +10310,27 @@ int LuaScriptInterface::luaNpcSetMasterPos(lua_State* L)
 	return 1;
 }
 
+int LuaScriptInterface::luaNpcGetSpectators(lua_State* L)
+{
+	// npc:getSpectators()
+	Npc* npc = getUserdata<Npc>(L, 1);
+	if (!npc) {
+		lua_pushnil(L);
+		return 1;
+	}
+
+	const auto& spectators = npc->getSpectators();
+	lua_createtable(L, spectators.size(), 0);
+
+	int index = 0;
+	for (const auto& spectatorPlayer : npc->getSpectators()) {
+		pushUserdata<const Player>(L, spectatorPlayer);
+		setMetatable(L, -1, "Player");
+		lua_rawseti(L, -2, ++index);
+	}
+	return 1;
+}
+
 // Guild
 int LuaScriptInterface::luaGuildCreate(lua_State* L)
 {
@@ -10420,8 +10482,7 @@ int LuaScriptInterface::luaGuildSetMotd(lua_State* L)
 int LuaScriptInterface::luaGroupCreate(lua_State* L)
 {
 	// Group(id)
-	uint32_t id = getInteger<uint32_t>(L, 2);
-
+	uint16_t id = getInteger<uint16_t>(L, 2);
 	Group* group = g_game.groups.getGroup(id);
 	if (group) {
 		pushUserdata<Group>(L, group);
@@ -10528,7 +10589,7 @@ int LuaScriptInterface::luaVocationCreate(lua_State* L)
 		id = g_vocations.getVocationId(getString(L, 2));
 	}
 
-	Vocation* vocation = g_vocations.getVocation(id);
+	Vocation* vocation = g_vocations.getVocation(static_cast<uint16_t>(id));
 	if (vocation) {
 		pushUserdata<Vocation>(L, vocation);
 		setMetatable(L, -1, "Vocation");
@@ -10754,7 +10815,7 @@ int LuaScriptInterface::luaVocationGetDemotion(lua_State* L)
 		return 1;
 	}
 
-	uint16_t fromId = vocation->getFromVocation();
+	uint16_t fromId = static_cast<uint16_t>(vocation->getFromVocation());
 	if (fromId == VOCATION_NONE) {
 		lua_pushnil(L);
 		return 1;
@@ -14229,11 +14290,11 @@ int LuaScriptInterface::luaPartyGetLeader(lua_State* L)
 
 int LuaScriptInterface::luaPartySetLeader(lua_State* L)
 {
-	// party:setLeader(player)
+	// party:setLeader(player[, force = false])
 	Player* player = getPlayer(L, 2);
 	Party* party = getUserdata<Party>(L, 1);
 	if (party && player) {
-		pushBoolean(L, party->passPartyLeadership(player));
+		pushBoolean(L, party->passPartyLeadership(player, getBoolean(L, 3, false)));
 	} else {
 		lua_pushnil(L);
 	}
@@ -14509,15 +14570,17 @@ int LuaScriptInterface::luaSpellOnCastSpell(lua_State* L)
 int LuaScriptInterface::luaSpellRegister(lua_State* L)
 {
 	// spell:register()
-	Spell* spell = getUserdata<Spell>(L, 1);
-	if (spell) {
+	Spell** spellPtr = getRawUserdata<Spell>(L, 1);
+	if (auto spell = *spellPtr) {
 		if (spell->spellType == SPELL_INSTANT) {
 			InstantSpell* instant = dynamic_cast<InstantSpell*>(getUserdata<Spell>(L, 1));
 			if (!instant->isScripted()) {
 				pushBoolean(L, false);
 				return 1;
 			}
+
 			pushBoolean(L, g_spells->registerInstantLuaEvent(instant));
+			*spellPtr = nullptr;
 		} else if (spell->spellType == SPELL_RUNE) {
 			RuneSpell* rune = dynamic_cast<RuneSpell*>(getUserdata<Spell>(L, 1));
 			if (rune->getMagicLevel() != 0 || rune->getLevel() != 0) {
@@ -14528,11 +14591,16 @@ int LuaScriptInterface::luaSpellRegister(lua_State* L)
 				iType.runeLevel = rune->getLevel();
 				iType.charges = rune->getCharges();
 			}
+
 			if (!rune->isScripted()) {
 				pushBoolean(L, false);
 				return 1;
 			}
+
 			pushBoolean(L, g_spells->registerRuneLuaEvent(rune));
+			*spellPtr = nullptr;
+		} else {
+			lua_pushnil(L);
 		}
 	} else {
 		lua_pushnil(L);
@@ -15328,16 +15396,15 @@ int LuaScriptInterface::luaActionOnUse(lua_State* L)
 int LuaScriptInterface::luaActionRegister(lua_State* L)
 {
 	// action:register()
-	Action* action = getUserdata<Action>(L, 1);
-	if (action) {
+	Action** actionPtr = getRawUserdata<Action>(L, 1);
+	if (auto action = *actionPtr) {
 		if (!action->isScripted()) {
 			pushBoolean(L, false);
 			return 1;
 		}
+
 		pushBoolean(L, g_actions->registerLuaEvent(action));
-		action->getActionIdRange().clear();
-		action->getItemIdRange().clear();
-		action->getUniqueIdRange().clear();
+		*actionPtr = nullptr;
 	} else {
 		lua_pushnil(L);
 	}
@@ -15352,10 +15419,10 @@ int LuaScriptInterface::luaActionItemId(lua_State* L)
 		int parameters = lua_gettop(L) - 1; // - 1 because self is a parameter aswell, which we want to skip ofc
 		if (parameters > 1) {
 			for (int i = 0; i < parameters; ++i) {
-				action->addItemId(getInteger<uint32_t>(L, 2 + i));
+				action->addItemId(getInteger<uint16_t>(L, 2 + i));
 			}
 		} else {
-			action->addItemId(getInteger<uint32_t>(L, 2));
+			action->addItemId(getInteger<uint16_t>(L, 2));
 		}
 		pushBoolean(L, true);
 	} else {
@@ -15372,10 +15439,10 @@ int LuaScriptInterface::luaActionActionId(lua_State* L)
 		int parameters = lua_gettop(L) - 1; // - 1 because self is a parameter aswell, which we want to skip ofc
 		if (parameters > 1) {
 			for (int i = 0; i < parameters; ++i) {
-				action->addActionId(getInteger<uint32_t>(L, 2 + i));
+				action->addActionId(getInteger<uint16_t>(L, 2 + i));
 			}
 		} else {
-			action->addActionId(getInteger<uint32_t>(L, 2));
+			action->addActionId(getInteger<uint16_t>(L, 2));
 		}
 		pushBoolean(L, true);
 	} else {
@@ -15392,10 +15459,10 @@ int LuaScriptInterface::luaActionUniqueId(lua_State* L)
 		int parameters = lua_gettop(L) - 1; // - 1 because self is a parameter aswell, which we want to skip ofc
 		if (parameters > 1) {
 			for (int i = 0; i < parameters; ++i) {
-				action->addUniqueId(getInteger<uint32_t>(L, 2 + i));
+				action->addUniqueId(getInteger<uint16_t>(L, 2 + i));
 			}
 		} else {
-			action->addUniqueId(getInteger<uint32_t>(L, 2));
+			action->addUniqueId(getInteger<uint16_t>(L, 2));
 		}
 		pushBoolean(L, true);
 	} else {
@@ -15485,13 +15552,15 @@ int LuaScriptInterface::luaTalkactionOnSay(lua_State* L)
 int LuaScriptInterface::luaTalkactionRegister(lua_State* L)
 {
 	// talkAction:register()
-	TalkAction* talk = getUserdata<TalkAction>(L, 1);
-	if (talk) {
+	TalkAction** talkPtr = getRawUserdata<TalkAction>(L, 1);
+	if (auto talk = *talkPtr) {
 		if (!talk->isScripted()) {
 			pushBoolean(L, false);
 			return 1;
 		}
+
 		pushBoolean(L, g_talkActions->registerLuaEvent(talk));
+		*talkPtr = nullptr;
 	} else {
 		lua_pushnil(L);
 	}
@@ -15603,13 +15672,15 @@ int LuaScriptInterface::luaCreatureEventType(lua_State* L)
 int LuaScriptInterface::luaCreatureEventRegister(lua_State* L)
 {
 	// creatureevent:register()
-	CreatureEvent* creature = getUserdata<CreatureEvent>(L, 1);
-	if (creature) {
+	CreatureEvent** creaturePtr = getRawUserdata<CreatureEvent>(L, 1);
+	if (auto creature = *creaturePtr) {
 		if (!creature->isScripted()) {
 			pushBoolean(L, false);
 			return 1;
 		}
+
 		pushBoolean(L, g_creatureEvents->registerLuaEvent(creature));
+		*creaturePtr = nullptr;
 	} else {
 		lua_pushnil(L);
 	}
@@ -15691,23 +15762,15 @@ int LuaScriptInterface::luaMoveEventType(lua_State* L)
 int LuaScriptInterface::luaMoveEventRegister(lua_State* L)
 {
 	// moveevent:register()
-	MoveEvent* moveevent = getUserdata<MoveEvent>(L, 1);
-	if (moveevent) {
-		if ((moveevent->getEventType() == MOVE_EVENT_EQUIP || moveevent->getEventType() == MOVE_EVENT_DEEQUIP) &&
-		    moveevent->getSlot() == SLOTP_WHEREEVER) {
-			uint32_t id = moveevent->getItemIdRange().at(0);
-			ItemType& it = Item::items.getItemType(id);
-			moveevent->setSlot(it.slotPosition);
-		}
+	MoveEvent** moveeventPtr = getRawUserdata<MoveEvent>(L, 1);
+	if (auto moveevent = *moveeventPtr) {
 		if (!moveevent->isScripted()) {
 			pushBoolean(L, g_moveEvents->registerLuaFunction(moveevent));
-			return 1;
+		} else {
+			pushBoolean(L, g_moveEvents->registerLuaEvent(moveevent));
 		}
-		pushBoolean(L, g_moveEvents->registerLuaEvent(moveevent));
-		moveevent->clearItemIdRange();
-		moveevent->clearActionIdRange();
-		moveevent->clearUniqueIdRange();
-		moveevent->clearPosList();
+
+		*moveeventPtr = nullptr;
 	} else {
 		lua_pushnil(L);
 	}
@@ -15877,10 +15940,10 @@ int LuaScriptInterface::luaMoveEventItemId(lua_State* L)
 		int parameters = lua_gettop(L) - 1; // - 1 because self is a parameter aswell, which we want to skip ofc
 		if (parameters > 1) {
 			for (int i = 0; i < parameters; ++i) {
-				moveevent->addItemId(getInteger<uint32_t>(L, 2 + i));
+				moveevent->addItemId(getInteger<uint16_t>(L, 2 + i));
 			}
 		} else {
-			moveevent->addItemId(getInteger<uint32_t>(L, 2));
+			moveevent->addItemId(getInteger<uint16_t>(L, 2));
 		}
 		pushBoolean(L, true);
 	} else {
@@ -15897,10 +15960,10 @@ int LuaScriptInterface::luaMoveEventActionId(lua_State* L)
 		int parameters = lua_gettop(L) - 1; // - 1 because self is a parameter aswell, which we want to skip ofc
 		if (parameters > 1) {
 			for (int i = 0; i < parameters; ++i) {
-				moveevent->addActionId(getInteger<uint32_t>(L, 2 + i));
+				moveevent->addActionId(getInteger<uint16_t>(L, 2 + i));
 			}
 		} else {
-			moveevent->addActionId(getInteger<uint32_t>(L, 2));
+			moveevent->addActionId(getInteger<uint16_t>(L, 2));
 		}
 		pushBoolean(L, true);
 	} else {
@@ -15917,10 +15980,10 @@ int LuaScriptInterface::luaMoveEventUniqueId(lua_State* L)
 		int parameters = lua_gettop(L) - 1; // - 1 because self is a parameter aswell, which we want to skip ofc
 		if (parameters > 1) {
 			for (int i = 0; i < parameters; ++i) {
-				moveevent->addUniqueId(getInteger<uint32_t>(L, 2 + i));
+				moveevent->addUniqueId(getInteger<uint16_t>(L, 2 + i));
 			}
 		} else {
-			moveevent->addUniqueId(getInteger<uint32_t>(L, 2));
+			moveevent->addUniqueId(getInteger<uint16_t>(L, 2));
 		}
 		pushBoolean(L, true);
 	} else {
@@ -15999,8 +16062,8 @@ int LuaScriptInterface::luaGlobalEventType(lua_State* L)
 int LuaScriptInterface::luaGlobalEventRegister(lua_State* L)
 {
 	// globalevent:register()
-	GlobalEvent* globalevent = getUserdata<GlobalEvent>(L, 1);
-	if (globalevent) {
+	GlobalEvent** globaleventPtr = getRawUserdata<GlobalEvent>(L, 1);
+	if (auto globalevent = *globaleventPtr) {
 		if (!globalevent->isScripted()) {
 			pushBoolean(L, false);
 			return 1;
@@ -16014,6 +16077,7 @@ int LuaScriptInterface::luaGlobalEventRegister(lua_State* L)
 		}
 
 		pushBoolean(L, g_globalEvents->registerLuaEvent(globalevent));
+		*globaleventPtr = nullptr;
 	} else {
 		lua_pushnil(L);
 	}
@@ -16197,12 +16261,7 @@ int LuaScriptInterface::luaWeaponRegister(lua_State* L)
 {
 	// weapon:register()
 	Weapon** weaponPtr = getRawUserdata<Weapon>(L, 1);
-	if (!weaponPtr) {
-		lua_pushnil(L);
-		return 1;
-	}
-
-	if (auto* weapon = *weaponPtr) {
+	if (auto weapon = *weaponPtr) {
 		if (weapon->weaponType == WEAPON_DISTANCE || weapon->weaponType == WEAPON_AMMO) {
 			weapon = getUserdata<WeaponDistance>(L, 1);
 		} else if (weapon->weaponType == WEAPON_WAND) {
@@ -16224,7 +16283,7 @@ int LuaScriptInterface::luaWeaponRegister(lua_State* L)
 
 		weapon->configureWeapon(it);
 		pushBoolean(L, g_weapons->registerLuaEvent(weapon));
-		*weaponPtr = nullptr; // Remove luascript reference
+		*weaponPtr = nullptr;
 	} else {
 		lua_pushnil(L);
 	}
@@ -16358,7 +16417,7 @@ int LuaScriptInterface::luaWeaponBreakChance(lua_State* L)
 	// weapon:breakChance(percent)
 	Weapon* weapon = getUserdata<Weapon>(L, 1);
 	if (weapon) {
-		weapon->setBreakChance(getInteger<uint32_t>(L, 2));
+		weapon->setBreakChance(getInteger<uint8_t>(L, 2));
 		pushBoolean(L, true);
 	} else {
 		lua_pushnil(L);
@@ -16471,7 +16530,7 @@ int LuaScriptInterface::luaWeaponId(lua_State* L)
 	// weapon:id(id)
 	Weapon* weapon = getUserdata<Weapon>(L, 1);
 	if (weapon) {
-		weapon->setID(getInteger<uint32_t>(L, 2));
+		weapon->setID(getInteger<uint16_t>(L, 2));
 		pushBoolean(L, true);
 	} else {
 		lua_pushnil(L);

@@ -1,6 +1,7 @@
 local spiderEgg = Action()
 
-function spiderEgg.onUse(player, item, fromPosition, target, toPosition, isHotkey)
+function spiderEgg.onUse(player, item, fromPosition, target, toPosition,
+                         isHotkey)
 	local chance = math.random(100)
 	if chance >= 50 and chance < 83 then
 		Game.createMonster("Spider", fromPosition)

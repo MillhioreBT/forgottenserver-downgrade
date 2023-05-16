@@ -3,14 +3,6 @@ local invalidIds = {
 }
 
 function onSay(player, words, param)
-	if not player:getGroup():getAccess() then
-		return true
-	end
-
-	if player:getAccountType() < ACCOUNT_TYPE_GOD then
-		return false
-	end
-
 	local split = param:splitTrimmed(",")
 
 	local itemType = ItemType(split[1])
@@ -22,38 +14,43 @@ function onSay(player, words, param)
 		end
 	end
 
-	if table.contains(invalidIds, itemType:getId()) then
-		return false
-	end
+	if table.contains(invalidIds, itemType:getId()) then return false end
 
 	local keyNumber = 0
 	local count = tonumber(split[2])
+	local subType = 1
+	if not itemType:isStackable() and split[3] then
+		subType = math.max(1, tonumber(split[3]) or 1)
+	end
+
 	if count then
-		if itemType:isStackable() then
-			count = math.min(10000, math.max(1, count))
+		if itemType:isFluidContainer() then
+			count = math.max(0, math.min(count, 99))
 		elseif itemType:isKey() then
 			keyNumber = count
 			count = 1
-		elseif not itemType:isFluidContainer() then
-			count = math.min(100, math.max(1, count))
 		else
-			count = math.max(0, count)
+			count = math.min(10000, math.max(1, count))
 		end
 	else
 		if not itemType:isFluidContainer() then
-			count = 1
+			count = math.max(1, itemType:getCharges())
 		else
 			count = 0
 		end
 	end
 
-	local result = player:addItem(itemType:getId(), count)
+	local result = nil
+	if itemType:isStackable() then
+		result = player:addItem(itemType:getId(), count, true, subType)
+	else
+		result = player:addItem(itemType:getId(), subType, true, count)
+	end
+
 	if result then
 		if not itemType:isStackable() then
 			if type(result) == "table" then
-				for _, item in ipairs(result) do
-					item:decay()
-				end
+				for _, item in ipairs(result) do item:decay() end
 			else
 				if itemType:isKey() then
 					result:setAttribute(ITEM_ATTRIBUTE_ACTIONID, keyNumber)

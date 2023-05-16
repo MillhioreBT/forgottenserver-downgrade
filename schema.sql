@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS `players` (
   `cap` int NOT NULL DEFAULT '400',
   `sex` int NOT NULL DEFAULT '0',
   `lastlogin` bigint unsigned NOT NULL DEFAULT '0',
-  `lastip` varbinary(16) NOT NULL DEFAULT '0',
+  `lastip` int unsigned NOT NULL DEFAULT '0',
   `save` tinyint NOT NULL DEFAULT '1',
   `skull` tinyint NOT NULL DEFAULT '0',
   `skulltime` bigint NOT NULL DEFAULT '0',
@@ -103,7 +103,7 @@ CREATE TABLE IF NOT EXISTS `account_storage` (
 ) ENGINE=InnoDB DEFAULT CHARACTER SET=utf8;
 
 CREATE TABLE IF NOT EXISTS `ip_bans` (
-  `ip` varbinary(16) NOT NULL,
+  `ip` int unsigned NOT NULL,
   `reason` varchar(255) NOT NULL,
   `banned_at` bigint NOT NULL,
   `expires_at` bigint NOT NULL,

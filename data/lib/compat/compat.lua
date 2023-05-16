@@ -38,6 +38,28 @@ NORTHWEST = DIRECTION_NORTHWEST
 NORTHEAST = DIRECTION_NORTHEAST
 
 do
+	local function storageProxy(player)
+		return setmetatable({}, {
+			__index = function(_, key)
+				return player:getStorageValue(PlayerStorageKeys[key] or key)
+			end,
+			__newindex = function(_, key, value)
+				player:setStorageValue(PlayerStorageKeys[key] or key, value)
+			end
+		})
+	end
+
+	local function accountStorageProxy(player)
+		return setmetatable({}, {
+			__index = function(_, key)
+				return Game.getAccountStorageValue(player:getAccountId(), key)
+			end,
+			__newindex = function(_, key, value)
+				Game.setAccountStorageValue(player:getAccountId(), key, value)
+			end
+		})
+	end
+
 	local function CreatureIndex(self, key)
 		local methods = getmetatable(self)
 		if key == "uid" then
@@ -56,7 +78,16 @@ do
 			return 1
 		elseif key == "actionid" then
 			return 0
+		elseif key == "storage" then
+			if methods.isPlayer(self) then
+				return storageProxy(self)
+			end
+		elseif key == "accountStorage" then
+			if methods.isPlayer(self) then
+				return accountStorageProxy(self)
+			end
 		end
+
 		return methods[key]
 	end
 	rawgetmetatable("Player").__index = CreatureIndex
@@ -270,14 +301,12 @@ do
 end
 
 function pushThing(thing)
-	local t = { uid = 0, itemid = 0, type = 0, actionid = 0 }
+	local t = {uid = 0, itemid = 0, type = 0, actionid = 0}
 	if thing then
 		if thing:isItem() then
 			t.uid = thing:getUniqueId()
 			t.itemid = thing:getId()
-			if ItemType(t.itemid):hasSubType() then
-				t.type = thing:getSubType()
-			end
+			if ItemType(t.itemid):hasSubType() then t.type = thing:getSubType() end
 			t.actionid = thing:getActionId()
 		elseif thing:isCreature() then
 			t.uid = thing:getId()
@@ -302,29 +331,19 @@ setCombatFormula = Combat.setFormula
 setCombatParam = Combat.setParameter
 
 Combat.setCondition = function(...)
-	print(
-		"[Warning - "
-			.. debug.getinfo(2).source:match("@?(.*)")
-			.. "] Function Combat.setCondition was renamed to Combat.addCondition and will be removed in the future"
-	)
+	print("[Warning - " .. debug.getinfo(2).source:match("@?(.*)") ..
+		      "] Function Combat.setCondition was renamed to Combat.addCondition and will be removed in the future")
 	Combat.addCondition(...)
 end
 
 setCombatCondition = function(...)
-	print(
-		"[Warning - "
-			.. debug.getinfo(2).source:match("@?(.*)")
-			.. "] Function setCombatCondition was renamed to addCombatCondition and will be removed in the future"
-	)
+	print("[Warning - " .. debug.getinfo(2).source:match("@?(.*)") ..
+		      "] Function setCombatCondition was renamed to addCombatCondition and will be removed in the future")
 	Combat.addCondition(...)
 end
 
-function doTargetCombatHealth(...)
-	return doTargetCombat(...)
-end
-function doAreaCombatHealth(...)
-	return doAreaCombat(...)
-end
+function doTargetCombatHealth(...) return doTargetCombat(...) end
+function doAreaCombatHealth(...) return doAreaCombat(...) end
 doCombatAreaHealth = doAreaCombatHealth
 function doTargetCombatMana(cid, target, min, max, effect)
 	return doTargetCombat(cid, target, COMBAT_MANADRAIN, min, max, effect)
@@ -340,32 +359,18 @@ setConditionFormula = Condition.setFormula
 addDamageCondition = Condition.addDamage
 addOutfitCondition = Condition.setOutfit
 
-function doCombat(cid, combat, var)
-	return combat:execute(cid, var)
-end
+function doCombat(cid, combat, var) return combat:execute(cid, var) end
 
-function isCreature(cid)
-	return Creature(cid)
-end
-function isPlayer(cid)
-	return Player(cid)
-end
-function isMonster(cid)
-	return Monster(cid)
-end
+function isCreature(cid) return Creature(cid) end
+function isPlayer(cid) return Player(cid) end
+function isMonster(cid) return Monster(cid) end
 function isSummon(cid)
 	local c = Creature(cid)
 	return c and c:getMaster()
 end
-function isNpc(cid)
-	return Npc(cid)
-end
-function isItem(uid)
-	return Item(uid)
-end
-function isContainer(uid)
-	return Container(uid)
-end
+function isNpc(cid) return Npc(cid) end
+function isItem(uid) return Item(uid) end
+function isContainer(uid) return Container(uid) end
 
 function getCreatureName(cid)
 	local c = Creature(cid)
@@ -444,14 +449,10 @@ end
 
 function getCreatureSummons(cid)
 	local c = Creature(cid)
-	if c == nil then
-		return false
-	end
+	if c == nil then return false end
 
 	local result = {}
-	for _, summon in ipairs(c:getSummons()) do
-		result[#result + 1] = summon:getId()
-	end
+	for _, summon in ipairs(c:getSummons()) do result[#result + 1] = summon:getId() end
 	return result
 end
 
@@ -520,12 +521,8 @@ function doAddCondition(cid, conditionId)
 end
 function doRemoveCondition(cid, conditionType, subId)
 	local c = Creature(cid)
-	return c
-		and (
-			c:removeCondition(conditionType, CONDITIONID_COMBAT, subId)
-			or c:removeCondition(conditionType, CONDITIONID_DEFAULT, subId)
-			or true
-		)
+	return c and (c:removeCondition(conditionType, CONDITIONID_COMBAT, subId) or
+		       c:removeCondition(conditionType, CONDITIONID_DEFAULT, subId) or true)
 end
 function getCreatureCondition(cid, type, subId)
 	local c = Creature(cid)
@@ -613,9 +610,7 @@ function getPlayerRequiredSkillTries(cid, skillId)
 end
 function getPlayerAccess(cid)
 	local player = Player(cid)
-	if player == nil then
-		return false
-	end
+	if player == nil then return false end
 	return player:getGroup():getAccess() and 1 or 0
 end
 function getPlayerSkill(cid, skillId)
@@ -718,26 +713,18 @@ end
 
 function getPlayerParty(cid)
 	local player = Player(cid)
-	if player == nil then
-		return false
-	end
+	if player == nil then return false end
 
 	local party = player:getParty()
-	if party == nil then
-		return nil
-	end
+	if party == nil then return nil end
 	return party:getLeader():getId()
 end
 function getPlayerGuildId(cid)
 	local player = Player(cid)
-	if player == nil then
-		return false
-	end
+	if player == nil then return false end
 
 	local guild = player:getGuild()
-	if guild == nil then
-		return false
-	end
+	if guild == nil then return false end
 	return guild:getId()
 end
 function getPlayerGuildLevel(cid)
@@ -746,26 +733,18 @@ function getPlayerGuildLevel(cid)
 end
 function getPlayerGuildName(cid)
 	local player = Player(cid)
-	if player == nil then
-		return false
-	end
+	if player == nil then return false end
 
 	local guild = player:getGuild()
-	if guild == nil then
-		return false
-	end
+	if guild == nil then return false end
 	return guild:getName()
 end
 function getPlayerGuildRank(cid)
 	local player = Player(cid)
-	if player == nil then
-		return false
-	end
+	if player == nil then return false end
 
 	local guild = player:getGuild()
-	if guild == nil then
-		return false
-	end
+	if guild == nil then return false end
 
 	local rank = guild:getRankByLevel(player:getGuildLevel())
 	return rank and rank.name or false
@@ -792,23 +771,17 @@ function getPlayerWeapon(cid)
 end
 function getPlayerSlotItem(cid, slot)
 	local player = Player(cid)
-	if player == nil then
-		return pushThing(nil)
-	end
+	if player == nil then return pushThing(nil) end
 	return pushThing(player:getSlotItem(slot))
 end
 function getPlayerItemById(cid, deepSearch, itemId, ...)
 	local player = Player(cid)
-	if player == nil then
-		return pushThing(nil)
-	end
+	if player == nil then return pushThing(nil) end
 	return pushThing(player:getItemById(itemId, deepSearch, ...))
 end
 function getPlayerFood(cid)
 	local player = Player(cid)
-	if player == nil then
-		return false
-	end
+	if player == nil then return false end
 	local c = player:getCondition(CONDITION_REGENERATION, CONDITIONID_DEFAULT)
 	return c and math.floor(c:getTicks() / 1000) or 0
 end
@@ -833,15 +806,11 @@ function isPremium(cid)
 	return p and p:isPremium() or false
 end
 function getPlayersByIPAddress(ip, mask)
-	if mask == nil then
-		mask = 0xFFFFFFFF
-	end
+	if mask == nil then mask = 0xFFFFFFFF end
 	local masked = ip & mask
 	local result = {}
 	for _, player in ipairs(Game.getPlayers()) do
-		if player:getIp() & mask == masked then
-			result[#result + 1] = player:getId()
-		end
+		if player:getIp() & mask == masked then result[#result + 1] = player:getId() end
 	end
 	return result
 end
@@ -865,11 +834,10 @@ function getPlayersByAccountNumber(accountNumber)
 end
 function getPlayerGUIDByName(name)
 	local player = Player(name)
-	if player then
-		return player:getGuid()
-	end
+	if player then return player:getGuid() end
 
-	local resultId = db.storeQuery("SELECT `id` FROM `players` WHERE `name` = " .. db.escapeString(name))
+	local resultId = db.storeQuery("SELECT `id` FROM `players` WHERE `name` = " ..
+		                               db.escapeString(name))
 	if resultId ~= false then
 		local guid = result.getNumber(resultId, "id")
 		result.free(resultId)
@@ -879,11 +847,11 @@ function getPlayerGUIDByName(name)
 end
 function getAccountNumberByPlayerName(name)
 	local player = Player(name)
-	if player then
-		return player:getAccountId()
-	end
+	if player then return player:getAccountId() end
 
-	local resultId = db.storeQuery("SELECT `account_id` FROM `players` WHERE `name` = " .. db.escapeString(name))
+	local resultId = db.storeQuery(
+		                 "SELECT `account_id` FROM `players` WHERE `name` = " ..
+			                 db.escapeString(name))
 	if resultId ~= false then
 		local accountId = result.getNumber(resultId, "account_id")
 		result.free(resultId)
@@ -905,7 +873,8 @@ function doPlayerSetNameDescription()
 end
 function doPlayerSendChannelMessage(cid, author, message, SpeakClasses, channel)
 	local p = Player(cid)
-	return p and p:sendChannelMessage(author, message, SpeakClasses, channel) or false
+	return p and p:sendChannelMessage(author, message, SpeakClasses, channel) or
+		       false
 end
 function doPlayerSetMaxCapacity(cid, cap)
 	local p = Player(cid)
@@ -936,9 +905,7 @@ function doPlayerTakeItem(cid, itemid, count)
 	return p and p:removeItem(itemid, count) or false
 end
 function doPlayerTransferMoneyTo(cid, target, money)
-	if not isValidMoney(money) then
-		return false
-	end
+	if not isValidMoney(money) then return false end
 	local p = Player(cid)
 	return p and p:transferMoneyTo(target, money) or false
 end
@@ -1013,9 +980,7 @@ function doPlayerAddOutfit(cid, lookType, addons)
 end
 function doPlayerRemOutfit(cid, lookType, addons)
 	local player = Player(cid)
-	if player == nil then
-		return false
-	end
+	if player == nil then return false end
 	if addons == 255 then
 		return player:removeOutfit(lookType)
 	else
@@ -1092,13 +1057,9 @@ function doPlayerAddLevel(cid, amount, round)
 end
 function doPlayerAddExp(cid, exp, useMult, ...)
 	local player = Player(cid)
-	if player == nil then
-		return false
-	end
+	if player == nil then return false end
 
-	if useMult then
-		exp = exp * Game.getExperienceStage(player:getLevel())
-	end
+	if useMult then exp = exp * Game.getExperienceStage(player:getLevel()) end
 	return player:addExperience(exp, ...)
 end
 doPlayerAddExperience = doPlayerAddExp
@@ -1117,9 +1078,7 @@ function doPlayerAddMana(cid, mana, ...)
 end
 function doPlayerJoinParty(cid, leaderId)
 	local player = Player(cid)
-	if player == nil then
-		return false
-	end
+	if player == nil then return false end
 
 	if player:getParty() then
 		player:sendTextMessage(MESSAGE_INFO_DESCR, "You are already in a party.")
@@ -1127,19 +1086,13 @@ function doPlayerJoinParty(cid, leaderId)
 	end
 
 	local leader = Player(leaderId)
-	if leader == nil then
-		return false
-	end
+	if leader == nil then return false end
 
 	local party = leader:getParty()
-	if party == nil or party:getLeader() ~= leader then
-		return true
-	end
+	if party == nil or party:getLeader() ~= leader then return true end
 
 	for _, invitee in ipairs(party:getInvitees()) do
-		if player ~= invitee then
-			return true
-		end
+		if player ~= invitee then return true end
 	end
 
 	party:addMember(player)
@@ -1147,16 +1100,12 @@ function doPlayerJoinParty(cid, leaderId)
 end
 function getPartyMembers(cid)
 	local player = Player(cid)
-	if player == nil then
-		return false
-	end
+	if player == nil then return false end
 
 	local party = player:getParty()
-	if party == nil then
-		return false
-	end
+	if party == nil then return false end
 
-	local result = { party:getLeader():getId() }
+	local result = {party:getLeader():getId()}
 	for _, member in ipairs(party:getMembers()) do
 		result[#result + 1] = member:getId()
 	end
@@ -1167,23 +1116,17 @@ doPlayerSendDefaultCancel = doPlayerSendCancel
 
 function getMonsterTargetList(cid)
 	local monster = Monster(cid)
-	if monster == nil then
-		return false
-	end
+	if monster == nil then return false end
 
 	local result = {}
 	for _, creature in ipairs(monster:getTargetList()) do
-		if monster:isTarget(creature) then
-			result[#result + 1] = creature:getId()
-		end
+		if monster:isTarget(creature) then result[#result + 1] = creature:getId() end
 	end
 	return result
 end
 function getMonsterFriendList(cid)
 	local monster = Monster(cid)
-	if monster == nil then
-		return false
-	end
+	if monster == nil then return false end
 
 	local z = monster:getPosition().z
 
@@ -1197,18 +1140,12 @@ function getMonsterFriendList(cid)
 end
 function doSetMonsterTarget(cid, target)
 	local monster = Monster(cid)
-	if monster == nil then
-		return false
-	end
+	if monster == nil then return false end
 
-	if monster:getMaster() then
-		return true
-	end
+	if monster:getMaster() then return true end
 
 	local target = Creature(cid)
-	if target == nil then
-		return false
-	end
+	if target == nil then return false end
 
 	monster:selectTarget(target)
 	return true
@@ -1216,13 +1153,9 @@ end
 doMonsterSetTarget = doSetMonsterTarget
 function doMonsterChangeTarget(cid)
 	local monster = Monster(cid)
-	if monster == nil then
-		return false
-	end
+	if monster == nil then return false end
 
-	if monster:getMaster() then
-		return true
-	end
+	if monster:getMaster() then return true end
 
 	monster:searchTarget(1)
 	return true
@@ -1238,14 +1171,10 @@ end
 doCreateMonster = doSummonCreature
 function doConvinceCreature(cid, target)
 	local creature = Creature(cid)
-	if creature == nil then
-		return false
-	end
+	if creature == nil then return false end
 
 	local targetCreature = Creature(target)
-	if targetCreature == nil then
-		return false
-	end
+	if targetCreature == nil then return false end
 
 	creature:addSummon(targetCreature)
 	return true
@@ -1304,22 +1233,16 @@ function getContainerCap(uid)
 end
 function getContainerItem(uid, slot)
 	local container = Container(uid)
-	if container == nil then
-		return pushThing(nil)
-	end
+	if container == nil then return pushThing(nil) end
 	return pushThing(container:getItem(slot))
 end
 
 function doAddContainerItemEx(uid, virtualId)
 	local container = Container(uid)
-	if container == nil then
-		return false
-	end
+	if container == nil then return false end
 
 	local res = container:addItemEx(Item(virtualId))
-	if res == nil then
-		return false
-	end
+	if res == nil then return false end
 	return res
 end
 
@@ -1335,23 +1258,18 @@ end
 
 function getPromotedVocation(vocationId)
 	local vocation = Vocation(vocationId)
-	if vocation == nil then
-		return 0
-	end
+	if vocation == nil then return 0 end
 
 	local promotedVocation = vocation:getPromotion()
-	if promotedVocation == nil then
-		return 0
-	end
+	if promotedVocation == nil then return 0 end
 	return promotedVocation:getId()
 end
 getPlayerPromotionLevel = getPromotedVocation
 
 function getGuildId(guildName)
-	local resultId = db.storeQuery("SELECT `id` FROM `guilds` WHERE `name` = " .. db.escapeString(guildName))
-	if resultId == false then
-		return false
-	end
+	local resultId = db.storeQuery("SELECT `id` FROM `guilds` WHERE `name` = " ..
+		                               db.escapeString(guildName))
+	if resultId == false then return false end
 
 	local guildId = result.getNumber(resultId, "id")
 	result.free(resultId)
@@ -1372,9 +1290,7 @@ function getHouseEntry(houseId)
 end
 function getHouseTown(houseId)
 	local h = House(houseId)
-	if h == nil then
-		return false
-	end
+	if h == nil then return false end
 	local t = h:getTown()
 	return t and t:getId() or false
 end
@@ -1383,24 +1299,12 @@ function getHouseTilesSize(houseId)
 	return h and h:getTileCount() or false
 end
 
-function isItemStackable(itemId)
-	return ItemType(itemId):isStackable()
-end
-function isItemRune(itemId)
-	return ItemType(itemId):isRune()
-end
-function isItemDoor(itemId)
-	return ItemType(itemId):isDoor()
-end
-function isItemContainer(itemId)
-	return ItemType(itemId):isContainer()
-end
-function isItemFluidContainer(itemId)
-	return ItemType(itemId):isFluidContainer()
-end
-function isItemMovable(itemId)
-	return ItemType(itemId):isMovable()
-end
+function isItemStackable(itemId) return ItemType(itemId):isStackable() end
+function isItemRune(itemId) return ItemType(itemId):isRune() end
+function isItemDoor(itemId) return ItemType(itemId):isDoor() end
+function isItemContainer(itemId) return ItemType(itemId):isContainer() end
+function isItemFluidContainer(itemId) return ItemType(itemId):isFluidContainer() end
+function isItemMovable(itemId) return ItemType(itemId):isMovable() end
 function isCorpse(uid)
 	local i = Item(uid)
 	return i and ItemType(i:getId()):isCorpse() or false
@@ -1409,68 +1313,51 @@ end
 isItemMoveable = isItemMovable
 isMoveable = isMovable
 
-function getItemName(itemId)
-	return ItemType(itemId):getName()
-end
+function getItemName(itemId) return ItemType(itemId):getName() end
 getItemNameById = getItemName
-function getItemWeight(itemId, ...)
-	return ItemType(itemId):getWeight(...) / 100
-end
+function getItemWeight(itemId, ...) return ItemType(itemId):getWeight(...) / 100 end
 function getItemDescriptions(itemId)
 	local itemType = ItemType(itemId)
 	return {
 		name = itemType:getName(),
 		plural = itemType:getPluralName(),
 		article = itemType:getArticle(),
-		description = itemType:getDescription(),
+		description = itemType:getDescription()
 	}
 end
 function getItemIdByName(name)
 	local id = ItemType(name):getId()
-	if id == 0 then
-		return false
-	end
+	if id == 0 then return false end
 	return id
 end
 function getItemWeightByUID(uid, ...)
 	local item = Item(uid)
-	if item == nil then
-		return false
-	end
+	if item == nil then return false end
 
 	local itemType = ItemType(item:getId())
-	return itemType:isStackable() and (itemType:getWeight(item:getCount(), ...) / 100)
-		or (itemType:getWeight(1, ...) / 100)
+	return itemType:isStackable() and
+		       (itemType:getWeight(item:getCount(), ...) / 100) or
+		       (itemType:getWeight(1, ...) / 100)
 end
 function getItemRWInfo(uid)
 	local item = Item(uid)
-	if item == nil then
-		return false
-	end
+	if item == nil then return false end
 
 	local rwFlags = 0
 	local itemType = ItemType(item:getId())
-	if itemType:isReadable() then
-		rwFlags = rwFlags | 1
-	end
+	if itemType:isReadable() then rwFlags = rwFlags | 1 end
 
-	if itemType:isWritable() then
-		rwFlags = rwFlags | 2
-	end
+	if itemType:isWritable() then rwFlags = rwFlags | 2 end
 	return rwFlags
 end
-function getContainerCapById(itemId)
-	return ItemType(itemId):getCapacity()
-end
+function getContainerCapById(itemId) return ItemType(itemId):getCapacity() end
 function getFluidSourceType(itemId)
 	local it = ItemType(itemId)
 	return it.id ~= 0 and it:getFluidSource() or false
 end
 function hasProperty(uid, prop)
 	local item = Item(uid)
-	if item == nil then
-		return false
-	end
+	if item == nil then return false end
 
 	local parent = item:getParent()
 	if parent:isTile() and item == parent:getGround() then
@@ -1482,9 +1369,7 @@ end
 
 function doSetItemText(uid, text)
 	local item = Item(uid)
-	if item == nil then
-		return false
-	end
+	if item == nil then return false end
 
 	if text ~= "" then
 		item:setAttribute(ITEM_ATTRIBUTE_TEXT, text)
@@ -1495,9 +1380,7 @@ function doSetItemText(uid, text)
 end
 function doSetItemSpecialDescription(uid, desc)
 	local item = Item(uid)
-	if item == nil then
-		return false
-	end
+	if item == nil then return false end
 
 	if desc ~= "" then
 		item:setAttribute(ITEM_ATTRIBUTE_DESCRIPTION, desc)
@@ -1530,35 +1413,27 @@ end
 
 function getHouseByPlayerGUID(playerGUID)
 	for _, house in ipairs(Game.getHouses()) do
-		if house:getOwnerGuid() == playerGUID then
-			return house:getId()
-		end
+		if house:getOwnerGuid() == playerGUID then return house:getId() end
 	end
 	return nil
 end
 
 function getTileHouseInfo(pos)
 	local t = Tile(pos)
-	if t == nil then
-		return false
-	end
+	if t == nil then return false end
 	local h = t:getHouse()
 	return h and h:getId() or false
 end
 
 function getTilePzInfo(position)
 	local t = Tile(position)
-	if t == nil then
-		return false
-	end
+	if t == nil then return false end
 	return t:hasFlag(TILESTATE_PROTECTIONZONE)
 end
 
 function getTileInfo(position)
 	local t = Tile(position)
-	if t == nil then
-		return false
-	end
+	if t == nil then return false end
 
 	local ret = pushThing(t:getGround())
 	ret.protection = t:hasFlag(TILESTATE_PROTECTIONZONE)
@@ -1579,48 +1454,36 @@ end
 
 function getTileItemByType(position, itemType)
 	local t = Tile(position)
-	if t == nil then
-		return pushThing(nil)
-	end
+	if t == nil then return pushThing(nil) end
 	return pushThing(t:getItemByType(itemType))
 end
 
 function getTileItemById(position, itemId, ...)
 	local t = Tile(position)
-	if t == nil then
-		return pushThing(nil)
-	end
+	if t == nil then return pushThing(nil) end
 	return pushThing(t:getItemById(itemId, ...))
 end
 
 function getTileThingByPos(position)
 	local t = Tile(position)
 	if t == nil then
-		if position.stackpos == -1 then
-			return -1
-		end
+		if position.stackpos == -1 then return -1 end
 		return pushThing(nil)
 	end
 
-	if position.stackpos == -1 then
-		return t:getThingCount()
-	end
+	if position.stackpos == -1 then return t:getThingCount() end
 	return pushThing(t:getThing(position.stackpos))
 end
 
 function getTileThingByTopOrder(position, topOrder)
 	local t = Tile(position)
-	if t == nil then
-		return pushThing(nil)
-	end
+	if t == nil then return pushThing(nil) end
 	return pushThing(t:getItemByTopOrder(topOrder))
 end
 
 function getTopCreature(position)
 	local t = Tile(position)
-	if t == nil then
-		return pushThing(nil)
-	end
+	if t == nil then return pushThing(nil) end
 	return pushThing(t:getTopCreature())
 end
 
@@ -1639,14 +1502,10 @@ function doTeleportThing(uid, dest, pushMovement)
 	else
 		if uid >= 0x10000000 then
 			local creature = Creature(uid)
-			if creature then
-				return creature:teleportTo(dest, pushMovement or false)
-			end
+			if creature then return creature:teleportTo(dest, pushMovement or false) end
 		else
 			local item = Item(uid)
-			if item then
-				return item:moveTo(dest)
-			end
+			if item then return item:moveTo(dest) end
 		end
 	end
 	return false
@@ -1664,15 +1523,11 @@ function getThingPos(uid)
 		thing = uid
 	end
 
-	if thing == nil then
-		return false
-	end
+	if thing == nil then return false end
 
 	local stackpos = 0
 	local tile = thing:getTile()
-	if tile then
-		stackpos = tile:getThingIndex(thing)
-	end
+	if tile then stackpos = tile:getThingIndex(thing) end
 
 	local position = thing:getPosition()
 	position.stackpos = stackpos
@@ -1682,9 +1537,7 @@ getThingPosition = getThingPos
 
 function getThingfromPos(pos)
 	local tile = Tile(pos)
-	if tile == nil then
-		return pushThing(nil)
-	end
+	if tile == nil then return pushThing(nil) end
 
 	local thing
 	local stackpos = pos.stackpos or 0
@@ -1692,9 +1545,7 @@ function getThingfromPos(pos)
 		thing = tile:getTopCreature()
 		if thing == nil then
 			local item = tile:getTopDownItem()
-			if item and item:getType():isMovable() then
-				thing = item
-			end
+			if item and item:getType():isMovable() then thing = item end
 		end
 	elseif stackpos == STACKPOS_TOP_FIELD then
 		thing = tile:getFieldItem()
@@ -1707,26 +1558,18 @@ function getThingfromPos(pos)
 end
 
 function doRelocate(fromPos, toPos)
-	if fromPos == toPos then
-		return false
-	end
+	if fromPos == toPos then return false end
 
 	local fromTile = Tile(fromPos)
-	if fromTile == nil then
-		return false
-	end
+	if fromTile == nil then return false end
 
-	if Tile(toPos) == nil then
-		return false
-	end
+	if Tile(toPos) == nil then return false end
 
 	for i = fromTile:getThingCount() - 1, 0, -1 do
 		local thing = fromTile:getThing(i)
 		if thing then
 			if thing:isItem() then
-				if ItemType(thing:getId()):isMovable() then
-					thing:moveTo(toPos)
-				end
+				if ItemType(thing:getId()):isMovable() then thing:moveTo(toPos) end
 			elseif thing:isCreature() then
 				thing:teleportTo(toPos)
 			end
@@ -1740,9 +1583,7 @@ function getThing(uid)
 end
 
 function getConfigInfo(info)
-	if type(info) ~= "string" then
-		return nil
-	end
+	if type(info) ~= "string" then return nil end
 	dofile("config.lua")
 	return _G[info]
 end
@@ -1760,9 +1601,7 @@ end
 
 saveData = saveServer
 
-function getGlobalStorageValue(key)
-	return Game.getStorageValue(key) or -1
-end
+function getGlobalStorageValue(key) return Game.getStorageValue(key) or -1 end
 getStorage = getGlobalStorageValue
 function setGlobalStorageValue(key, value)
 	Game.setStorageValue(key, value)
@@ -1771,21 +1610,13 @@ end
 doSetStorage = setGlobalStorageValue
 getWorldType = Game.getWorldType
 
-function setWorldType(type)
-	return Game.setWorldType(type)
-end
+function setWorldType(type) return Game.setWorldType(type) end
 
-function getGameState()
-	return Game.getGameState()
-end
+function getGameState() return Game.getGameState() end
 
-function doSetGameState(state)
-	return Game.setGameState(state)
-end
+function doSetGameState(state) return Game.setGameState(state) end
 
-function doExecuteRaid(raidName)
-	return Game.startRaid(raidName)
-end
+function doExecuteRaid(raidName) return Game.startRaid(raidName) end
 
 numberToVariant = Variant
 stringToVariant = Variant
@@ -1812,14 +1643,11 @@ function doCreateTeleport(itemId, destination, position)
 end
 
 function getSpectators(centerPos, rangex, rangey, multifloor, onlyPlayers)
-	local result = Game.getSpectators(centerPos, multifloor, onlyPlayers or false, rangex, rangex, rangey, rangey)
-	if #result == 0 then
-		return nil
-	end
+	local result = Game.getSpectators(centerPos, multifloor, onlyPlayers or false,
+	                                  rangex, rangex, rangey, rangey)
+	if #result == 0 then return nil end
 
-	for index, spectator in ipairs(result) do
-		result[index] = spectator:getId()
-	end
+	for index, spectator in ipairs(result) do result[index] = spectator:getId() end
 	return result
 end
 
@@ -1829,9 +1657,7 @@ function broadcastMessage(message, messageType)
 end
 doBroadcastMessage = broadcastMessage
 
-function Guild.addMember(self, player)
-	return player:setGuild(self)
-end
+function Guild.addMember(self, player) return player:setGuild(self) end
 function Guild.removeMember(self, player)
 	return player:getGuild() == self and player:setGuild(nil)
 end
@@ -1842,14 +1668,10 @@ function getPlayerInstantSpellCount(cid)
 end
 function getPlayerInstantSpellInfo(cid, spellId)
 	local player = Player(cid)
-	if not player then
-		return false
-	end
+	if not player then return false end
 
 	local spell = Spell(spellId)
-	if not spell or not player:canCast(spell) then
-		return false
-	end
+	if not spell or not player:canCast(spell) then return false end
 
 	return spell
 end
@@ -1864,9 +1686,7 @@ function doSetMonsterOutfit(cid, name, time)
 end
 function doSetCreatureOutfit(cid, outfit, time)
 	local creature = Creature(cid)
-	if not creature then
-		return false
-	end
+	if not creature then return false end
 
 	local condition = Condition(CONDITION_OUTFIT)
 	condition:setOutfit(outfit)
@@ -1878,40 +1698,28 @@ end
 
 function doTileAddItemEx(pos, uid, flags)
 	local tile = Tile(pos)
-	if not tile then
-		return false
-	end
+	if not tile then return false end
 
 	local item = Item(uid)
-	if item then
-		return tile:addItemEx(item, flags)
-	end
+	if item then return tile:addItemEx(item, flags) end
 
 	return false
 end
 
-function isInArray(array, value)
-	return table.contains(array, value)
-end
+function isInArray(array, value) return table.contains(array, value) end
 
 function doCreateItem(itemid, count, pos)
 	local tile = Tile(pos)
-	if not tile then
-		return false
-	end
+	if not tile then return false end
 
 	local item = Game.createItem(itemid, count, pos)
-	if item then
-		return item:getUniqueId()
-	end
+	if item then return item:getUniqueId() end
 	return false
 end
 
 function doCreateItemEx(itemid, count)
 	local item = Game.createItem(itemid, count)
-	if item then
-		return item:getUniqueId()
-	end
+	if item then return item:getUniqueId() end
 	return false
 end
 
@@ -1920,46 +1728,40 @@ function doMoveCreature(cid, direction)
 	return c ~= nil and c:move(direction)
 end
 
-function createFunctions(class)
-	local exclude = { [2] = { "is" }, [3] = { "get", "set", "add", "can" }, [4] = { "need" } }
-	local temp = {}
-	for name, func in pairs(class) do
-		local add = true
+do
+	local exclude = {
+		[2] = {"is"},
+		[3] = {"get", "set", "add", "can"},
+		[4] = {"need"}
+	}
+
+	local function exists(name)
 		for strLen, strTable in pairs(exclude) do
-			if table.contains(strTable, name:sub(1, strLen)) then
-				add = false
-			end
-		end
-		if add then
-			local str = name:sub(1, 1):upper() .. name:sub(2)
-			local getFunc = function(self)
-				return func(self)
-			end
-			local setFunc = function(self, ...)
-				return func(self, ...)
-			end
-			local get = "get" .. str
-			local set = "set" .. str
-			if not (rawget(class, get) and rawget(class, set)) then
-				table.insert(temp, { set, setFunc, get, getFunc })
-			end
+			if table.contains(strTable, name:sub(1, strLen)) then return true end
 		end
 	end
-	for _, func in ipairs(temp) do
-		rawset(class, func[1], func[2])
-		rawset(class, func[3], func[4])
+
+	function createFunctions(class)
+		local temp = {}
+		for name, func in pairs(class) do
+			if not exists(name) then
+				local str = name:sub(1, 1):upper() .. name:sub(2)
+				local get = "get" .. str
+				local set = "set" .. str
+				if not class[get] and not class[set] then
+					class[get] = function(self) return func(self) end
+					class[set] = function(self, ...) return func(self, ...) end
+				end
+			end
+		end
 	end
 end
 
-function isNumber(str)
-	return tonumber(str) ~= nil
-end
+function isNumber(str) return tonumber(str) ~= nil end
 
 function doSetCreatureLight(cid, lightLevel, lightColor, time)
 	local creature = Creature(cid)
-	if not creature then
-		return false
-	end
+	if not creature then return false end
 
 	local condition = Condition(CONDITION_LIGHT)
 	condition:setParameter(CONDITION_PARAM_LIGHT_LEVEL, lightLevel)
@@ -1969,9 +1771,7 @@ function doSetCreatureLight(cid, lightLevel, lightColor, time)
 	return true
 end
 
-function getExperienceForLevel(level)
-	return Game.getExperienceForLevel(level)
-end
+function getExperienceForLevel(level) return Game.getExperienceForLevel(level) end
 
 do
 	local combats = {
@@ -1986,12 +1786,10 @@ do
 		[COMBAT_DROWNDAMAGE] = "drown",
 		[COMBAT_ICEDAMAGE] = "ice",
 		[COMBAT_HOLYDAMAGE] = "holy",
-		[COMBAT_DEATHDAMAGE] = "death",
+		[COMBAT_DEATHDAMAGE] = "death"
 	}
 
-	function getCombatName(combat)
-		return combats[combat]
-	end
+	function getCombatName(combat) return combats[combat] end
 end
 
 do
@@ -2004,12 +1802,10 @@ do
 		[SKILL_SHIELD] = "shielding",
 		[SKILL_FISHING] = "fishing",
 		[SKILL_MAGLEVEL] = "magic level",
-		[SKILL_LEVEL] = "level",
+		[SKILL_LEVEL] = "level"
 	}
 
-	function getSkillName(skill)
-		return skills[skill] or "unknown"
-	end
+	function getSkillName(skill) return skills[skill] or "unknown" end
 end
 
 do
@@ -2019,7 +1815,7 @@ do
 		[SPECIALSKILL_LIFELEECHCHANCE] = "life leech chance",
 		[SPECIALSKILL_LIFELEECHAMOUNT] = "life leech amount",
 		[SPECIALSKILL_MANALEECHCHANCE] = "mana leech chance",
-		[SPECIALSKILL_MANALEECHAMOUNT] = "mana leech amount",
+		[SPECIALSKILL_MANALEECHAMOUNT] = "mana leech amount"
 	}
 
 	function getSpecialSkillName(specialSkill)
@@ -2032,37 +1828,23 @@ do
 		[STAT_MAXHITPOINTS] = "hitpoints",
 		[STAT_MAXMANAPOINTS] = "mana",
 		[STAT_SOULPOINTS] = "soul points",
-		[STAT_MAGICPOINTS] = "magic level",
+		[STAT_MAGICPOINTS] = "magic level"
 	}
 
-	function getStatName(stat)
-		return stats[stat] or "unknown"
-	end
+	function getStatName(stat) return stats[stat] or "unknown" end
 end
 
-function indexToCombatType(idx)
-	return 1 << idx
-end
+function indexToCombatType(idx) return 1 << idx end
 
-function showpos(v)
-	return v > 0 and "+" or "-"
-end
+function showpos(v) return v > 0 and "+" or "-" end
 
 -- this is a fix for lua52 or higher which has the function renamed to table.unpack, while luajit still uses unpack
-if not unpack then
-	unpack = table.unpack
-end
+if not unpack then unpack = table.unpack end
 
-if not loadstring then
-	loadstring = load
-end
+if not loadstring then loadstring = load end
 
 function table.maxn(t)
 	local max = 0
-	for k in pairs(t) do
-		if type(k) == "number" and k > max then
-			max = k
-		end
-	end
+	for k in pairs(t) do if type(k) == "number" and k > max then max = k end end
 	return max
 end

@@ -57,7 +57,7 @@ public:
 	void clear(bool fromLua) override final;
 
 private:
-	using MoveListMap = std::map<int32_t, MoveEventList>;
+	using MoveListMap = std::map<uint16_t, MoveEventList>;
 	using MovePosListMap = std::map<Position, MoveEventList>;
 	void clearMap(MoveListMap& map, bool fromLua);
 	void clearPosMap(MovePosListMap& map, bool fromLua);
@@ -67,7 +67,7 @@ private:
 	Event_ptr getEvent(std::string_view nodeName) override;
 	bool registerEvent(Event_ptr event, const pugi::xml_node& node) override;
 
-	void addEvent(MoveEvent moveEvent, int32_t id, MoveListMap& map);
+	void addEvent(MoveEvent moveEvent, uint16_t id, MoveListMap& map);
 
 	void addEvent(MoveEvent moveEvent, const Position& pos, MovePosListMap& map);
 	MoveEvent* getEvent(const Tile* tile, MoveEvent_t eventType);
@@ -114,8 +114,8 @@ public:
 	uint32_t getReqLevel() const { return reqLevel; }
 	uint32_t getReqMagLv() const { return reqMagLevel; }
 	bool isPremium() const { return premium; }
-	const std::string& getVocationString() const { return vocationString; }
-	void setVocationString(const std::string& str) { vocationString = str; }
+	std::string_view getVocationString() const { return vocationString; }
+	void setVocationString(std::string_view str) { vocationString = str; }
 	uint32_t getWieldInfo() const { return wieldInfo; }
 	const auto& getVocationEquipSet() const { return vocationEquipSet; }
 	void addVocationEquipSet(const std::string& vocationName)
@@ -132,18 +132,42 @@ public:
 
 	bool getTileItem() const { return tileItem; }
 	void setTileItem(bool b) { tileItem = b; }
-	void clearItemIdRange() { return itemIdRange.clear(); }
-	const std::vector<uint32_t>& getItemIdRange() const { return itemIdRange; }
-	void addItemId(uint32_t id) { itemIdRange.emplace_back(id); }
-	void clearActionIdRange() { return actionIdRange.clear(); }
-	const std::vector<uint32_t>& getActionIdRange() const { return actionIdRange; }
-	void addActionId(uint32_t id) { actionIdRange.emplace_back(id); }
-	void clearUniqueIdRange() { return uniqueIdRange.clear(); }
-	const std::vector<uint32_t>& getUniqueIdRange() const { return uniqueIdRange; }
-	void addUniqueId(uint32_t id) { uniqueIdRange.emplace_back(id); }
-	void clearPosList() { return posList.clear(); }
-	const std::vector<Position>& getPosList() const { return posList; }
-	void addPosList(Position pos) { posList.emplace_back(pos); }
+
+	auto stealItemIdRange()
+	{
+		std::vector<uint16_t> ret{};
+		std::swap(itemIdRange, ret);
+		return ret;
+	}
+	void addItemId(uint16_t id) { itemIdRange.emplace_back(id); }
+
+	auto stealActionIdRange()
+	{
+		std::vector<uint16_t> ret{};
+		std::swap(actionIdRange, ret);
+		return ret;
+	}
+	void clearActionIdRange() { actionIdRange.clear(); }
+	void addActionId(uint16_t id) { actionIdRange.emplace_back(id); }
+
+	auto stealUniqueIdRange()
+	{
+		std::vector<uint16_t> ret{};
+		std::swap(uniqueIdRange, ret);
+		return ret;
+	}
+	void clearUniqueIdRange() { uniqueIdRange.clear(); }
+	void addUniqueId(uint16_t id) { uniqueIdRange.emplace_back(id); }
+
+	auto stealPosList()
+	{
+		std::vector<Position> ret{};
+		std::swap(posList, ret);
+		return ret;
+	}
+	void clearPosList() { posList.clear(); }
+	void addPosList(const Position& pos) { posList.emplace_back(pos); }
+
 	void setSlot(uint32_t s) { slot = s; }
 	uint32_t getRequiredLevel() { return reqLevel; }
 	void setRequiredLevel(uint32_t level) { reqLevel = level; }
@@ -182,9 +206,9 @@ private:
 	std::unordered_set<uint16_t> vocationEquipSet;
 	bool tileItem = false;
 
-	std::vector<uint32_t> itemIdRange;
-	std::vector<uint32_t> actionIdRange;
-	std::vector<uint32_t> uniqueIdRange;
+	std::vector<uint16_t> itemIdRange;
+	std::vector<uint16_t> actionIdRange;
+	std::vector<uint16_t> uniqueIdRange;
 	std::vector<Position> posList;
 };
 

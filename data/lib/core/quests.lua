@@ -22,9 +22,7 @@ end
 
 function Quest:isCompleted(player)
 	for _, mission in pairs(self.missions) do
-		if not mission:isCompleted(player) then
-			return false
-		end
+		if not mission:isCompleted(player) then return false end
 	end
 	return true
 end
@@ -45,9 +43,7 @@ Mission.__index = Mission
 function Mission:isStarted(player)
 	local value = player:getStorageValue(self.storageId)
 	if value >= self.startValue then
-		if self.ignoreEndValue or value <= self.endValue then
-			return true
-		end
+		if self.ignoreEndValue or value <= self.endValue then return true end
 	end
 	return false
 end
@@ -68,9 +64,7 @@ end
 
 function Mission:getDescription(player)
 	local descriptionType = type(self.description)
-	if descriptionType == "function" then
-		return self.description(player)
-	end
+	if descriptionType == "function" then return self.description(player) end
 
 	local value = player:getStorageValue(self.storageId)
 	if descriptionType == "string" then
@@ -82,15 +76,11 @@ function Mission:getDescription(player)
 	if descriptionType == "table" then
 		if self.ignoreEndValue then
 			for current = self.endValue, self.startValue, -1 do
-				if value >= current then
-					return self.description[current]
-				end
+				if value >= current then return self.description[current] end
 			end
 		else
 			for current = self.endValue, self.startValue, -1 do
-				if value == current then
-					return self.description[current]
-				end
+				if value == current then return self.description[current] end
 			end
 		end
 	end
@@ -98,19 +88,11 @@ function Mission:getDescription(player)
 	return "An error has occurred, please contact a gamemaster."
 end
 
-function Game.getQuests()
-	return quests
-end
-function Game.getMissions()
-	return missions
-end
+function Game.getQuests() return quests end
+function Game.getMissions() return missions end
 
-function Game.getQuestById(id)
-	return quests[id]
-end
-function Game.getMissionById(id)
-	return missions[id]
-end
+function Game.getQuestById(id) return quests[id] end
+function Game.getMissionById(id) return missions[id] end
 
 function Game.clearQuests()
 	quests = {}
@@ -119,17 +101,13 @@ function Game.clearQuests()
 end
 
 function Game.createQuest(name, quest)
-	if not isScriptsInterface() then
-		return
-	end
+	if not isScriptsInterface() then return end
 
 	if type(quest) == "table" then
 		setmetatable(quest, Quest)
 		quest.id = -1
 		quest.name = name
-		if type(quest.missions) ~= "table" then
-			quest.missions = {}
-		end
+		if type(quest.missions) ~= "table" then quest.missions = {} end
 
 		return quest
 	end
@@ -145,14 +123,14 @@ end
 
 function Game.isQuestStorage(key, value, oldValue)
 	for _, quest in pairs(quests) do
-		if quest.storageId == key and quest.storageValue == value then
-			return true
-		end
+		if quest.storageId == key and quest.storageValue == value then return true end
 	end
 
 	for _, mission in pairs(missions) do
-		if mission.storageId == key and value >= mission.startValue and value <= mission.endValue then
-			return not mission.description or oldValue < mission.startValue or oldValue > mission.endValue
+		if mission.storageId == key and value >= mission.startValue and value <=
+			mission.endValue then
+			return not mission.description or oldValue < mission.startValue or oldValue >
+				       mission.endValue
 		end
 	end
 	return false
@@ -161,9 +139,7 @@ end
 function Player:getQuests()
 	local playerQuests = {}
 	for _, quest in pairs(quests) do
-		if quest:isStarted(self) then
-			playerQuests[#playerQuests + 1] = quest
-		end
+		if quest:isStarted(self) then playerQuests[#playerQuests + 1] = quest end
 	end
 	return playerQuests
 end

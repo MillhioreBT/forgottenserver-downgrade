@@ -3,5 +3,5 @@ actionIds = {
 	pickHole = 105, -- hidden mud hole
 	levelDoor = 1000, -- level door
 	citizenship = 30020, -- citizenship teleport
-	citizenshipLast = 30050, -- citizenship teleport last
+	citizenshipLast = 30050 -- citizenship teleport last
 }

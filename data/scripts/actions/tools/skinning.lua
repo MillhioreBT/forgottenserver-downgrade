@@ -46,16 +46,26 @@ local config = {
 
 		-- Piece of Marble Rock
 		[11343] = {
-			{chance = 530, newItem = 11346, desc = "This little figurine of a goddess was masterfully sculpted by |PLAYERNAME|."},
-			{chance = 9600, newItem = 11345, desc = "This little figurine made by |PLAYERNAME| has some room for improvement."},
-			{chance = 24000, newItem = 11344, desc = "This shoddy work was made by |PLAYERNAME|."}
+			{
+				chance = 530,
+				newItem = 11346,
+				desc = "This little figurine of a goddess was masterfully sculpted by |PLAYERNAME|."
+			}, {
+				chance = 9600,
+				newItem = 11345,
+				desc = "This little figurine made by |PLAYERNAME| has some room for improvement."
+			}, {
+				chance = 24000,
+				newItem = 11344,
+				desc = "This shoddy work was made by |PLAYERNAME|."
+			}
 		},
 
 		-- Ice Cube
 		[7441] = {chance = 22000, newItem = 7442},
 		[7442] = {chance = 4800, newItem = 7444},
 		[7444] = {chance = 900, newItem = 7445},
-		[7445] = {chance = 40, newItem = 7446},
+		[7445] = {chance = 40, newItem = 7446}
 	},
 	[5942] = {
 		-- Demon
@@ -66,7 +76,7 @@ local config = {
 		[2956] = {chance = 6000, newItem = 5905, after = 2957}, -- vampire
 		[6006] = {chance = 6000, newItem = 5905, after = 2957}, -- vampire, after being killed
 		[9654] = {chance = 6000, newItem = 5905, after = 9658}, -- vampire bride
-		[9660] = {chance = 6000, newItem = 5905, after = 9658}, -- vampire bride, after being killed
+		[9660] = {chance = 6000, newItem = 5905, after = 9658} -- vampire bride, after being killed
 	}
 }
 
@@ -88,7 +98,8 @@ function skinning.onUse(player, item, fromPosition, target, toPosition, isHotkey
 				if target.itemid == 11343 then
 					local marble = player:addItem(skinChild.newItem, skinChild.amount or 1)
 					if marble then
-						marble:setAttribute(ITEM_ATTRIBUTE_DESCRIPTION, skinChild.desc:gsub("|PLAYERNAME|", player:getName()))
+						marble:setAttribute(ITEM_ATTRIBUTE_DESCRIPTION,
+						                    skinChild.desc:gsub("|PLAYERNAME|", player:getName()))
 					end
 					if skinChild.newItem == 11346 then
 						player:addAchievement("Marblelous")
@@ -108,7 +119,8 @@ function skinning.onUse(player, item, fromPosition, target, toPosition, isHotkey
 
 		if not added and target.itemid == 11343 then
 			effect = CONST_ME_HITAREA
-			player:say("Your attempt at shaping that marble rock failed miserably.", TALKTYPE_MONSTER_SAY)
+			player:say("Your attempt at shaping that marble rock failed miserably.",
+			           TALKTYPE_MONSTER_SAY)
 			transform = false
 			target:remove()
 		end
@@ -138,13 +150,12 @@ function skinning.onUse(player, item, fromPosition, target, toPosition, isHotkey
 		end
 	end
 	if transform then
-		target:transform(skin.after or target:getType():getDecayId() or target.itemid + 1)
+		target:transform(
+			skin.after or target:getType():getDecayId() or target.itemid + 1)
 	else
 		target:remove()
 	end
-	if toPosition.x == CONTAINER_POSITION then
-		toPosition = player:getPosition()
-	end
+	if toPosition.x == CONTAINER_POSITION then toPosition = player:getPosition() end
 	toPosition:sendMagicEffect(effect)
 	return true
 end

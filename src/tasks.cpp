@@ -29,7 +29,7 @@ void Dispatcher::threadMain()
 		}
 		tmpTaskList.swap(taskList);
 		taskLockUnique.unlock();
-
+ 
 		for (Task* task : tmpTaskList) {
 			if (!task->hasExpired()) {
 				++dispatcherCycle;

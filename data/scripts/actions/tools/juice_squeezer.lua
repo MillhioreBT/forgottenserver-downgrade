@@ -1,6 +1,7 @@
 local juiceSquizer = Action()
 
-function juiceSquizer.onUse(player, item, fromPosition, target, toPosition, isHotkey)
+function juiceSquizer.onUse(player, item, fromPosition, target, toPosition,
+                            isHotkey)
 	local fruits = {
 		2673, -- pear
 		2674, -- red apple

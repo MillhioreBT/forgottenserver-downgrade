@@ -11,7 +11,7 @@
 #include <random>
 #include <string_view>
 
-void printXMLError(const std::string& where, const std::string& fileName, const pugi::xml_parse_result& result);
+void printXMLError(std::string_view where, std::string_view fileName, const pugi::xml_parse_result& result);
 
 std::string transformToSHA1(std::string_view input);
 std::string generateToken(const std::string& key, uint32_t ticks);

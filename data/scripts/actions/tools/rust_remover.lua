@@ -33,7 +33,7 @@ local config = {
 		[2] = {id = 2648, chance = 4037}, -- Chain Legs
 		[3] = {id = 2478, chance = 2174}, -- Brass Legs
 		[4] = {id = 2647, chance = 1242}, -- Plate Legs
-		[5] = {id = 2477, chance = 186}, -- Knight Legs
+		[5] = {id = 2477, chance = 186} -- Knight Legs
 	},
 	[9813] = { -- Rusty Legs (Rare)
 		[1] = {id = 2478, chance = 6500}, -- Brass Legs
@@ -75,16 +75,15 @@ local config = {
 	[9818] = { -- Rusted Boots
 	},
 	[9819] = { -- Slightly Rusted Boots
-	},
+	}
 }
 
 local rustRemover = Action()
 
-function rustRemover.onUse(player, item, fromPosition, target, toPosition, isHotkey)
+function rustRemover.onUse(player, item, fromPosition, target, toPosition,
+                           isHotkey)
 	local targetItem = config[target.itemid]
-	if not targetItem then
-		return true
-	end
+	if not targetItem then return true end
 
 	local randomChance = math.random(10000)
 	local index = false
@@ -92,27 +91,30 @@ function rustRemover.onUse(player, item, fromPosition, target, toPosition, isHot
 	if targetItem[1].chance >= randomChance then -- implying first item in the table index always has the highest chance.
 		while not index do
 			randomIndex = math.random(#targetItem)
-			if targetItem[randomIndex].chance >= randomChance then
-				index = randomIndex
-			end
+			if targetItem[randomIndex].chance >= randomChance then index = randomIndex end
 		end
 	end
 
 	if not index then
 		if table.contains({9808, 9809, 9810}, target.itemid) then
-			msg = "The armor was already damaged so badly that it broke when you tried to clean it."
+			msg =
+				"The armor was already damaged so badly that it broke when you tried to clean it."
 		end
 		if table.contains({9811, 9812, 9813}, target.itemid) then
-			msg = "The legs were already damaged so badly that they broke when you tried to clean them."
+			msg =
+				"The legs were already damaged so badly that they broke when you tried to clean them."
 		end
 		if table.contains({9814, 9815, 9816}, target.itemid) then
-			msg = "The shield was already damaged so badly that it broke when you tried to clean it."
+			msg =
+				"The shield was already damaged so badly that it broke when you tried to clean it."
 		end
 		if table.contains({9817, 9818, 9819}, target.itemid) then
-			msg = "The boots were already damaged so badly that they broke when you tried to clean them."
+			msg =
+				"The boots were already damaged so badly that they broke when you tried to clean them."
 		end
 		if table.contains({9820, 9821, 9822}, target.itemid) then
-			msg = "The helmet was already damaged so badly that it broke when you tried to clean it."
+			msg =
+				"The helmet was already damaged so badly that it broke when you tried to clean it."
 		end
 		player:say(msg, TALKTYPE_MONSTER_SAY)
 		target:getPosition():sendMagicEffect(CONST_ME_BLOCKHIT)

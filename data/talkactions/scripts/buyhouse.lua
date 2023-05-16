@@ -1,16 +1,12 @@
-local config = {
-	level = 1,
-	onlyPremium = true
-}
+local config = {level = 1, onlyPremium = true}
 
 function onSay(player, words, param)
 	local housePrice = configManager.getNumber(configKeys.HOUSE_PRICE)
-	if housePrice == -1 then
-		return true
-	end
+	if housePrice == -1 then return true end
 
 	if player:getLevel() < config.level then
-		player:sendCancelMessage("You need level " .. config.level .. " or higher to buy a house.")
+		player:sendCancelMessage("You need level " .. config.level ..
+			                         " or higher to buy a house.")
 		return false
 	end
 
@@ -25,7 +21,8 @@ function onSay(player, words, param)
 	local tile = Tile(position)
 	local house = tile and tile:getHouse()
 	if not house then
-		player:sendCancelMessage("You have to be looking at the door of the house you would like to buy.")
+		player:sendCancelMessage(
+			"You have to be looking at the door of the house you would like to buy.")
 		return false
 	end
 
@@ -46,6 +43,7 @@ function onSay(player, words, param)
 	end
 
 	house:setOwnerGuid(player:getGuid())
-	player:sendTextMessage(MESSAGE_INFO_DESCR, "You have successfully bought this house, be sure to have the money for the rent in the bank.")
+	player:sendTextMessage(MESSAGE_INFO_DESCR,
+	                       "You have successfully bought this house, be sure to have the money for the rent in the bank.")
 	return false
 end

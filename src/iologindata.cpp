@@ -211,6 +211,27 @@ bool IOLoginData::loadPlayerByName(Player* player, std::string_view name)
 	        db.escapeString(name))));
 }
 
+static GuildWarVector getWarList(uint32_t guildId)
+{
+	DBResult_ptr result = Database::getInstance().storeQuery(fmt::format(
+	    "SELECT `guild1`, `guild2` FROM `guild_wars` WHERE (`guild1` = {:d} OR `guild2` = {:d}) AND `ended` = 0 AND `status` = 1",
+	    guildId, guildId));
+	if (!result) {
+		return {};
+	}
+
+	GuildWarVector guildWarVector;
+	do {
+		uint32_t guild1 = result->getNumber<uint32_t>("guild1");
+		if (guildId != guild1) {
+			guildWarVector.push_back(guild1);
+		} else {
+			guildWarVector.push_back(result->getNumber<uint32_t>("guild2"));
+		}
+	} while (result->next());
+	return std::move(guildWarVector);
+}
+
 bool IOLoginData::loadPlayer(Player* player, DBResult_ptr result)
 {
 	if (!result) {
@@ -402,7 +423,7 @@ bool IOLoginData::loadPlayer(Player* player, DBResult_ptr result)
 
 			player->guildRank = rank;
 
-			IOGuild::getWarList(guildId, player->guildWarVector);
+			player->guildWarVector = getWarList(guildId);
 
 			if ((result = db.storeQuery(fmt::format(
 			         "SELECT COUNT(*) AS `members` FROM `guild_membership` WHERE `guild_id` = {:d}", guildId)))) {
@@ -597,7 +618,7 @@ bool IOLoginData::saveItems(const Player* player, const ItemBlockList& itemList,
 
 bool IOLoginData::savePlayer(Player* player)
 {
-	if (player->getHealth() <= 0) {
+	if (player->isDead()) {
 		player->changeHealth(1);
 	}
 

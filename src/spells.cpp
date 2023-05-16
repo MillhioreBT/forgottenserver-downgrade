@@ -162,7 +162,7 @@ bool Spells::registerRuneLuaEvent(RuneSpell* event)
 	RuneSpell_ptr rune{event};
 	if (rune) {
 		uint16_t id = rune->getRuneItemId();
-		auto result = runes.emplace(rune->getRuneItemId(), std::move(*rune));
+		auto result = runes.emplace(id, std::move(*rune));
 		if (!result.second) {
 			std::cout << "[Warning - Spells::registerRuneLuaEvent] Duplicate registered rune with id: " << id
 			          << std::endl;
@@ -803,7 +803,7 @@ bool InstantSpell::playerCastInstant(Player* player, std::string& param)
 			}
 
 			target = playerTarget;
-			if (!target || target->getHealth() <= 0) {
+			if (!target || target->isDead()) {
 				if (!casterTargetOrDirection) {
 					player->addHealExhaust(cooldown);
 					player->sendCancelMessage(ret);
@@ -819,7 +819,7 @@ bool InstantSpell::playerCastInstant(Player* player, std::string& param)
 			}
 		} else {
 			target = player->getAttackedCreature();
-			if (!target || target->getHealth() <= 0) {
+			if (!target || target->isDead()) {
 				if (!casterTargetOrDirection) {
 					player->sendCancelMessage(RETURNVALUE_YOUCANONLYUSEITONCREATURES);
 					g_game.addMagicEffect(player->getPosition(), CONST_ME_POFF);
@@ -893,7 +893,7 @@ bool InstantSpell::castSpell(Creature* creature)
 
 	if (casterTargetOrDirection) {
 		Creature* target = creature->getAttackedCreature();
-		if (target && target->getHealth() > 0) {
+		if (target && !target->isDead()) {
 			if (!canThrowSpell(creature, target)) {
 				return false;
 			}

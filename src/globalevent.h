@@ -68,7 +68,7 @@ public:
 	GlobalEvent_t getEventType() const { return eventType; }
 	void setEventType(GlobalEvent_t type) { eventType = type; }
 
-	const std::string& getName() const { return name; }
+	std::string_view getName() const { return name; }
 	void setName(std::string eventName) { name = eventName; }
 
 	uint32_t getInterval() const { return interval; }

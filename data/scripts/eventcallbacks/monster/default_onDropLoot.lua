@@ -1,9 +1,7 @@
 local event = Event()
 
 event.onDropLoot = function(self, corpse)
-	if configManager.getNumber(configKeys.RATE_LOOT) == 0 then
-		return
-	end
+	if configManager.getNumber(configKeys.RATE_LOOT) == 0 then return end
 
 	local player = Player(corpse:getCorpseOwner())
 	local mType = self:getType()
@@ -17,7 +15,8 @@ event.onDropLoot = function(self, corpse)
 		end
 
 		if player then
-			local text = ("Loot of %s: %s"):format(mType:getNameDescription(), corpse:getContentDescription())
+			local text = ("Loot of %s: %s"):format(mType:getNameDescription(),
+			                                       corpse:getContentDescription())
 			local party = player:getParty()
 			if party then
 				party:broadcastPartyLoot(text)
@@ -26,7 +25,8 @@ event.onDropLoot = function(self, corpse)
 			end
 		end
 	else
-		local text = ("Loot of %s: nothing (due to low stamina)"):format(mType:getNameDescription())
+		local text = ("Loot of %s: nothing (due to low stamina)"):format(
+			             mType:getNameDescription())
 		local party = player:getParty()
 		if party then
 			party:broadcastPartyLoot(text)

@@ -2,7 +2,7 @@ local beds = {
 	[7904] = {{7811, 7812}, {7813, 7814}}, -- green kit
 	[7905] = {{7819, 7820}, {7821, 7822}}, -- yellow kit
 	[7906] = {{7815, 7816}, {7817, 7818}}, -- red kit
-	[7907] = {{1754, 1755}, {1760, 1761}}, -- removal kit
+	[7907] = {{1754, 1755}, {1760, 1761}} -- removal kit
 }
 
 local function internalBedTransform(item, targetItem, toPosition, itemArray)
@@ -22,13 +22,12 @@ function onUse(player, item, fromPosition, target, toPosition, isHotkey)
 	end
 
 	local tile = Tile(toPosition)
-	if not tile or not tile:getHouse() then
-		return false
-	end
+	if not tile or not tile:getHouse() then return false end
 
 	local targetItemId = target:getId()
 	if targetItemId == newBed[1][1] or targetItemId == newBed[2][1] then
-		player:sendTextMessage(MESSAGE_STATUS_SMALL, "You already have this bed modification.")
+		player:sendTextMessage(MESSAGE_STATUS_SMALL,
+		                       "You already have this bed modification.")
 		return true
 	end
 

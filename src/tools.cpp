@@ -9,11 +9,11 @@
 
 extern ConfigManager g_config;
 
-void printXMLError(const std::string& where, const std::string& fileName, const pugi::xml_parse_result& result)
+void printXMLError(std::string_view where, std::string_view fileName, const pugi::xml_parse_result& result)
 {
 	std::cout << '[' << where << "] Failed to load " << fileName << ": " << result.description() << std::endl;
 
-	FILE* file = fopen(fileName.c_str(), "rb");
+	FILE* file = fopen(fileName.data(), "rb");
 	if (!file) {
 		return;
 	}

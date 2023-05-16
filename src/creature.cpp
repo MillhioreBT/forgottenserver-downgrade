@@ -169,7 +169,7 @@ void Creature::onAttacking(uint32_t interval)
 
 void Creature::onIdleStatus()
 {
-	if (getHealth() > 0) {
+	if (!isDead()) {
 		damageMap.clear();
 		lastHitCreatureId = 0;
 	}
@@ -1138,7 +1138,8 @@ void Creature::onGainExperience(uint64_t gainExp, Creature* target)
 	                        fmt::format("{:s} gained {:d} {:s}.", ucfirst(getNameDescription()), gainExp,
 	                                    gainExp != 1 ? " experience points" : " experience point"));
 	for (Creature* spectator : spectators) {
-		spectator->getPlayer()->sendTextMessage(textMessage);
+		assert(dynamic_cast<Player*>(spectator) != nullptr);
+		static_cast<Player*>(spectator)->sendTextMessage(textMessage);
 	}
 
 	g_game.addAnimatedText(spectators, std::to_string(gainExp), position, TEXTCOLOR_WHITE);

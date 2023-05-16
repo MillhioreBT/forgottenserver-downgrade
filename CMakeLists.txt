@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
+set(CMAKE_BUILD_TYPE Release)
 
 # Ensure to pick up the default triplet from the environment if any. This helps
 # driving the vcpkg triplet in the same way either when starting vcpkg directly,

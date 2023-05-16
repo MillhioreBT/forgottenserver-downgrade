@@ -425,9 +425,9 @@ void CreatureEvent::executeOnKill(Creature* creature, Creature* target)
 	scriptInterface->callVoidFunction(2);
 }
 
-bool CreatureEvent::executeTextEdit(Player* player, Item* item, const std::string& text)
+bool CreatureEvent::executeTextEdit(Player* player, Item* item, std::string_view text, const uint32_t windowTextId)
 {
-	// onTextEdit(player, item, text)
+	// onTextEdit(player, item, text, windowTextId)
 	if (!scriptInterface->reserveScriptEnv()) {
 		std::cout << "[Error - CreatureEvent::executeTextEdit] Call stack overflow" << std::endl;
 		return false;
@@ -445,7 +445,9 @@ bool CreatureEvent::executeTextEdit(Player* player, Item* item, const std::strin
 	LuaScriptInterface::pushThing(L, item);
 	LuaScriptInterface::pushString(L, text);
 
-	return scriptInterface->callFunction(3);
+	lua_pushinteger(L, windowTextId);
+
+	return scriptInterface->callFunction(4);
 }
 
 void CreatureEvent::executeHealthChange(Creature* creature, Creature* attacker, CombatDamage& damage)
@@ -529,7 +531,7 @@ void CreatureEvent::executeManaChange(Creature* creature, Creature* attacker, Co
 	scriptInterface->resetScriptEnv();
 }
 
-void CreatureEvent::executeExtendedOpcode(Player* player, uint8_t opcode, const std::string& buffer)
+void CreatureEvent::executeExtendedOpcode(Player* player, uint8_t opcode, std::string_view buffer)
 {
 	// onExtendedOpcode(player, opcode, buffer)
 	if (!scriptInterface->reserveScriptEnv()) {

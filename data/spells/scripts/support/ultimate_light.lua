@@ -8,6 +8,4 @@ condition:setParameter(CONDITION_PARAM_LIGHT_COLOR, 215)
 condition:setParameter(CONDITION_PARAM_TICKS, (60 * 33 + 10) * 1000)
 combat:addCondition(condition)
 
-function onCastSpell(creature, variant)
-	return combat:execute(creature, variant)
-end
+function onCastSpell(creature, variant) return combat:execute(creature, variant) end

@@ -1,8 +1,4 @@
 function onSay(player, words, param)
-	if not player:getGroup():getAccess() then
-		return true
-	end
-
 	local target = Player(param)
 	if not target then
 		player:sendCancelMessage("Player not found.")

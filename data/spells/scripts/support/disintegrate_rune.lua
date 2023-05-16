@@ -8,13 +8,12 @@ function onCastSpell(creature, variant, isHotkey)
 		local items = tile:getItems()
 		if items then
 			for i, item in ipairs(items) do
-				if item:getType():isMovable() and item:getUniqueId() > 65535 and item:getActionId() == 0 and not table.contains(corpseIds, item:getId()) then
+				if item:getType():isMovable() and item:getUniqueId() > 65535 and
+					item:getActionId() == 0 and not table.contains(corpseIds, item:getId()) then
 					item:remove()
 				end
 
-				if i == removalLimit then
-					break
-				end
+				if i == removalLimit then break end
 			end
 		end
 	end

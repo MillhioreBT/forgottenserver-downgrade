@@ -49,4 +49,11 @@ private:
 	uint32_t memberCount = 0;
 };
 
+using GuildWarVector = std::vector<uint32_t>;
+
+namespace IOGuild {
+Guild* loadGuild(uint32_t guildId);
+uint32_t getGuildIdByName(std::string_view name);
+}; // namespace IOGuild
+
 #endif

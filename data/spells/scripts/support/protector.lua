@@ -12,6 +12,4 @@ local pacified = Condition(CONDITION_PACIFIED)
 pacified:setParameter(CONDITION_PARAM_TICKS, 10000)
 combat:addCondition(pacified)
 
-function onCastSpell(creature, variant)
-	return combat:execute(creature, variant)
-end
+function onCastSpell(creature, variant) return combat:execute(creature, variant) end

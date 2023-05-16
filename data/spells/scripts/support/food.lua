@@ -5,13 +5,11 @@ local foods = {
 	2674, -- apple
 	2689, -- bread
 	2690, -- roll
-	2696  -- cheese
+	2696 -- cheese
 }
 
 function onCastSpell(creature, variant)
-	if math.random(0, 1) == 1 then
-		creature:addItem(foods[math.random(#foods)])
-	end
+	if math.random(0, 1) == 1 then creature:addItem(foods[math.random(#foods)]) end
 
 	creature:addItem(foods[math.random(#foods)])
 	creature:getPosition():sendMagicEffect(CONST_ME_MAGIC_GREEN)

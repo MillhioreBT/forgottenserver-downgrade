@@ -7,6 +7,4 @@ condition:setParameter(CONDITION_PARAM_TICKS, 33000)
 condition:setFormula(0.3, -24, 0.3, -24)
 combat:addCondition(condition)
 
-function onCastSpell(creature, variant)
-	return combat:execute(creature, variant)
-end
+function onCastSpell(creature, variant) return combat:execute(creature, variant) end

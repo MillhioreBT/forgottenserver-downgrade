@@ -324,18 +324,7 @@ uint16_t Item::getSubType() const
 	return count;
 }
 
-Player* Item::getHoldingPlayer() const
-{
-	Cylinder* p = getParent();
-	while (p) {
-		if (p->getCreature()) {
-			return p->getCreature()->getPlayer();
-		}
-
-		p = p->getParent();
-	}
-	return nullptr;
-}
+const Player* Item::getHoldingPlayer() const { return dynamic_cast<const Player*>(getTopParent()); }
 
 void Item::setSubType(uint16_t n)
 {
@@ -951,8 +940,7 @@ bool Item::canDecay() const
 		return false;
 	}
 
-	const ItemType& it = Item::items[id];
-	if (getDecayTo() < 0 || it.decayTime == 0) {
+	if (getDecayTo() < 0 || getDecayTime() == 0) {
 		return false;
 	}
 

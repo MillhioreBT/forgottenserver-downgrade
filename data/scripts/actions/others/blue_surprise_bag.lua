@@ -14,7 +14,8 @@ local config = {
 
 local blueSurpriseBag = Action()
 
-function blueSurpriseBag.onUse(player, item, fromPosition, target, toPosition, isHotkey)
+function blueSurpriseBag.onUse(player, item, fromPosition, target, toPosition,
+                               isHotkey)
 	local chance = math.random(0, 10000)
 	for i = 1, #config do
 		local randomItem = config[i]
@@ -22,9 +23,7 @@ function blueSurpriseBag.onUse(player, item, fromPosition, target, toPosition, i
 			if randomItem.itemId then
 				local gift = randomItem.itemId
 				local count = randomItem.count or 1
-				if type(count) == "table" then
-					count = math.random(count[1], count[2])
-				end
+				if type(count) == "table" then count = math.random(count[1], count[2]) end
 				player:addItem(gift, count)
 			end
 
