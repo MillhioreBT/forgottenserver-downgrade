@@ -1,6 +1,7 @@
 local lotteryTicket = Action()
 
-function lotteryTicket.onUse(player, item, fromPosition, target, toPosition, isHotkey)
+function lotteryTicket.onUse(player, item, fromPosition, target, toPosition,
+                             isHotkey)
 	if math.random(98) == 1 then
 		player:getPosition():sendMagicEffect(CONST_ME_SOUND_YELLOW)
 		item:transform(5958)

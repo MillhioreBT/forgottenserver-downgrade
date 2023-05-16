@@ -1,19 +1,16 @@
 local event = Event()
 
 function event.onShareExperience(party, exp, rawExp)
-	local sharedExperienceMultiplier = 1.20 --20%
+	local sharedExperienceMultiplier = 1.20 -- 20%
 	local vocationsIds = {}
 
 	local vocationId = party:getLeader():getVocation():getBase():getId()
-	if vocationId ~= VOCATION_NONE then
-		vocationsIds[1] = vocationId
-	end
+	if vocationId ~= VOCATION_NONE then vocationsIds[1] = vocationId end
 
 	for _, member in ipairs(party:getMembers()) do
 		vocationId = member:getVocation():getBase():getId()
-		if not table.contains(vocationsIds, vocationId) and vocationId ~= VOCATION_NONE then
-			vocationsIds[#vocationsIds + 1] = vocationId
-		end
+		if not table.contains(vocationsIds, vocationId) and vocationId ~=
+			VOCATION_NONE then vocationsIds[#vocationsIds + 1] = vocationId end
 	end
 
 	local size = #vocationsIds

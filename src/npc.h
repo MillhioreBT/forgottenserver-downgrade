@@ -146,6 +146,8 @@ public:
 	void turnToCreature(Creature* creature);
 	void setCreatureFocus(Creature* creature);
 
+	const auto& getSpectators() { return spectators; }
+
 	NpcScriptInterface* getScriptInterface();
 
 	static uint32_t npcAutoID;

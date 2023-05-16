@@ -2,7 +2,8 @@ local monsters = {"Rat", "Green Frog", "Chicken"}
 
 local spellwand = Action()
 
-function spellwand.onUse(player, item, fromPosition, target, toPosition, isHotkey)
+function spellwand.onUse(player, item, fromPosition, target, toPosition,
+                         isHotkey)
 	if player:getTile():hasFlag(TILESTATE_PROTECTIONZONE) then
 		player:sendCancelMessage(RETURNVALUE_NOTPOSSIBLE)
 		return true
@@ -14,9 +15,11 @@ function spellwand.onUse(player, item, fromPosition, target, toPosition, isHotke
 	if math.random(100) <= 33 then
 		item:remove()
 		player:say("The spellwand broke.", TALKTYPE_MONSTER_SAY)
-		if math.random(100) <= 75 and player:getStorageValue(PlayerStorageKeys.madSheepSummon) <= os.time() then
+		if math.random(100) <= 75 and
+			player:getStorageValue(PlayerStorageKeys.madSheepSummon) <= os.time() then
 			Game.createMonster("Mad Sheep", fromPosition)
-			player:setStorageValue(PlayerStorageKeys.madSheepSummon, os.time() + 12 * 60 * 60)
+			player:setStorageValue(PlayerStorageKeys.madSheepSummon,
+			                       os.time() + 12 * 60 * 60)
 		end
 	else
 		target:setMonsterOutfit(monsters[math.random(#monsters)], 60 * 1000)

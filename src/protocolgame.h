@@ -175,7 +175,7 @@ private:
 	void sendCloseTrade();
 
 	void sendTextWindow(uint32_t windowTextId, Item* item, uint16_t maxlen, bool canWrite);
-	void sendTextWindow(uint32_t windowTextId, uint32_t itemId, std::string_view text);
+	void sendTextWindow(uint32_t windowTextId, uint16_t itemId, std::string_view text);
 	void sendHouseWindow(uint32_t windowTextId, std::string_view text);
 	void sendOutfitWindow();
 

@@ -897,7 +897,8 @@ bool ConditionRegeneration::executeCondition(Creature* creature, int32_t interva
 					message.type = MESSAGE_STATUS_DEFAULT;
 					message.text = player->getName() + " was healed for " + healString;
 					for (Creature* spectator : spectators) {
-						spectator->getPlayer()->sendTextMessage(message);
+						assert(dynamic_cast<Player*>(spectator) != nullptr);
+						static_cast<Player*>(spectator)->sendTextMessage(message);
 					}
 				}
 			}
@@ -927,7 +928,8 @@ bool ConditionRegeneration::executeCondition(Creature* creature, int32_t interva
 					message.type = MESSAGE_STATUS_DEFAULT;
 					message.text = player->getName() + " gained " + manaGainString + " mana.";
 					for (Creature* spectator : spectators) {
-						spectator->getPlayer()->sendTextMessage(message);
+						assert(dynamic_cast<Player*>(spectator) != nullptr);
+						static_cast<Player*>(spectator)->sendTextMessage(message);
 					}
 				}
 			}

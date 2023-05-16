@@ -2,12 +2,7 @@
 
 	Burst Arrow example
 
-]]
-local area = createCombatArea({
-	{1, 1, 1},
-	{1, 3, 1},
-	{1, 1, 1}
-})
+]] local area = createCombatArea({{1, 1, 1}, {1, 3, 1}, {1, 1, 1}})
 
 local combat = Combat()
 combat:setParameter(COMBAT_PARAM_TYPE, COMBAT_PHYSICALDAMAGE)
@@ -19,9 +14,7 @@ combat:setArea(area)
 local burstarrow = Weapon(WEAPON_AMMO)
 
 burstarrow.onUseWeapon = function(player, variant)
-	if player:getSkull() == SKULL_BLACK then
-		return false
-	end
+	if player:getSkull() == SKULL_BLACK then return false end
 
 	return combat:execute(player, variant)
 end

@@ -21,9 +21,11 @@ event.onLook = function(self, thing, position, distance, description)
 			local transformEquipId = itemType:getTransformEquipId()
 			local transformDeEquipId = itemType:getTransformDeEquipId()
 			if transformEquipId ~= 0 then
-				description = string.format("%s\nTransforms to: %d (onEquip)", description, transformEquipId)
+				description = string.format("%s\nTransforms to: %d (onEquip)", description,
+				                            transformEquipId)
 			elseif transformDeEquipId ~= 0 then
-				description = string.format("%s\nTransforms to: %d (onDeEquip)", description, transformDeEquipId)
+				description = string.format("%s\nTransforms to: %d (onDeEquip)",
+				                            description, transformDeEquipId)
 			end
 
 			local decayId = itemType:getDecayId()
@@ -33,17 +35,21 @@ event.onLook = function(self, thing, position, distance, description)
 		elseif thing:isCreature() then
 			local str = "%s\nHealth: %d / %d"
 			if thing:isPlayer() and thing:getMaxMana() > 0 then
-				str = string.format("%s, Mana: %d / %d", str, thing:getMana(), thing:getMaxMana())
+				str = string.format("%s, Mana: %d / %d", str, thing:getMana(),
+				                    thing:getMaxMana())
 			end
-			description = string.format(str, description, thing:getHealth(), thing:getMaxHealth()) .. "."
+			description = string.format(str, description, thing:getHealth(),
+			                            thing:getMaxHealth()) .. "."
 		end
 
 		local position = thing:getPosition()
-		description = string.format("%s\nPosition: %d, %d, %d", description, position.x, position.y, position.z)
+		description = string.format("%s\nPosition: %d, %d, %d", description,
+		                            position.x, position.y, position.z)
 
 		if thing:isCreature() then
 			if thing:isPlayer() then
-				description = string.format("%s\nIP: %s.", description, Game.convertIpToString(thing:getIp()))
+				description = string.format("%s\nIP: %s.", description,
+				                            Game.convertIpToString(thing:getIp()))
 			end
 		end
 	end

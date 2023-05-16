@@ -9,6 +9,8 @@ Position.directionOffset = {
 	[DIRECTION_NORTHEAST] = {x = 1, y = -1}
 }
 
+function Position:getTile() return Tile(self) end
+
 function Position:getNextPosition(direction, steps)
 	local offset = Position.directionOffset[direction]
 	if offset then
@@ -19,7 +21,7 @@ function Position:getNextPosition(direction, steps)
 end
 
 function Position:moveUpstairs()
-	local swap = function (lhs, rhs)
+	local swap = function(lhs, rhs)
 		lhs.x, rhs.x = rhs.x, lhs.x
 		lhs.y, rhs.y = rhs.y, lhs.y
 		lhs.z, rhs.z = rhs.z, lhs.z
@@ -31,9 +33,7 @@ function Position:moveUpstairs()
 	local toTile = Tile(defaultPosition)
 	if not toTile or not toTile:isWalkable() then
 		for direction = DIRECTION_NORTH, DIRECTION_NORTHEAST do
-			if direction == DIRECTION_SOUTH then
-				direction = DIRECTION_WEST
-			end
+			if direction == DIRECTION_SOUTH then direction = DIRECTION_WEST end
 
 			local position = self + Position.directionOffset[direction]
 			toTile = Tile(position)
@@ -63,9 +63,8 @@ function Position:isInRange(from, to)
 		}
 	}
 
-	if  self.x >= zone.nW.x and self.x <= zone.sE.x
-	and self.y >= zone.nW.y and self.y <= zone.sE.y
-	and self.z >= zone.nW.z and self.z <= zone.sE.z then
+	if self.x >= zone.nW.x and self.x <= zone.sE.x and self.y >= zone.nW.y and
+		self.y <= zone.sE.y and self.z >= zone.nW.z and self.z <= zone.sE.z then
 		return true
 	end
 	return false

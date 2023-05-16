@@ -18,12 +18,11 @@ function onTargetCreature(creature, target)
 		end
 	end
 
-	doTargetCombatHealth(creature:getId(), target, COMBAT_HEALING, min, max, CONST_ME_NONE)
+	doTargetCombatHealth(creature:getId(), target, COMBAT_HEALING, min, max,
+	                     CONST_ME_NONE)
 	return true
 end
 
 combat:setCallback(CALLBACK_PARAM_TARGETCREATURE, "onTargetCreature")
 
-function onCastSpell(creature, variant)
-	return combat:execute(creature, variant)
-end
+function onCastSpell(creature, variant) return combat:execute(creature, variant) end

@@ -27,7 +27,7 @@ public:
 
 	std::string_view getWords() const { return words; }
 	const std::vector<std::string>& getWordsMap() const { return wordsMap; }
-	void setWords(std::string word)
+	void setWords(const std::string& word)
 	{
 		words = word;
 		wordsMap.push_back(word);

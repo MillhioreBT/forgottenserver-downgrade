@@ -1,4 +1,6 @@
-local classes = {Action, CreatureEvent, Spell, TalkAction, MoveEvent, GlobalEvent, Weapon}
+local classes = {
+	Action, CreatureEvent, Spell, TalkAction, MoveEvent, GlobalEvent, Weapon
+}
 
 for _, class in ipairs(classes) do
 	local MT = getmetatable(class)
@@ -6,9 +8,7 @@ for _, class in ipairs(classes) do
 
 	MT.__call = function(self, def, ...)
 		-- Backwards compatibility for default obj() constructor
-		if type(def) ~= "table" then
-			return DefaultConstructor(self, def, ...)
-		end
+		if type(def) ~= "table" then return DefaultConstructor(self, def, ...) end
 
 		local obj = nil
 		if def.init then
@@ -22,9 +22,8 @@ for _, class in ipairs(classes) do
 
 		for methodName, value in pairs(def) do
 			-- Strictly check if a correct callback is passed
-			if methodName:sub(1, 2) == "on" and type(value) == "function" and rawget(class, methodName) then
-				hasCallback = true
-			end
+			if methodName:sub(1, 2) == "on" and type(value) == "function" and
+				rawget(class, methodName) then hasCallback = true end
 
 			if methodName ~= "register" then
 				local method = rawget(self, methodName)

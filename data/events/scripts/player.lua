@@ -4,9 +4,7 @@ function Player:onLook(thing, position, distance)
 		description = Event.onLook(self, thing, position, distance, description)
 	end
 
-	if description ~= "" then
-		self:sendTextMessage(MESSAGE_INFO_DESCR, description)
-	end
+	if description ~= "" then self:sendTextMessage(MESSAGE_INFO_DESCR, description) end
 end
 
 function Player:onLookInBattleList(creature, distance)
@@ -15,9 +13,7 @@ function Player:onLookInBattleList(creature, distance)
 		description = Event.onLookInBattleList(self, creature, distance, description)
 	end
 
-	if description ~= "" then
-		self:sendTextMessage(MESSAGE_INFO_DESCR, description)
-	end
+	if description ~= "" then self:sendTextMessage(MESSAGE_INFO_DESCR, description) end
 end
 
 function Player:onLookInTrade(partner, item, distance)
@@ -26,9 +22,7 @@ function Player:onLookInTrade(partner, item, distance)
 		description = Event.onLookInTrade(self, partner, item, distance, description)
 	end
 
-	if description ~= "" then
-		self:sendTextMessage(MESSAGE_INFO_DESCR, description)
-	end
+	if description ~= "" then self:sendTextMessage(MESSAGE_INFO_DESCR, description) end
 end
 
 function Player:onLookInShop(itemType, count)
@@ -37,21 +31,23 @@ function Player:onLookInShop(itemType, count)
 		description = Event.onLookInShop(self, itemType, count, description)
 	end
 
-	if description ~= "" then
-		self:sendTextMessage(MESSAGE_INFO_DESCR, description)
-	end
+	if description ~= "" then self:sendTextMessage(MESSAGE_INFO_DESCR, description) end
 end
 
-function Player:onMoveItem(item, count, fromPosition, toPosition, fromCylinder, toCylinder)
+function Player:onMoveItem(item, count, fromPosition, toPosition, fromCylinder,
+                           toCylinder)
 	if hasEvent.onMoveItem then
-		return Event.onMoveItem(self, item, count, fromPosition, toPosition, fromCylinder, toCylinder)
+		return Event.onMoveItem(self, item, count, fromPosition, toPosition,
+		                        fromCylinder, toCylinder)
 	end
 	return true
 end
 
-function Player:onItemMoved(item, count, fromPosition, toPosition, fromCylinder, toCylinder)
+function Player:onItemMoved(item, count, fromPosition, toPosition, fromCylinder,
+                            toCylinder)
 	if hasEvent.onItemMoved then
-		Event.onItemMoved(self, item, count, fromPosition, toPosition, fromCylinder, toCylinder)
+		Event.onItemMoved(self, item, count, fromPosition, toPosition, fromCylinder,
+		                  toCylinder)
 	end
 end
 
@@ -62,9 +58,11 @@ function Player:onMoveCreature(creature, fromPosition, toPosition)
 	return true
 end
 
-function Player:onReportRuleViolation(targetName, reportType, reportReason, comment, translation)
+function Player:onReportRuleViolation(targetName, reportType, reportReason,
+                                      comment, translation)
 	if hasEvent.onReportRuleViolation then
-		Event.onReportRuleViolation(self, targetName, reportType, reportReason, comment, translation)
+		Event.onReportRuleViolation(self, targetName, reportType, reportReason,
+		                            comment, translation)
 	end
 end
 
@@ -76,16 +74,12 @@ function Player:onReportBug(message, position, category)
 end
 
 function Player:onTurn(direction)
-	if hasEvent.onTurn then
-		return Event.onTurn(self, direction)
-	end
+	if hasEvent.onTurn then return Event.onTurn(self, direction) end
 	return true
 end
 
 function Player:onTradeRequest(target, item)
-	if hasEvent.onTradeRequest then
-		return Event.onTradeRequest(self, target, item)
-	end
+	if hasEvent.onTradeRequest then return Event.onTradeRequest(self, target, item) end
 	return true
 end
 
@@ -103,7 +97,8 @@ function Player:onTradeCompleted(target, item, targetItem, isSuccess)
 end
 
 function Player:onGainExperience(source, exp, rawExp)
-	return hasEvent.onGainExperience and Event.onGainExperience(self, source, exp, rawExp) or exp
+	return hasEvent.onGainExperience and
+		       Event.onGainExperience(self, source, exp, rawExp) or exp
 end
 
 function Player:onLoseExperience(exp)
@@ -112,28 +107,27 @@ end
 
 function Player:onGainSkillTries(skill, tries)
 	if APPLY_SKILL_MULTIPLIER == false then
-		return hasEvent.onGainSkillTries and Event.onGainSkillTries(self, skill, tries) or tries
+		return hasEvent.onGainSkillTries and
+			       Event.onGainSkillTries(self, skill, tries) or tries
 	end
 
 	if skill == SKILL_MAGLEVEL then
 		tries = tries * configManager.getNumber(configKeys.RATE_MAGIC)
-		return hasEvent.onGainSkillTries and Event.onGainSkillTries(self, skill, tries) or tries
+		return hasEvent.onGainSkillTries and
+			       Event.onGainSkillTries(self, skill, tries) or tries
 	end
 	tries = tries * configManager.getNumber(configKeys.RATE_SKILL)
-	return hasEvent.onGainSkillTries and Event.onGainSkillTries(self, skill, tries) or tries
+	return
+		hasEvent.onGainSkillTries and Event.onGainSkillTries(self, skill, tries) or
+			tries
 end
 
 function Player:onNetworkMessage(recvByte, msg)
 	local handler = PacketHandlers[recvByte]
 	if not handler then
-		io.write(
-			string.format(
-				"Player: %s sent an unknown packet header: 0x%02X with %d bytes!\n",
-				self:getName(),
-				recvByte,
-				msg:len()
-			)
-		)
+		io.write(string.format(
+			         "Player: %s sent an unknown packet header: 0x%02X with %d bytes!\n",
+			         self:getName(), recvByte, msg:len()))
 		return
 	end
 

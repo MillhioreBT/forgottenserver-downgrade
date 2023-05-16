@@ -121,8 +121,11 @@ void printServerVersion()
 	std::cout << std::endl;
 
 	std::cout << "A server developed by " << STATUS_SERVER_DEVELOPERS << std::endl;
-	std::cout << "Downgraded and further developed by Nekiro" << std::endl;
+	std::cout << "Downgraded and further developed by Nekiro / MillhioreBT" << std::endl;
 	std::cout << "Visit our forum for updates, support, and resources: http://otland.net/." << std::endl;
+	std::cout << std::endl;
+
+	std::cout << "Repository: " << fmt::format(fg(fmt::color::floral_white), "{}", STATUS_SERVER_REPOSITORY) << std::endl;
 	std::cout << std::endl;
 }
 
@@ -134,6 +137,13 @@ void mainLoader(int, char*[], ServiceManager* services)
 	srand(static_cast<unsigned int>(OTSYS_TIME()));
 #ifdef _WIN32
 	SetConsoleTitle(STATUS_SERVER_NAME);
+
+	// fixes a problem with escape characters not being processed in Windows consoles
+	HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+	DWORD dwMode = 0;
+	GetConsoleMode(hOut, &dwMode);
+	dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+	SetConsoleMode(hOut, dwMode);
 #endif
 
 	printServerVersion();

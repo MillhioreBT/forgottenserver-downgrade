@@ -7,9 +7,7 @@ condition:setFormula(-1, 80, -1, 80)
 combat:addCondition(condition)
 
 function onCastSpell(creature, variant, isHotkey)
-	if not combat:execute(creature, variant) then
-		return false
-	end
+	if not combat:execute(creature, variant) then return false end
 
 	creature:getPosition():sendMagicEffect(CONST_ME_MAGIC_GREEN)
 	return true

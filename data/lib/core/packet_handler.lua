@@ -3,12 +3,14 @@ PacketHandlers = {}
 local function register(self)
 	if isScriptsInterface() then
 		if not self.onReceive then
-			debugPrint("[Warning - PacketHandler::register] need to setup a callback before you can register.")
+			debugPrint(
+				"[Warning - PacketHandler::register] need to setup a callback before you can register.")
 			return
 		end
 
 		if type(self.onReceive) ~= "function" then
-			debugPrint(string.format("[Warning - PacketHandler::onReceive] a function is expected."))
+			debugPrint(string.format(
+				           "[Warning - PacketHandler::onReceive] a function is expected."))
 			return
 		end
 
@@ -16,14 +18,8 @@ local function register(self)
 	end
 end
 
-local function clear(self)
-	PacketHandlers[self.packetType] = nil
-end
+local function clear(self) PacketHandlers[self.packetType] = nil end
 
 function PacketHandler(packetType)
-	return {
-		clear = clear,
-		packetType = packetType,
-		register = register,
-	}
+	return {clear = clear, packetType = packetType, register = register}
 end

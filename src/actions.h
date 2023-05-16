@@ -34,13 +34,28 @@ public:
 	bool getCheckFloor() const { return checkFloor; }
 	void setCheckFloor(bool v) { checkFloor = v; }
 
-	std::vector<uint16_t> getItemIdRange() { return ids; }
+	auto stealItemIdRange()
+	{
+		std::vector<uint16_t> ret{};
+		std::swap(ids, ret);
+		return ret;
+	}
 	void addItemId(uint16_t id) { ids.emplace_back(id); }
 
-	std::vector<uint16_t> getUniqueIdRange() { return uids; }
+	auto stealUniqueIdRange()
+	{
+		std::vector<uint16_t> ret{};
+		std::swap(uids, ret);
+		return ret;
+	}
 	void addUniqueId(uint16_t id) { uids.emplace_back(id); }
 
-	std::vector<uint16_t> getActionIdRange() { return aids; }
+	auto stealActionIdRange()
+	{
+		std::vector<uint16_t> ret{};
+		std::swap(aids, ret);
+		return ret;
+	}
 	void addActionId(uint16_t id) { aids.emplace_back(id); }
 
 	virtual ReturnValue canExecuteAction(const Player* player, const Position& toPos);

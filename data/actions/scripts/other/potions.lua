@@ -33,7 +33,7 @@ local potions = {
 		effect = CONST_ME_MAGIC_BLUE,
 		description = "Only sorcerers and druids may drink this potion.",
 		text = "You feel smarter."
-		},
+	},
 	[7443] = { -- bullseye potion
 		condition = bullseye,
 		vocations = {3, 7},
@@ -94,21 +94,20 @@ local potions = {
 	},
 	[8474] = { -- antidote potion
 		antidote = true,
-		flask = 7636,
+		flask = 7636
 	},
 	[8704] = { -- small health potion
 		health = {60, 90},
-		flask = 7636,
+		flask = 7636
 	}
 }
 
 function onUse(player, item, fromPosition, target, toPosition, isHotkey)
-	if type(target) == "userdata" and not target:isPlayer() then
-		return false
-	end
+	if type(target) == "userdata" and not target:isPlayer() then return false end
 
 	local potion = potions[item:getId()]
-	if potion.level and player:getLevel() < potion.level or potion.vocations and not table.contains(potion.vocations, player:getVocation():getId()) then
+	if potion.level and player:getLevel() < potion.level or potion.vocations and
+		not table.contains(potion.vocations, player:getVocation():getId()) then
 		player:say(potion.description, TALKTYPE_MONSTER_SAY)
 		return true
 	end
@@ -137,9 +136,7 @@ function onUse(player, item, fromPosition, target, toPosition, isHotkey)
 			doTargetCombat(0, target, COMBAT_MANADRAIN, potion.mana[1], potion.mana[2])
 		end
 
-		if potion.antidote then
-			target:removeCondition(CONDITION_POISON)
-		end
+		if potion.antidote then target:removeCondition(CONDITION_POISON) end
 
 		player:addAchievementProgress("Potion Addict", 100000)
 		player:addItem(potion.flask)

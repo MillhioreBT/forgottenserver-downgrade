@@ -208,6 +208,7 @@ public:
 	static void pushString(lua_State* L, std::string_view value);
 	static void pushCallback(lua_State* L, int32_t callback);
 	static void pushCylinder(lua_State* L, Cylinder* cylinder);
+	static void pushItems(lua_State* L, std::vector<const Item*> items);
 
 	static std::string popString(lua_State* L);
 	static int32_t popCallback(lua_State* L);
@@ -769,6 +770,7 @@ private:
 	static int luaContainerGetCapacity(lua_State* L);
 	static int luaContainerGetEmptySlots(lua_State* L);
 	static int luaContainerGetItems(lua_State* L);
+	static int luaContainerGetAllItems(lua_State* L);
 	static int luaContainerGetItemHoldingCount(lua_State* L);
 	static int luaContainerGetItemCountById(lua_State* L);
 
@@ -1023,6 +1025,10 @@ private:
 	static int luaPlayerHasSecureMode(lua_State* L);
 	static int luaPlayerGetFightMode(lua_State* L);
 
+	static int luaPlayerGetIdleTime(lua_State* L);
+
+	static int luaPlayerSendCreatureSquare(lua_State* L);
+
 	// OfflinePlayer
 	static int luaOfflinePlayerCreate(lua_State* L);
 
@@ -1069,6 +1075,8 @@ private:
 	static int luaNpcIsNpc(lua_State* L);
 
 	static int luaNpcSetMasterPos(lua_State* L);
+
+	static int luaNpcGetSpectators(lua_State* L);
 
 	// Guild
 	static int luaGuildCreate(lua_State* L);

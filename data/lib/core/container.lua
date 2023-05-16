@@ -1,11 +1,7 @@
-function Container.isContainer(self)
-	return true
-end
+function Container.isContainer(self) return true end
 
 function Container.createLootItem(self, item)
-	if self:getEmptySlots() == 0 then
-		return true
-	end
+	if self:getEmptySlots() == 0 then return true end
 
 	local itemCount = 0
 	local randvalue = getLootRandom()
@@ -23,14 +19,10 @@ function Container.createLootItem(self, item)
 		local count = math.min(100, itemCount)
 
 		local subType = count
-		if itemType:isFluidContainer() then
-			subType = math.max(0, item.subType)
-		end
+		if itemType:isFluidContainer() then subType = math.max(0, item.subType) end
 
 		local tmpItem = Game.createItem(item.itemId, subType)
-		if not tmpItem then
-			return false
-		end
+		if not tmpItem then return false end
 
 		if tmpItem:isContainer() then
 			for i = 1, #item.childLoot do
@@ -50,18 +42,12 @@ function Container.createLootItem(self, item)
 			tmpItem:setAttribute(ITEM_ATTRIBUTE_CHARGES, item.subType)
 		end
 
-		if item.actionId ~= -1 then
-			tmpItem:setActionId(item.actionId)
-		end
+		if item.actionId ~= -1 then tmpItem:setActionId(item.actionId) end
 
-		if item.text and item.text ~= "" then
-			tmpItem:setText(item.text)
-		end
+		if item.text and item.text ~= "" then tmpItem:setText(item.text) end
 
 		local ret = self:addItemEx(tmpItem)
-		if ret ~= RETURNVALUE_NOERROR then
-			tmpItem:remove()
-		end
+		if ret ~= RETURNVALUE_NOERROR then tmpItem:remove() end
 
 		itemCount = itemCount - count
 	end
@@ -73,7 +59,8 @@ function Container:getContentDescription()
 	if items and #items > 0 then
 		local loot = {}
 		for _, item in ipairs(items) do
-			loot[#loot + 1] = string.format("%s", item:getNameDescription(item:getSubType(), true))
+			loot[#loot + 1] = string.format("%s", item:getNameDescription(
+				                                item:getSubType(), true))
 		end
 
 		return table.concat(loot, ", ")

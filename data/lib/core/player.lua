@@ -1,20 +1,23 @@
 local foodCondition = Condition(CONDITION_REGENERATION, CONDITIONID_DEFAULT)
 
 function Player.feed(self, food)
-	local condition = self:getCondition(CONDITION_REGENERATION, CONDITIONID_DEFAULT)
+	local condition =
+		self:getCondition(CONDITION_REGENERATION, CONDITIONID_DEFAULT)
 	if condition then
 		condition:setTicks(condition:getTicks() + (food * 1000))
 	else
 		local vocation = self:getVocation()
-		if not vocation then
-			return nil
-		end
+		if not vocation then return nil end
 
 		foodCondition:setTicks(food * 1000)
-		foodCondition:setParameter(CONDITION_PARAM_HEALTHGAIN, vocation:getHealthGainAmount())
-		foodCondition:setParameter(CONDITION_PARAM_HEALTHTICKS, vocation:getHealthGainTicks() * 1000)
-		foodCondition:setParameter(CONDITION_PARAM_MANAGAIN, vocation:getManaGainAmount())
-		foodCondition:setParameter(CONDITION_PARAM_MANATICKS, vocation:getManaGainTicks() * 1000)
+		foodCondition:setParameter(CONDITION_PARAM_HEALTHGAIN,
+		                           vocation:getHealthGainAmount())
+		foodCondition:setParameter(CONDITION_PARAM_HEALTHTICKS,
+		                           vocation:getHealthGainTicks() * 1000)
+		foodCondition:setParameter(CONDITION_PARAM_MANAGAIN,
+		                           vocation:getManaGainAmount())
+		foodCondition:setParameter(CONDITION_PARAM_MANATICKS,
+		                           vocation:getManaGainTicks() * 1000)
 
 		self:addCondition(foodCondition)
 	end
@@ -32,9 +35,7 @@ function Player.getDepotItems(self, depotId)
 	return self:getDepotChest(depotId, true):getItemHoldingCount()
 end
 
-function Player.hasFlag(self, flag)
-	return self:getGroup():hasFlag(flag)
-end
+function Player.hasFlag(self, flag) return self:getGroup():hasFlag(flag) end
 
 function Player.getLossPercent(self)
 	local blessings = 0
@@ -47,11 +48,7 @@ function Player.getLossPercent(self)
 		[5] = 0
 	}
 
-	for i = 1, 5 do
-		if self:hasBlessing(i) then
-			blessings = blessings + 1
-		end
-	end
+	for i = 1, 5 do if self:hasBlessing(i) then blessings = blessings + 1 end end
 	return lossPercent[blessings]
 end
 
@@ -71,9 +68,7 @@ end
 
 function Player.removePremiumTime(self, seconds)
 	local currentTime = self:getPremiumTime()
-	if currentTime < seconds then
-		return false
-	end
+	if currentTime < seconds then return false end
 
 	self:setPremiumTime(currentTime - seconds)
 	return true
@@ -92,13 +87,13 @@ function Player.removePremiumDays(self, days)
 end
 
 function Player.isPremium(self)
-	return self:getPremiumTime() > 0 or configManager.getBoolean(configKeys.FREE_PREMIUM) or self:hasFlag(PlayerFlag_IsAlwaysPremium)
+	return self:getPremiumTime() > 0 or
+		       configManager.getBoolean(configKeys.FREE_PREMIUM) or
+		       self:hasFlag(PlayerFlag_IsAlwaysPremium)
 end
 
 function Player.sendCancelMessage(self, message)
-	if type(message) == "number" then
-		message = Game.getReturnMessage(message)
-	end
+	if type(message) == "number" then message = Game.getReturnMessage(message) end
 	return self:sendTextMessage(MESSAGE_STATUS_SMALL, message)
 end
 
@@ -107,9 +102,7 @@ function Player.isUsingOtClient(self)
 end
 
 function Player.sendExtendedOpcode(self, opcode, buffer)
-	if not self:isUsingOtClient() then
-		return false
-	end
+	if not self:isUsingOtClient() then return false end
 
 	local networkMessage = NetworkMessage()
 	networkMessage:addByte(0x32)
@@ -139,22 +132,19 @@ end
 
 -- Always pass the number through the isValidMoney function first before using the transferMoneyTo
 function Player.transferMoneyTo(self, target, amount)
-	if not target then
-		return false
-	end
+	if not target then return false end
 
 	-- See if you can afford this transfer
 	local balance = self:getBankBalance()
-	if amount > balance then
-		return false
-	end
+	if amount > balance then return false end
 
 	-- See if player is online
 	local targetPlayer = Player(target.guid)
 	if targetPlayer then
 		targetPlayer:setBankBalance(targetPlayer:getBankBalance() + amount)
 	else
-		db.query("UPDATE `players` SET `balance` = `balance` + " .. amount .. " WHERE `id` = '" .. target.guid .. "'")
+		db.query("UPDATE `players` SET `balance` = `balance` + " .. amount ..
+			         " WHERE `id` = '" .. target.guid .. "'")
 	end
 
 	self:setBankBalance(self:getBankBalance() - amount)
@@ -163,9 +153,7 @@ end
 
 function Player.canCarryMoney(self, amount)
 	-- Anyone can carry as much imaginary money as they desire
-	if amount == 0 then
-		return true
-	end
+	if amount == 0 then return true end
 
 	-- The 3 below loops will populate these local variables
 	local totalWeight = 0
@@ -189,9 +177,7 @@ function Player.canCarryMoney(self, amount)
 	end
 
 	-- If player don't have enough capacity to carry this money
-	if self:getFreeCapacity() < totalWeight then
-		return false
-	end
+	if self:getFreeCapacity() < totalWeight then return false end
 
 	-- If player don't have enough available inventory slots to carry this money
 	local backpack = self:getSlotItem(CONST_SLOT_BACKPACK)
@@ -203,18 +189,14 @@ end
 
 function Player.withdrawMoney(self, amount)
 	local balance = self:getBankBalance()
-	if amount > balance or not self:addMoney(amount) then
-		return false
-	end
+	if amount > balance or not self:addMoney(amount) then return false end
 
 	self:setBankBalance(balance - amount)
 	return true
 end
 
 function Player.depositMoney(self, amount)
-	if not self:removeMoney(amount) then
-		return false
-	end
+	if not self:removeMoney(amount) then return false end
 
 	self:setBankBalance(self:getBankBalance() + amount)
 	return true
@@ -231,11 +213,15 @@ function Player.removeTotalMoney(self, amount)
 			self:removeMoney(moneyCount)
 			local remains = amount - moneyCount
 			self:setBankBalance(bankCount - remains)
-			self:sendTextMessage(MESSAGE_INFO_DESCR, ("Paid %d from inventory and %d gold from bank account. Your account balance is now %d gold."):format(moneyCount, amount - moneyCount, self:getBankBalance()))
+			self:sendTextMessage(MESSAGE_INFO_DESCR,
+			                     ("Paid %d from inventory and %d gold from bank account. Your account balance is now %d gold."):format(
+				                     moneyCount, amount - moneyCount, self:getBankBalance()))
 			return true
 		else
 			self:setBankBalance(bankCount - amount)
-			self:sendTextMessage(MESSAGE_INFO_DESCR, ("Paid %d gold from bank account. Your account balance is now %d gold."):format(amount, self:getBankBalance()))
+			self:sendTextMessage(MESSAGE_INFO_DESCR,
+			                     ("Paid %d gold from bank account. Your account balance is now %d gold."):format(
+				                     amount, self:getBankBalance()))
 			return true
 		end
 	end
@@ -246,9 +232,13 @@ function Player.addLevel(self, amount, round)
 	round = round or false
 	local level, amount = self:getLevel(), amount or 1
 	if amount > 0 then
-		return self:addExperience(Game.getExperienceForLevel(level + amount) - (round and self:getExperience() or Game.getExperienceForLevel(level)))
+		return self:addExperience(Game.getExperienceForLevel(level + amount) -
+			                          (round and self:getExperience() or
+				                          Game.getExperienceForLevel(level)))
 	else
-		return self:removeExperience(((round and self:getExperience() or Game.getExperienceForLevel(level)) - Game.getExperienceForLevel(level + amount)))
+		return self:removeExperience(((round and self:getExperience() or
+			                             Game.getExperienceForLevel(level)) -
+			                             Game.getExperienceForLevel(level + amount)))
 	end
 end
 
@@ -266,7 +256,8 @@ function Player.addMagicLevel(self, value)
 	else
 		value = math.min(currentMagLevel, math.abs(value))
 		while value > 0 do
-			sum = sum + self:getVocation():getRequiredManaSpent(currentMagLevel - value + 1)
+			sum = sum +
+				      self:getVocation():getRequiredManaSpent(currentMagLevel - value + 1)
 			value = value - 1
 		end
 
@@ -280,7 +271,9 @@ function Player.addSkillLevel(self, skillId, value)
 
 	if value > 0 then
 		while value > 0 do
-			sum = sum + self:getVocation():getRequiredSkillTries(skillId, currentSkillLevel + value)
+			sum = sum +
+				      self:getVocation()
+					      :getRequiredSkillTries(skillId, currentSkillLevel + value)
 			value = value - 1
 		end
 
@@ -288,7 +281,9 @@ function Player.addSkillLevel(self, skillId, value)
 	else
 		value = math.min(currentSkillLevel, math.abs(value))
 		while value > 0 do
-			sum = sum + self:getVocation():getRequiredSkillTries(skillId, currentSkillLevel - value + 1)
+			sum = sum +
+				      self:getVocation()
+					      :getRequiredSkillTries(skillId, currentSkillLevel - value + 1)
 			value = value - 1
 		end
 
@@ -307,8 +302,6 @@ end
 
 function Player.getWeaponType(self)
 	local weapon = self:getSlotItem(CONST_SLOT_LEFT)
-	if weapon then
-		return weapon:getType():getWeaponType()
-	end
+	if weapon then return weapon:getType():getWeaponType() end
 	return WEAPON_NONE
 end

@@ -2,18 +2,24 @@ local function levitate(creature, parameter)
 	local fromPosition = creature:getPosition()
 	parameter = parameter:trim():lower()
 
-	if parameter == "up" and fromPosition.z ~= 8 or parameter == "down" and fromPosition.z ~= 7 then
+	if parameter == "up" and fromPosition.z ~= 8 or parameter == "down" and
+		fromPosition.z ~= 7 then
 		local toPosition = creature:getPosition()
 		toPosition:getNextPosition(creature:getDirection())
 
-		local tile =
-			Tile(parameter == "up" and Position(fromPosition.x, fromPosition.y, fromPosition.z - 1) or toPosition)
-		if not tile or not tile:getGround() and not tile:hasFlag(TILESTATE_IMMOVABLEBLOCKSOLID) then
-			tile = Tile(toPosition.x, toPosition.y, toPosition.z + (parameter == "up" and -1 or 1))
+		local tile = Tile(parameter == "up" and
+			                  Position(fromPosition.x, fromPosition.y, fromPosition.z - 1) or
+			                  toPosition)
+		if not tile or not tile:getGround() and
+			not tile:hasFlag(TILESTATE_IMMOVABLEBLOCKSOLID) then
+			tile = Tile(toPosition.x, toPosition.y,
+			            toPosition.z + (parameter == "up" and -1 or 1))
 
-			if tile and tile:getGround() and not tile:hasFlag(TILESTATE_IMMOVABLEBLOCKSOLID) then
+			if tile and tile:getGround() and
+				not tile:hasFlag(TILESTATE_IMMOVABLEBLOCKSOLID) then
 				local fromPos = creature:getPosition()
-				local moved = creature:move(tile, (FLAG_IGNOREBLOCKITEM | FLAG_IGNOREBLOCKCREATURE))
+				local moved = creature:move(tile, (FLAG_IGNOREBLOCKITEM |
+					                            FLAG_IGNOREBLOCKCREATURE))
 
 				if moved == RETURNVALUE_NOERROR then
 					fromPos:sendMagicEffect(CONST_ME_TELEPORT)

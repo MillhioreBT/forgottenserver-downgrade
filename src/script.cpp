@@ -7,7 +7,7 @@
 
 #include "configmanager.h"
 
-#include <boost/filesystem.hpp>
+#include <fmt/color.h>
 
 extern LuaEnvironment g_luaEnvironment;
 extern ConfigManager g_config;
@@ -18,13 +18,16 @@ Scripts::~Scripts() { scriptInterface.reInitState(); }
 
 bool Scripts::loadScripts(std::string folderName, bool isLib, bool reload)
 {
-	namespace fs = boost::filesystem;
+	namespace fs = std::filesystem;
 
 	const auto dir = fs::current_path() / "data" / folderName;
 	if (!fs::exists(dir) || !fs::is_directory(dir)) {
 		std::cout << "[Warning - Scripts::loadScripts] Can not load folder '" << folderName << "'." << std::endl;
 		return false;
 	}
+
+	const bool& scriptsConsoleLogs = g_config[ConfigKeysBoolean::SCRIPTS_CONSOLE_LOGS];
+	std::vector<std::string> disabled = {}, loaded = {}, reloaded = {};
 
 	fs::recursive_directory_iterator endit;
 	std::vector<fs::path> v;
@@ -37,8 +40,11 @@ bool Scripts::loadScripts(std::string folderName, bool isLib, bool reload)
 		if (fs::is_regular_file(*it) && it->path().extension() == ".lua") {
 			size_t found = it->path().filename().string().find(disable);
 			if (found != std::string::npos) {
-				if (g_config[ConfigKeysBoolean::SCRIPTS_CONSOLE_LOGS]) {
-					std::cout << "> " << it->path().filename().string() << " [disabled]" << std::endl;
+				if (scriptsConsoleLogs) {
+					const auto& scrName = it->path().filename().string();
+					disabled.push_back(
+					    fmt::format("\"{}\"", fmt::format(fg(fmt::color::yellow), "{}",
+					                                      std::string_view(scrName.data(), scrName.size() - 4))));
 				}
 				continue;
 			}
@@ -46,31 +52,39 @@ bool Scripts::loadScripts(std::string folderName, bool isLib, bool reload)
 		}
 	}
 	sort(v.begin(), v.end());
-	std::string redir;
 	for (auto it = v.begin(); it != v.end(); ++it) {
 		const std::string scriptFile = it->string();
-		if (!isLib) {
-			if (redir.empty() || redir != it->parent_path().string()) {
-				auto p = fs::path(it->relative_path());
-				if (g_config[ConfigKeysBoolean::SCRIPTS_CONSOLE_LOGS]) {
-					std::cout << ">> [" << p.parent_path().filename() << "]" << std::endl;
-				}
-				redir = it->parent_path().string();
-			}
-		}
-
 		if (scriptInterface.loadFile(scriptFile) == -1) {
 			std::cout << "> " << it->filename().string() << " [error]" << std::endl;
 			std::cout << "^ " << scriptInterface.getLastLuaError() << std::endl;
 			continue;
 		}
 
-		if (g_config[ConfigKeysBoolean::SCRIPTS_CONSOLE_LOGS]) {
+		if (scriptsConsoleLogs) {
+			const auto& scrName = it->filename().string();
 			if (!reload) {
-				std::cout << "> " << it->filename().string() << " [loaded]" << std::endl;
+				loaded.push_back(fmt::format(
+				    "\"{}\"",
+				    fmt::format(fg(fmt::color::green), "{}", std::string_view(scrName.data(), scrName.size() - 4))));
 			} else {
-				std::cout << "> " << it->filename().string() << " [reloaded]" << std::endl;
+				reloaded.push_back(fmt::format(
+				    "\"{}\"",
+				    fmt::format(fg(fmt::color::green), "{}", std::string_view(scrName.data(), scrName.size() - 4))));
 			}
+		}
+	}
+
+	if (scriptsConsoleLogs) {
+		if (!disabled.empty()) {
+			std::cout << fmt::format("{{{}}}", fmt::join(disabled, ", ")) << std::endl;
+		}
+
+		if (!loaded.empty()) {
+			std::cout << fmt::format("{{{}}}", fmt::join(loaded, ", ")) << std::endl;
+		}
+
+		if (!reloaded.empty()) {
+			std::cout << fmt::format("{{{}}}", fmt::join(reloaded, ", ")) << std::endl;
 		}
 	}
 

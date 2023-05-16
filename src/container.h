@@ -14,6 +14,8 @@ class Container;
 class DepotChest;
 class DepotLocker;
 
+using ContainerQueue = std::queue<const Container*>;
+
 class ContainerIterator
 {
 public:
@@ -58,6 +60,7 @@ public:
 	ContainerIterator iterator() const;
 
 	const ItemDeque& getItemList() const { return itemlist; }
+	ItemVector getItems(bool recursive = false);
 
 	ItemDeque::const_reverse_iterator getReversedItems() const { return itemlist.rbegin(); }
 	ItemDeque::const_reverse_iterator getReversedEnd() const { return itemlist.rend(); }
@@ -96,8 +99,6 @@ public:
 	std::map<uint32_t, uint32_t>& getAllItemTypeCount(std::map<uint32_t, uint32_t>& countMap) const override final;
 	Thing* getThing(size_t index) const override final;
 
-	ItemVector getItems(bool recursive = false);
-
 	void postAddNotification(Thing* thing, const Cylinder* oldParent, int32_t index,
 	                         cylinderlink_t link = LINK_OWNER) override;
 	void postRemoveNotification(Thing* thing, const Cylinder* newParent, int32_t index,
@@ -111,7 +112,6 @@ protected:
 	ItemDeque itemlist;
 
 private:
-
 	uint32_t maxSize;
 	uint32_t totalWeight = 0;
 	uint32_t serializationCount = 0;

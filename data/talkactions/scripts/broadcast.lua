@@ -1,7 +1,5 @@
 function onSay(player, words, param)
-	if not player:hasFlag(PlayerFlag_CanBroadcast) then
-		return true
-	end
+	if not player:hasFlag(PlayerFlag_CanBroadcast) then return true end
 
 	print("> " .. player:getName() .. " broadcasted: \"" .. param .. "\".")
 	for _, targetPlayer in ipairs(Game.getPlayers()) do

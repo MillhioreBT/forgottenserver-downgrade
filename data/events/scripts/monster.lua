@@ -1,7 +1,5 @@
 function Monster:onDropLoot(corpse)
-	if hasEvent.onDropLoot then
-		Event.onDropLoot(self, corpse)
-	end
+	if hasEvent.onDropLoot then Event.onDropLoot(self, corpse) end
 end
 
 function Monster:onSpawn(position, startup, artificial)

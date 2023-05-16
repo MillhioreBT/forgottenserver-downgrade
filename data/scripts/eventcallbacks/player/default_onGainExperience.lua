@@ -4,20 +4,14 @@ soulCondition:setParameter(CONDITION_PARAM_SOULGAIN, 1)
 
 local function useStamina(player)
 	local staminaMinutes = player:getStamina()
-	if staminaMinutes == 0 then
-		return
-	end
+	if staminaMinutes == 0 then return end
 
 	local playerId = player:getId()
-	if not nextUseStaminaTime[playerId] then
-		nextUseStaminaTime[playerId] = 0
-	end
+	if not nextUseStaminaTime[playerId] then nextUseStaminaTime[playerId] = 0 end
 
 	local currentTime = os.time()
 	local timePassed = currentTime - nextUseStaminaTime[playerId]
-	if timePassed <= 0 then
-		return
-	end
+	if timePassed <= 0 then return end
 
 	if timePassed > 60 then
 		if staminaMinutes > 2 then
@@ -36,14 +30,13 @@ end
 local event = Event()
 
 function event.onGainExperience(player, source, exp, rawExp)
-	if not source or source:isPlayer() then
-		return exp
-	end
+	if not source or source:isPlayer() then return exp end
 
 	-- Soul regeneration
 	local vocation = player:getVocation()
 	if player:getSoul() < vocation:getMaxSoul() and exp >= player:getLevel() then
-		soulCondition:setParameter(CONDITION_PARAM_SOULTICKS, vocation:getSoulGainTicks() * 1000)
+		soulCondition:setParameter(CONDITION_PARAM_SOULTICKS,
+		                           vocation:getSoulGainTicks() * 1000)
 		player:addCondition(soulCondition)
 	end
 

@@ -662,6 +662,13 @@ public:
 		return static_cast<ItemDecayState_t>(getIntAttr(ITEM_ATTRIBUTE_DECAYSTATE));
 	}
 
+	int32_t getDecayTime() const
+	{
+		if (hasAttribute(ITEM_ATTRIBUTE_DURATION)) {
+			return getIntAttr(ITEM_ATTRIBUTE_DURATION);
+		}
+		return items[id].decayTime;
+	}
 	void setDecayTo(int32_t decayTo) { setIntAttr(ITEM_ATTRIBUTE_DECAYTO, decayTo); }
 	int32_t getDecayTo() const
 	{
@@ -694,7 +701,7 @@ public:
 	void setID(uint16_t newid);
 
 	// Returns the player that is holding this item in his inventory
-	Player* getHoldingPlayer() const;
+	const Player* getHoldingPlayer() const;
 
 	WeaponType_t getWeaponType() const { return items[id].weaponType; }
 	Ammo_t getAmmoType() const { return items[id].ammoType; }

@@ -9,6 +9,4 @@ condition:setParameter(CONDITION_PARAM_HEALTHTICKS, 3000)
 condition:setParameter(CONDITION_PARAM_BUFF_SPELL, true)
 combat:addCondition(condition)
 
-function onCastSpell(creature, variant)
-	return combat:execute(creature, variant)
-end
+function onCastSpell(creature, variant) return combat:execute(creature, variant) end

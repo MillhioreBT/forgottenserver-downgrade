@@ -12,7 +12,6 @@
 #include "enums.h"
 #include "groups.h"
 #include "guild.h"
-#include "ioguild.h"
 #include "outfit.h"
 #include "party.h"
 #include "protocolgame.h"
@@ -153,7 +152,7 @@ public:
 
 	bool isGuildMate(const Player* player) const;
 
-	const std::string& getGuildNick() const { return guildNick; }
+	std::string_view getGuildNick() const { return guildNick; }
 	void setGuildNick(std::string nick) { guildNick = nick; }
 
 	bool isInWar(const Player* player) const;
@@ -233,6 +232,8 @@ public:
 
 	void setLastDepotId(int16_t newId) { lastDepotId = newId; }
 	int16_t getLastDepotId() const { return lastDepotId; }
+
+	int32_t getIdleTime() const { return idleTime; }
 
 	void resetIdleTime() { idleTime = 0; }
 
@@ -361,7 +362,7 @@ public:
 	// V.I.P. functions
 	void notifyStatusChange(Player* loginPlayer, VipStatus_t status);
 	bool removeVIP(uint32_t vipGuid);
-	bool addVIP(uint32_t vipGuid, const std::string& vipName, VipStatus_t status);
+	bool addVIP(uint32_t vipGuid, std::string_view vipName, VipStatus_t status);
 	bool addVIPInternal(uint32_t vipGuid);
 
 	// follow functions
@@ -638,7 +639,7 @@ public:
 			client->sendCreatureShield(creature);
 		}
 	}
-	void sendAnimatedText(const std::string& message, const Position& pos, TextColor_t color)
+	void sendAnimatedText(std::string_view message, const Position& pos, TextColor_t color)
 	{
 		if (client) {
 			client->sendAnimatedText(message, pos, color);
@@ -779,7 +780,7 @@ public:
 			client->sendTextWindow(windowTextId, item, maxlen, canWrite);
 		}
 	}
-	void sendTextWindow(uint32_t itemId, std::string_view text) const
+	void sendTextWindow(uint16_t itemId, std::string_view text) const
 	{
 		if (client) {
 			client->sendTextWindow(windowTextId, itemId, text);

@@ -14,12 +14,13 @@ local config = {
 	{chanceFrom = 9960, chanceTo = 9974, itemId = 2492}, -- dragon scale mail
 	{chanceFrom = 9975, chanceTo = 9986, itemId = 2498}, -- royal helmet
 	{chanceFrom = 9987, chanceTo = 9995, itemId = 2173}, -- amulet of loss
-	{chanceFrom = 9996, chanceTo = 10000, itemId = 6566}, -- stuffed dragon
+	{chanceFrom = 9996, chanceTo = 10000, itemId = 6566} -- stuffed dragon
 }
 
 local redSurpriseBag = Action()
 
-function redSurpriseBag.onUse(player, item, fromPosition, target, toPosition, isHotkey)
+function redSurpriseBag.onUse(player, item, fromPosition, target, toPosition,
+                              isHotkey)
 	local chance = math.random(0, 10000)
 	for i = 1, #config do
 		local randomItem = config[i]
@@ -27,9 +28,7 @@ function redSurpriseBag.onUse(player, item, fromPosition, target, toPosition, is
 			if randomItem.itemId then
 				local gift = randomItem.itemId
 				local count = randomItem.count or 1
-				if type(count) == "table" then
-					count = math.random(count[1], count[2])
-				end
+				if type(count) == "table" then count = math.random(count[1], count[2]) end
 				player:addItem(gift, count)
 			end
 

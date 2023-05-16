@@ -1,7 +1,5 @@
 function Game.broadcastMessage(message, messageType)
-	if not messageType then
-		messageType = MESSAGE_STATUS_WARNING
-	end
+	if not messageType then messageType = MESSAGE_STATUS_WARNING end
 
 	for _, player in ipairs(Game.getPlayers()) do
 		player:sendTextMessage(messageType, message)
@@ -9,7 +7,8 @@ function Game.broadcastMessage(message, messageType)
 end
 
 function Game.convertIpToString(ip)
-	return string.format("%d.%d.%d.%d", ip & 0xFF, (ip >> 8) & 0xFF, (ip >> 16) & 0xFF, ip >> 24)
+	return string.format("%d.%d.%d.%d", ip & 0xFF, (ip >> 8) & 0xFF,
+	                     (ip >> 16) & 0xFF, ip >> 24)
 end
 
 function Game.getReverseDirection(direction)
@@ -48,14 +47,73 @@ function Game.getSkillType(weaponType)
 	return SKILL_FIST
 end
 
-if not globalStorageTable then
-	globalStorageTable = {}
-end
+if not globalStorageTable then globalStorageTable = {} end
 
-function Game.getStorageValue(key)
-	return globalStorageTable[key]
-end
+function Game.getStorageValue(key) return globalStorageTable[key] end
 
-function Game.setStorageValue(key, value)
-	globalStorageTable[key] = value
+function Game.setStorageValue(key, value) globalStorageTable[key] = value end
+
+do
+	local cdShort = {"d", "h", "m", "s"}
+	local cdLong = {" day", " hour", " minute", " second"}
+	local function getTimeUnitGrammar(amount, unitID, isLong)
+		return isLong and
+			       string.format("%s%s", cdLong[unitID], amount ~= 1 and "s" or "") or
+			       cdShort[unitID]
+	end
+
+	function Game.getCountdownString(duration, longVersion, hideZero)
+		if duration < 0 then return "expired" end
+
+		local days = math.floor(duration / 86400)
+		local hours = math.floor((duration % 86400) / 3600)
+		local minutes = math.floor((duration % 3600) / 60)
+		local seconds = math.floor(duration % 60)
+
+		local response = {}
+		if hideZero then
+			if days > 0 then
+				response[#response + 1] = days .. getTimeUnitGrammar(days, 1, longVersion)
+			end
+
+			if hours > 0 then
+				response[#response + 1] = hours .. getTimeUnitGrammar(hours, 2, longVersion)
+			end
+
+			if minutes > 0 then
+				response[#response + 1] = minutes ..
+					                          getTimeUnitGrammar(minutes, 3, longVersion)
+			end
+
+			if seconds > 0 then
+				response[#response + 1] = seconds ..
+					                          getTimeUnitGrammar(seconds, 4, longVersion)
+			end
+		else
+			if days > 0 then
+				response[#response + 1] = days .. getTimeUnitGrammar(days, 1, longVersion)
+				response[#response + 1] = hours .. getTimeUnitGrammar(hours, 2, longVersion)
+				response[#response + 1] = minutes ..
+					                          getTimeUnitGrammar(minutes, 3, longVersion)
+				response[#response + 1] = seconds ..
+					                          getTimeUnitGrammar(seconds, 4, longVersion)
+			elseif hours > 0 then
+				response[#response + 1] = hours .. getTimeUnitGrammar(hours, 2, longVersion)
+				response[#response + 1] = minutes ..
+					                          getTimeUnitGrammar(minutes, 3, longVersion)
+				response[#response + 1] = seconds ..
+					                          getTimeUnitGrammar(seconds, 4, longVersion)
+			elseif minutes > 0 then
+				response[#response + 1] = minutes ..
+					                          getTimeUnitGrammar(minutes, 3, longVersion)
+				response[#response + 1] = seconds ..
+					                          getTimeUnitGrammar(seconds, 4, longVersion)
+			elseif seconds >= 0 then
+				response[#response + 1] = seconds ..
+					                          getTimeUnitGrammar(seconds, 4, longVersion)
+			end
+		end
+
+		return table.concat(response, " ")
+	end
 end

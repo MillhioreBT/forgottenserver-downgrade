@@ -304,7 +304,7 @@ void ProtocolGame::logout(bool displayEffect, bool forced)
 			}
 		}
 
-		if (displayEffect && player->getHealth() > 0 && !player->isInGhostMode()) {
+		if (displayEffect && !player->isDead() && !player->isInGhostMode()) {
 			g_game.addMagicEffect(player->getPosition(), CONST_ME_POFF);
 		}
 	}
@@ -458,7 +458,7 @@ void ProtocolGame::parsePacket(NetworkMessage& msg)
 	}
 
 	// a dead player can not performs actions
-	if (player->isRemoved() || player->getHealth() <= 0) {
+	if (player->isRemoved() || player->isDead()) {
 		if (recvbyte == 0x0F) {
 			disconnect();
 			return;
@@ -1759,7 +1759,7 @@ void ProtocolGame::sendPrivateMessage(const Player* speaker, SpeakClasses type, 
 	msg.add<uint32_t>(++statementId);
 	if (speaker) {
 		msg.addString(speaker->getName());
-		msg.add<uint16_t>(speaker->getLevel());
+		msg.add<uint16_t>(static_cast<uint16_t>(speaker->getLevel()));
 	} else {
 		msg.add<uint32_t>(0x00);
 	}
@@ -1781,7 +1781,7 @@ void ProtocolGame::sendChangeSpeed(const Creature* creature, uint32_t speed)
 	NetworkMessage msg;
 	msg.addByte(0x8F);
 	msg.add<uint32_t>(creature->getID());
-	msg.add<uint16_t>(speed);
+	msg.add<uint16_t>(static_cast<uint16_t>(speed));
 	writeToOutputBuffer(msg);
 }
 
@@ -1873,7 +1873,7 @@ void ProtocolGame::sendAddTileItem(const Position& pos, uint32_t stackpos, const
 	NetworkMessage msg;
 	msg.addByte(0x6A);
 	msg.addPosition(pos);
-	msg.addByte(stackpos);
+	msg.addByte(static_cast<uint8_t>(stackpos));
 	msg.addItem(item);
 	writeToOutputBuffer(msg);
 }
@@ -1887,7 +1887,7 @@ void ProtocolGame::sendUpdateTileItem(const Position& pos, uint32_t stackpos, co
 	NetworkMessage msg;
 	msg.addByte(0x6B);
 	msg.addPosition(pos);
-	msg.addByte(stackpos);
+	msg.addByte(static_cast<uint8_t>(stackpos));
 	msg.addItem(item);
 	writeToOutputBuffer(msg);
 }
@@ -1912,7 +1912,7 @@ void ProtocolGame::sendUpdateTileCreature(const Position& pos, uint32_t stackpos
 	NetworkMessage msg;
 	msg.addByte(0x6B);
 	msg.addPosition(pos);
-	msg.addByte(stackpos);
+	msg.addByte(static_cast<uint8_t>(stackpos));
 
 	bool known;
 	uint32_t removedKnown;
@@ -1997,7 +1997,7 @@ void ProtocolGame::sendAddCreature(const Creature* creature, const Position& pos
 			NetworkMessage msg;
 			msg.addByte(0x6A);
 			msg.addPosition(pos);
-			msg.addByte(stackpos);
+			msg.addByte(static_cast<uint8_t>(stackpos));
 
 			bool known;
 			uint32_t removedKnown;
@@ -2072,7 +2072,7 @@ void ProtocolGame::sendMoveCreature(const Creature* creature, const Position& ne
 				msg.addByte(0x6D);
 				if (oldStackPos < 10) {
 					msg.addPosition(oldPos);
-					msg.addByte(oldStackPos);
+					msg.addByte(static_cast<uint8_t>(oldStackPos));
 				} else {
 					msg.add<uint16_t>(0xFFFF);
 					msg.add<uint32_t>(creature->getID());
@@ -2116,7 +2116,7 @@ void ProtocolGame::sendMoveCreature(const Creature* creature, const Position& ne
 			msg.addByte(0x6D);
 			if (oldStackPos < 10) {
 				msg.addPosition(oldPos);
-				msg.addByte(oldStackPos);
+				msg.addByte(static_cast<uint8_t>(oldStackPos));
 			} else {
 				msg.add<uint16_t>(0xFFFF);
 				msg.add<uint32_t>(creature->getID());
@@ -2206,7 +2206,7 @@ void ProtocolGame::sendTextWindow(uint32_t windowTextId, Item* item, uint16_t ma
 	writeToOutputBuffer(msg);
 }
 
-void ProtocolGame::sendTextWindow(uint32_t windowTextId, uint32_t itemId, std::string_view text)
+void ProtocolGame::sendTextWindow(uint32_t windowTextId, uint16_t itemId, std::string_view text)
 {
 	NetworkMessage msg;
 	msg.addByte(0x96);
@@ -2324,8 +2324,8 @@ void ProtocolGame::AddCreature(NetworkMessage& msg, const Creature* creature, bo
 	if (creature->isHealthHidden()) {
 		msg.addByte(0x00);
 	} else {
-		msg.addByte(std::ceil(
-		    (static_cast<double>(creature->getHealth()) / std::max<int32_t>(creature->getMaxHealth(), 1)) * 100));
+		msg.addByte(static_cast<uint8_t>(std::ceil(
+		    (static_cast<double>(creature->getHealth()) / std::max<int32_t>(creature->getMaxHealth(), 1)) * 100)));
 	}
 
 	msg.addByte(creature->getDirection());
@@ -2341,7 +2341,7 @@ void ProtocolGame::AddCreature(NetworkMessage& msg, const Creature* creature, bo
 	msg.addByte(player->isAccessPlayer() ? 0xFF : lightInfo.level);
 	msg.addByte(lightInfo.color);
 
-	msg.add<uint16_t>(creature->getStepSpeed());
+	msg.add<uint16_t>(static_cast<uint16_t>(creature->getStepSpeed()));
 
 	msg.addByte(player->getSkullClient(otherPlayer));
 	msg.addByte(player->getPartyShield(otherPlayer));
@@ -2357,20 +2357,24 @@ void ProtocolGame::AddPlayerStats(NetworkMessage& msg)
 {
 	msg.addByte(0xA0);
 
-	msg.add<uint16_t>(std::min<int32_t>(player->getHealth(), std::numeric_limits<uint16_t>::max()));
-	msg.add<uint16_t>(std::min<int32_t>(player->getMaxHealth(), std::numeric_limits<uint16_t>::max()));
+	msg.add<uint16_t>(
+	    static_cast<uint16_t>(std::min<int32_t>(player->getHealth(), std::numeric_limits<uint16_t>::max())));
+	msg.add<uint16_t>(
+	    static_cast<uint16_t>(std::min<int32_t>(player->getMaxHealth(), std::numeric_limits<uint16_t>::max())));
 
 	msg.add<uint32_t>(player->hasFlag(PlayerFlag_HasInfiniteCapacity) ? 1000000 : player->getFreeCapacity());
 
 	msg.add<uint32_t>(std::min<uint32_t>(player->getExperience(), std::numeric_limits<int32_t>::max()));
 
-	msg.add<uint16_t>(player->getLevel());
+	msg.add<uint16_t>(static_cast<uint16_t>(player->getLevel()));
 	msg.addByte(player->getLevelPercent());
 
-	msg.add<uint16_t>(std::min<int32_t>(player->getMana(), std::numeric_limits<uint16_t>::max()));
-	msg.add<uint16_t>(std::min<int32_t>(player->getMaxMana(), std::numeric_limits<uint16_t>::max()));
+	msg.add<uint16_t>(
+	    static_cast<uint16_t>(std::min<int32_t>(player->getMana(), std::numeric_limits<uint16_t>::max())));
+	msg.add<uint16_t>(
+	    static_cast<uint16_t>(std::min<int32_t>(player->getMaxMana(), std::numeric_limits<uint16_t>::max())));
 
-	msg.addByte(std::min<uint32_t>(player->getMagicLevel(), std::numeric_limits<uint8_t>::max()));
+	msg.addByte(static_cast<uint8_t>(std::min<uint32_t>(player->getMagicLevel(), std::numeric_limits<uint8_t>::max())));
 	msg.addByte(player->getMagicLevelPercent());
 
 	msg.addByte(player->getSoul());
@@ -2394,7 +2398,8 @@ void ProtocolGame::AddPlayerSkills(NetworkMessage& msg)
 	msg.addByte(0xA1);
 
 	for (uint8_t i = SKILL_FIRST; i <= SKILL_LAST; ++i) {
-		msg.addByte(std::min<int32_t>(player->getSkillLevel(i), std::numeric_limits<uint16_t>::max()));
+		msg.addByte(
+		    static_cast<uint8_t>(std::min<int32_t>(player->getSkillLevel(i), std::numeric_limits<uint16_t>::max())));
 		msg.addByte(player->getSkillPercent(i));
 	}
 }
@@ -2440,7 +2445,7 @@ void ProtocolGame::RemoveTileThing(NetworkMessage& msg, const Position& pos, uin
 
 	msg.addByte(0x6C);
 	msg.addPosition(pos);
-	msg.addByte(stackpos);
+	msg.addByte(static_cast<uint8_t>(stackpos));
 }
 
 void ProtocolGame::RemoveTileCreature(NetworkMessage& msg, const Creature* creature, const Position& pos,
@@ -2476,7 +2481,7 @@ void ProtocolGame::MoveUpCreature(NetworkMessage& msg, const Creature* creature,
 			                    (Map::maxClientViewportX * 2) + 2, (Map::maxClientViewportY * 2) + 2, 8 - i, skip);
 		}
 		if (skip >= 0) {
-			msg.addByte(skip);
+			msg.addByte(static_cast<uint8_t>(skip));
 			msg.addByte(0xFF);
 		}
 	}
@@ -2488,7 +2493,7 @@ void ProtocolGame::MoveUpCreature(NetworkMessage& msg, const Creature* creature,
 		                    skip);
 
 		if (skip >= 0) {
-			msg.addByte(skip);
+			msg.addByte(static_cast<uint8_t>(skip));
 			msg.addByte(0xFF);
 		}
 	}
@@ -2525,7 +2530,7 @@ void ProtocolGame::MoveDownCreature(NetworkMessage& msg, const Creature* creatur
 			                    -i - 1, skip);
 		}
 		if (skip >= 0) {
-			msg.addByte(skip);
+			msg.addByte(static_cast<uint8_t>(skip));
 			msg.addByte(0xFF);
 		}
 	}
@@ -2536,7 +2541,7 @@ void ProtocolGame::MoveDownCreature(NetworkMessage& msg, const Creature* creatur
 		                    (Map::maxClientViewportX * 2) + 2, (Map::maxClientViewportY * 2) + 2, -3, skip);
 
 		if (skip >= 0) {
-			msg.addByte(skip);
+			msg.addByte(static_cast<uint8_t>(skip));
 			msg.addByte(0xFF);
 		}
 	}
@@ -2559,7 +2564,7 @@ void ProtocolGame::AddShopItem(NetworkMessage& msg, const ShopInfo& item)
 	msg.add<uint16_t>(it.clientId);
 
 	if (it.isSplash() || it.isFluidContainer()) {
-		msg.addByte(serverFluidToClient(item.subType));
+		msg.addByte(serverFluidToClient(static_cast<uint8_t>(item.subType)));
 	} else {
 		msg.addByte(0x00);
 	}

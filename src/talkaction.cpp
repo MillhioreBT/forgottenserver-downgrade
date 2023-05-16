@@ -40,32 +40,27 @@ Event_ptr TalkActions::getEvent(std::string_view nodeName)
 bool TalkActions::registerEvent(Event_ptr event, const pugi::xml_node&)
 {
 	TalkAction_ptr talkAction{static_cast<TalkAction*>(event.release())}; // event is guaranteed to be a TalkAction
-	std::vector<std::string> words = talkAction->getWordsMap();
+	const std::vector<std::string>& words = talkAction->getWordsMap();
 
-	for (size_t i = 0; i < words.size(); i++) {
-		if (i == words.size() - 1) {
-			talkActions.emplace(words[i], std::move(*talkAction));
-		} else {
-			talkActions.emplace(words[i], *talkAction);
-		}
+	for (const auto& word : words) {
+		talkActions.emplace(word, *talkAction);
 	}
-
 	return true;
 }
 
 bool TalkActions::registerLuaEvent(TalkAction* event)
 {
 	TalkAction_ptr talkAction{event};
-	std::vector<std::string> words = talkAction->getWordsMap();
+	const std::vector<std::string>& words = talkAction->getWordsMap();
 
-	for (size_t i = 0; i < words.size(); i++) {
-		if (i == words.size() - 1) {
-			talkActions.emplace(words[i], std::move(*talkAction));
-		} else {
-			talkActions.emplace(words[i], *talkAction);
-		}
+	if (words.empty()) {
+		std::cout << "[Warning - TalkActions::registerLuaEvent] Missing words for talk action." << std::endl;
+		return false;
 	}
 
+	for (const auto& word : words) {
+		talkActions.emplace(word, *talkAction);
+	}
 	return true;
 }
 
@@ -133,7 +128,17 @@ bool TalkAction::configureEvent(const pugi::xml_node& node)
 		separator = pugi::cast<char>(separatorAttribute.value());
 	}
 
-	for (auto& word : explodeString(wordsAttribute.as_string(), ";")) {
+	pugi::xml_attribute accessAttribute = node.attribute("access");
+	if (accessAttribute) {
+		needAccess = pugi::cast<bool>(accessAttribute.value());
+	}
+
+	pugi::xml_attribute accountTypeAttribute = node.attribute("accountType");
+	if (accountTypeAttribute) {
+		requiredAccountType = static_cast<AccountType_t>(pugi::cast<uint8_t>(accountTypeAttribute.value()));
+	}
+
+	for (const auto& word : explodeString(wordsAttribute.as_string(), ";")) {
 		setWords(word);
 	}
 	return true;

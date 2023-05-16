@@ -20,14 +20,14 @@ extern Events* g_events;
 static constexpr int32_t MINSPAWN_INTERVAL = 10 * 1000;           // 10 seconds to match RME
 static constexpr int32_t MAXSPAWN_INTERVAL = 24 * 60 * 60 * 1000; // 1 day
 
-bool Spawns::loadFromXml(const std::string& filename)
+bool Spawns::loadFromXml(std::string_view filename)
 {
 	if (loaded) {
 		return true;
 	}
 
 	pugi::xml_document doc;
-	pugi::xml_parse_result result = doc.load_file(filename.c_str());
+	pugi::xml_parse_result result = doc.load_file(filename.data());
 	if (!result) {
 		printXMLError("Error - Spawns::loadFromXml", filename, result);
 		return false;
@@ -36,7 +36,7 @@ bool Spawns::loadFromXml(const std::string& filename)
 	this->filename = filename;
 	loaded = true;
 
-	for (auto spawnNode : doc.child("spawns").children()) {
+	for (auto& spawnNode : doc.child("spawns").children()) {
 		Position centerPos(pugi::cast<uint16_t>(spawnNode.attribute("centerx").value()),
 		                   pugi::cast<uint16_t>(spawnNode.attribute("centery").value()),
 		                   pugi::cast<uint16_t>(spawnNode.attribute("centerz").value()));
@@ -63,7 +63,7 @@ bool Spawns::loadFromXml(const std::string& filename)
 		spawnList.emplace_front(centerPos, radius);
 		Spawn& spawn = spawnList.front();
 
-		for (auto childNode : spawnNode.children()) {
+		for (auto& childNode : spawnNode.children()) {
 			if (caseInsensitiveEqual(childNode.name(), "monsters")) {
 				Position pos(centerPos.x + pugi::cast<uint16_t>(childNode.attribute("x").value()),
 				             centerPos.y + pugi::cast<uint16_t>(childNode.attribute("y").value()), centerPos.z);
@@ -92,7 +92,7 @@ bool Spawns::loadFromXml(const std::string& filename)
 				sb.interval = interval;
 				sb.lastSpawn = 0;
 
-				for (auto monsterNode : childNode.children()) {
+				for (auto& monsterNode : childNode.children()) {
 					pugi::xml_attribute nameAttribute = monsterNode.attribute("name");
 					if (!nameAttribute) {
 						continue;
@@ -260,7 +260,8 @@ bool Spawn::findPlayer(const Position& pos)
 	SpectatorVec spectators;
 	g_game.map.getSpectators(spectators, pos, false, true);
 	for (Creature* spectator : spectators) {
-		if (!spectator->getPlayer()->hasFlag(PlayerFlag_IgnoredByMonsters)) {
+		assert(dynamic_cast<Player*>(spectator) != nullptr);
+		if (!static_cast<Player*>(spectator)->hasFlag(PlayerFlag_IgnoredByMonsters)) {
 			return true;
 		}
 	}

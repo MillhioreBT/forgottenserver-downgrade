@@ -1134,7 +1134,7 @@ void Player::onRemoveCreature(Creature* creature, bool isLogout)
 		clearPartyInvitations();
 
 		if (party) {
-			party->leaveParty(this);
+			party->leaveParty(this, true);
 		}
 
 		g_chat->removeUserFromAllChannels(*this);
@@ -1601,7 +1601,8 @@ void Player::addExperience(Creature* source, uint64_t exp, bool sendText /* = fa
 			message.type = MESSAGE_STATUS_DEFAULT;
 			message.text = getName() + " gained " + expString;
 			for (Creature* spectator : spectators) {
-				spectator->getPlayer()->sendTextMessage(message);
+				assert(dynamic_cast<Player*>(spectator) != nullptr);
+				static_cast<Player*>(spectator)->sendTextMessage(message);
 			}
 		}
 	}
@@ -1687,7 +1688,8 @@ void Player::removeExperience(uint64_t exp, bool sendText /* = false*/)
 			message.type = MESSAGE_STATUS_DEFAULT;
 			message.text = getName() + " lost " + expString;
 			for (Creature* spectator : spectators) {
-				spectator->getPlayer()->sendTextMessage(message);
+				assert(dynamic_cast<Player*>(spectator) != nullptr);
+				static_cast<Player*>(spectator)->sendTextMessage(message);
 			}
 		}
 	}
@@ -2143,7 +2145,7 @@ bool Player::removeVIP(uint32_t vipGuid)
 	return true;
 }
 
-bool Player::addVIP(uint32_t vipGuid, const std::string& vipName, VipStatus_t status)
+bool Player::addVIP(uint32_t vipGuid, std::string_view vipName, VipStatus_t status)
 {
 	if (VIPList.size() >= getMaxVIPEntries()) {
 		sendTextMessage(MESSAGE_STATUS_SMALL, "You cannot add more buddies.");
@@ -2904,7 +2906,7 @@ void Player::postAddNotification(Thing* thing, const Cylinder* oldParent, int32_
 		assert(i ? i->getContainer() != nullptr : true);
 
 		if (i) {
-			requireListUpdate = i->getContainer()->getHoldingPlayer() != this;
+			requireListUpdate = static_cast<const Container*>(i)->getHoldingPlayer() != this;
 		} else {
 			requireListUpdate = oldParent != this;
 		}
@@ -2960,7 +2962,7 @@ void Player::postRemoveNotification(Thing* thing, const Cylinder* newParent, int
 		assert(i ? i->getContainer() != nullptr : true);
 
 		if (i) {
-			requireListUpdate = i->getContainer()->getHoldingPlayer() != this;
+			requireListUpdate = static_cast<const Container*>(i)->getHoldingPlayer() != this;
 		} else {
 			requireListUpdate = newParent != this;
 		}
@@ -3622,7 +3624,7 @@ bool Player::canWear(uint32_t lookType, uint8_t addons) const
 
 bool Player::hasOutfit(uint32_t lookType, uint8_t addons)
 {
-	const Outfit* outfit = Outfits::getInstance().getOutfitByLookType(sex, lookType);
+	const Outfit* outfit = Outfits::getInstance().getOutfitByLookType(sex, static_cast<uint16_t>(lookType));
 	if (!outfit) {
 		return false;
 	}

@@ -59,176 +59,154 @@ bool Actions::registerEvent(Event_ptr event, const pugi::xml_node& node)
 {
 	Action_ptr action{static_cast<Action*>(event.release())}; // event is guaranteed to be an Action
 
+	bool success = false;
 	pugi::xml_attribute attr;
-	if ((attr = node.attribute("itemid"))) {
-		std::vector<int32_t> idList = vectorAtoi(explodeString(attr.as_string(), ";"));
-		bool success = true;
-
+	if (attr = node.attribute("itemid")) {
+		const std::vector<int32_t>& idList = vectorAtoi(explodeString(attr.as_string(), ";"));
 		for (const auto& id : idList) {
-			auto result = useItemMap.emplace(id, std::move(*action));
+			auto result = useItemMap.emplace(static_cast<uint16_t>(id), *action);
 			if (!result.second) {
 				std::cout << "[Warning - Actions::registerEvent] Duplicate registered item with id: " << id
 				          << std::endl;
-				success = false;
-			}
-		}
-
-		return success;
-	} else if ((attr = node.attribute("fromid"))) {
-		pugi::xml_attribute toIdAttribute = node.attribute("toid");
-		if (!toIdAttribute) {
-			std::cout << "[Warning - Actions::registerEvent] Missing toid in fromid: " << attr.as_string() << std::endl;
-			return false;
-		}
-
-		uint16_t fromId = pugi::cast<uint16_t>(attr.value());
-		uint16_t iterId = fromId;
-		uint16_t toId = pugi::cast<uint16_t>(toIdAttribute.value());
-
-		auto result = useItemMap.emplace(iterId, *action);
-		if (!result.second) {
-			std::cout << "[Warning - Actions::registerEvent] Duplicate registered item with id: " << iterId
-			          << " in fromid: " << fromId << ", toid: " << toId << std::endl;
-		}
-
-		bool success = result.second;
-		while (++iterId <= toId) {
-			result = useItemMap.emplace(iterId, *action);
-			if (!result.second) {
-				std::cout << "[Warning - Actions::registerEvent] Duplicate registered item with id: " << iterId
-				          << " in fromid: " << fromId << ", toid: " << toId << std::endl;
 				continue;
 			}
+
 			success = true;
 		}
-		return success;
-	} else if ((attr = node.attribute("uniqueid"))) {
-		std::vector<int32_t> uidList = vectorAtoi(explodeString(attr.as_string(), ";"));
-		bool success = true;
+	}
 
+	if ((attr = node.attribute("uniqueid"))) {
+		const std::vector<int32_t>& uidList = vectorAtoi(explodeString(attr.as_string(), ";"));
 		for (const auto& uid : uidList) {
-			auto result = uniqueItemMap.emplace(uid, std::move(*action));
+			auto result = uniqueItemMap.emplace(static_cast<uint16_t>(uid), *action);
 			if (!result.second) {
 				std::cout << "[Warning - Actions::registerEvent] Duplicate registered item with uniqueid: " << uid
 				          << std::endl;
-				success = false;
-			}
-		}
-
-		return success;
-	} else if ((attr = node.attribute("fromuid"))) {
-		pugi::xml_attribute toUidAttribute = node.attribute("touid");
-		if (!toUidAttribute) {
-			std::cout << "[Warning - Actions::registerEvent] Missing touid in fromuid: " << attr.as_string()
-			          << std::endl;
-			return false;
-		}
-
-		uint16_t fromUid = pugi::cast<uint16_t>(attr.value());
-		uint16_t iterUid = fromUid;
-		uint16_t toUid = pugi::cast<uint16_t>(toUidAttribute.value());
-
-		auto result = uniqueItemMap.emplace(iterUid, *action);
-		if (!result.second) {
-			std::cout << "[Warning - Actions::registerEvent] Duplicate registered item with unique id: " << iterUid
-			          << " in fromuid: " << fromUid << ", touid: " << toUid << std::endl;
-		}
-
-		bool success = result.second;
-		while (++iterUid <= toUid) {
-			result = uniqueItemMap.emplace(iterUid, *action);
-			if (!result.second) {
-				std::cout << "[Warning - Actions::registerEvent] Duplicate registered item with unique id: " << iterUid
-				          << " in fromuid: " << fromUid << ", touid: " << toUid << std::endl;
 				continue;
 			}
+
 			success = true;
 		}
-		return success;
-	} else if ((attr = node.attribute("actionid"))) {
-		std::vector<int32_t> aidList = vectorAtoi(explodeString(attr.as_string(), ";"));
-		bool success = true;
+	}
 
+	if ((attr = node.attribute("actionid"))) {
+		const std::vector<int32_t>& aidList = vectorAtoi(explodeString(attr.as_string(), ";"));
 		for (const auto& aid : aidList) {
-			auto result = actionItemMap.emplace(aid, std::move(*action));
+			auto result = actionItemMap.emplace(static_cast<uint16_t>(aid), *action);
 			if (!result.second) {
 				std::cout << "[Warning - Actions::registerEvent] Duplicate registered item with actionid: " << aid
 				          << std::endl;
-				success = false;
-			}
-		}
-
-		return success;
-	} else if ((attr = node.attribute("fromaid"))) {
-		pugi::xml_attribute toAidAttribute = node.attribute("toaid");
-		if (!toAidAttribute) {
-			std::cout << "[Warning - Actions::registerEvent] Missing toaid in fromaid: " << attr.as_string()
-			          << std::endl;
-			return false;
-		}
-
-		uint16_t fromAid = pugi::cast<uint16_t>(attr.value());
-		uint16_t iterAid = fromAid;
-		uint16_t toAid = pugi::cast<uint16_t>(toAidAttribute.value());
-
-		auto result = actionItemMap.emplace(iterAid, *action);
-		if (!result.second) {
-			std::cout << "[Warning - Actions::registerEvent] Duplicate registered item with action id: " << iterAid
-			          << " in fromaid: " << fromAid << ", toaid: " << toAid << std::endl;
-		}
-
-		bool success = result.second;
-		while (++iterAid <= toAid) {
-			result = actionItemMap.emplace(iterAid, *action);
-			if (!result.second) {
-				std::cout << "[Warning - Actions::registerEvent] Duplicate registered item with action id: " << iterAid
-				          << " in fromaid: " << fromAid << ", toaid: " << toAid << std::endl;
 				continue;
 			}
+
 			success = true;
 		}
-		return success;
 	}
-	return false;
+
+	if (attr = node.attribute("fromid")) {
+		if (const auto& toIdAttribute = node.attribute("toid")) {
+			uint16_t fromId = pugi::cast<uint16_t>(attr.value());
+			uint16_t iterId = fromId;
+			uint16_t toId = pugi::cast<uint16_t>(toIdAttribute.value());
+			for (; iterId <= toId; iterId++) {
+				if (!useItemMap.emplace(iterId, *action).second) {
+					std::cout << "[Warning - Actions::registerEvent] Duplicate registered item with id: " << iterId
+					          << " in fromid: " << fromId << ", toid: " << toId << std::endl;
+					continue;
+				}
+
+				success = true;
+			}
+		} else {
+			std::cout << "[Warning - Actions::registerEvent] Missing toid in fromid: " << attr.as_string() << std::endl;
+		}
+	}
+
+	if (attr = node.attribute("fromuid")) {
+		if (const auto& toUidAttribute = node.attribute("touid")) {
+			uint16_t fromUid = pugi::cast<uint16_t>(attr.value());
+			uint16_t iterUid = fromUid;
+			uint16_t toUid = pugi::cast<uint16_t>(toUidAttribute.value());
+			for (; iterUid <= toUid; iterUid++) {
+				if (!uniqueItemMap.emplace(iterUid, *action).second) {
+					std::cout << "[Warning - Actions::registerEvent] Duplicate registered item with unique id: "
+					          << iterUid << " in fromuid: " << fromUid << ", touid: " << toUid << std::endl;
+					continue;
+				}
+
+				success = true;
+			}
+		} else {
+			std::cout << "[Warning - Actions::registerEvent] Missing touid in fromuid: " << attr.as_string()
+			          << std::endl;
+		}
+	}
+
+	if (attr = node.attribute("fromaid")) {
+		if (const auto& toAidAttribute = node.attribute("toaid")) {
+			uint16_t fromAid = pugi::cast<uint16_t>(attr.value());
+			uint16_t iterAid = fromAid;
+			uint16_t toAid = pugi::cast<uint16_t>(toAidAttribute.value());
+			for (; iterAid <= toAid; iterAid++) {
+				if (!actionItemMap.emplace(iterAid, *action).second) {
+					std::cout << "[Warning - Actions::registerEvent] Duplicate registered item with action id: "
+					          << iterAid << " in fromaid: " << fromAid << ", toaid: " << toAid << std::endl;
+					continue;
+				}
+
+				success = true;
+			}
+		} else {
+			std::cout << "[Warning - Actions::registerEvent] Missing toaid in fromaid: " << attr.as_string()
+			          << std::endl;
+		}
+	}
+	return success;
 }
 
 bool Actions::registerLuaEvent(Action* event)
 {
 	Action_ptr action{event};
-	if (!action->getItemIdRange().empty()) {
-		const auto& range = action->getItemIdRange();
-		for (auto id : range) {
-			auto result = useItemMap.emplace(id, *action);
-			if (!result.second) {
-				std::cout << "[Warning - Actions::registerLuaEvent] Duplicate registered item with id: " << id
-				          << " in range from id: " << range.front() << ", to id: " << range.back() << std::endl;
-			}
+
+	const auto& ids = action->stealItemIdRange();
+	const auto& uids = action->stealUniqueIdRange();
+	const auto& aids = action->stealActionIdRange();
+
+	bool success = false;
+	for (const auto& id : ids) {
+		if (!useItemMap.emplace(id, *action).second) {
+			std::cout << "[Warning - Actions::registerLuaEvent] Duplicate registered item with id: " << id
+			          << " in range from id: " << ids.front() << ", to id: " << ids.back() << std::endl;
+			continue;
 		}
-		return true;
-	} else if (!action->getUniqueIdRange().empty()) {
-		const auto& range = action->getUniqueIdRange();
-		for (auto id : range) {
-			auto result = uniqueItemMap.emplace(id, *action);
-			if (!result.second) {
-				std::cout << "[Warning - Actions::registerLuaEvent] Duplicate registered item with uid: " << id
-				          << " in range from uid: " << range.front() << ", to uid: " << range.back() << std::endl;
-			}
-		}
-		return true;
-	} else if (!action->getActionIdRange().empty()) {
-		const auto& range = action->getActionIdRange();
-		for (auto id : range) {
-			auto result = actionItemMap.emplace(id, *action);
-			if (!result.second) {
-				std::cout << "[Warning - Actions::registerLuaEvent] Duplicate registered item with aid: " << id
-				          << " in range from aid: " << range.front() << ", to aid: " << range.back() << std::endl;
-			}
-		}
-		return true;
+
+		success = true;
 	}
 
-	std::cout << "[Warning - Actions::registerLuaEvent] There is no id / aid / uid set for this event" << std::endl;
-	return false;
+	for (const auto& id : uids) {
+		if (!uniqueItemMap.emplace(id, *action).second) {
+			std::cout << "[Warning - Actions::registerLuaEvent] Duplicate registered item with uid: " << id
+			          << " in range from uid: " << uids.front() << ", to uid: " << uids.back() << std::endl;
+			continue;
+		}
+
+		success = true;
+	}
+
+	for (const auto& id : aids) {
+		if (!actionItemMap.emplace(id, *action).second) {
+			std::cout << "[Warning - Actions::registerLuaEvent] Duplicate registered item with aid: " << id
+			          << " in range from aid: " << aids.front() << ", to aid: " << aids.back() << std::endl;
+			continue;
+		}
+
+		success = true;
+	}
+
+	if (!success) {
+		std::cout << "[Warning - Actions::registerLuaEvent] There is no id / aid / uid set for this event" << std::endl;
+	}
+	return success;
 }
 
 ReturnValue Actions::canUse(const Player* player, const Position& pos)

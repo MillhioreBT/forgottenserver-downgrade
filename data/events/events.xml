@@ -11,6 +11,9 @@
 	<event class="Party" method="onLeave" enabled="0" />
 	<event class="Party" method="onDisband" enabled="0" />
 	<event class="Party" method="onShareExperience" enabled="1" />
+	<event class="Party" method="onInvite" enabled="0" />
+	<event class="Party" method="onRevokeInvitation" enabled="0" />
+	<event class="Party" method="onPassLeadership" enabled="0" />
 
 	<!-- Player methods -->
 	<event class="Player" method="onLook" enabled="1" />
@@ -22,7 +25,7 @@
 	<event class="Player" method="onMoveCreature" enabled="0" />
 	<event class="Player" method="onReportBug" enabled="1" />
 	<event class="Player" method="onReportRuleViolation" enabled="1" />
-	<event class="Player" method="onTurn" enabled="0" />
+	<event class="Player" method="onTurn" enabled="1" />
 	<event class="Player" method="onTradeRequest" enabled="0" />
 	<event class="Player" method="onTradeAccept" enabled="0" />
 	<event class="Player" method="onTradeCompleted" enabled="0" />

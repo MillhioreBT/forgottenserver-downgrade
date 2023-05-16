@@ -1,10 +1,9 @@
-function Creature.getClosestFreePosition(self, position, maxRadius, mustBeReachable)
+function Creature.getClosestFreePosition(self, position, maxRadius,
+                                         mustBeReachable)
 	maxRadius = maxRadius or 1
 
 	-- backward compatability (extended)
-	if maxRadius == true then
-		maxRadius = 2
-	end
+	if maxRadius == true then maxRadius = 2 end
 
 	local checkPosition = Position(position)
 	for radius = 0, maxRadius do
@@ -19,7 +18,8 @@ function Creature.getClosestFreePosition(self, position, maxRadius, mustBeReacha
 			end
 
 			local tile = Tile(checkPosition)
-			if tile and tile:getCreatureCount() == 0 and not tile:hasProperty(CONST_PROP_IMMOVABLEBLOCKSOLID) and
+			if tile and tile:getCreatureCount() == 0 and
+				not tile:hasProperty(CONST_PROP_IMMOVABLEBLOCKSOLID) and
 				(not mustBeReachable or self:getPathTo(checkPosition)) then
 				return checkPosition
 			end
@@ -28,45 +28,28 @@ function Creature.getClosestFreePosition(self, position, maxRadius, mustBeReacha
 	return Position()
 end
 
-function Creature.getPlayer(self)
-	return self:isPlayer() and self or nil
-end
+function Creature.getPlayer(self) return self:isPlayer() and self or nil end
 
-function Creature.isContainer(self)
-	return false
-end
+function Creature.isContainer(self) return false end
 
-function Creature.isItem(self)
-	return false
-end
+function Creature.isItem(self) return false end
 
-function Creature.isMonster(self)
-	return false
-end
+function Creature.isMonster(self) return false end
 
-function Creature.isNpc(self)
-	return false
-end
+function Creature.isNpc(self) return false end
 
-function Creature.isPlayer(self)
-	return false
-end
+function Creature.isPlayer(self) return false end
 
-function Creature.isTeleport(self)
-	return false
-end
+function Creature.isTeleport(self) return false end
 
-function Creature.isTile(self)
-	return false
-end
+function Creature.isTile(self) return false end
 
 function Creature:setMonsterOutfit(monster, time)
 	local monsterType = MonsterType(monster)
-	if not monsterType then
-		return false
-	end
+	if not monsterType then return false end
 
-	if self:isPlayer() and not (self:hasFlag(PlayerFlag_CanIllusionAll) or monsterType:isIllusionable()) then
+	if self:isPlayer() and
+		not (self:hasFlag(PlayerFlag_CanIllusionAll) or monsterType:isIllusionable()) then
 		return false
 	end
 
@@ -80,14 +63,10 @@ end
 
 function Creature:setItemOutfit(item, time)
 	local itemType = ItemType(item)
-	if not itemType then
-		return false
-	end
+	if not itemType then return false end
 
 	local condition = Condition(CONDITION_OUTFIT)
-	condition:setOutfit({
-		lookTypeEx = itemType:getId()
-	})
+	condition:setOutfit({lookTypeEx = itemType:getId()})
 	condition:setTicks(time)
 	self:addCondition(condition)
 
@@ -96,9 +75,7 @@ end
 
 function Creature:addSummon(monster)
 	local summon = Monster(monster)
-	if not summon then
-		return false
-	end
+	if not summon then return false end
 
 	summon:setTarget(nil)
 	summon:setFollowCreature(nil)
@@ -112,9 +89,7 @@ end
 
 function Creature:removeSummon(monster)
 	local summon = Monster(monster)
-	if not summon or summon:getMaster() ~= self then
-		return false
-	end
+	if not summon or summon:getMaster() ~= self then return false end
 
 	summon:setTarget(nil)
 	summon:setFollowCreature(nil)
@@ -126,9 +101,7 @@ function Creature:removeSummon(monster)
 end
 
 function Creature:addDamageCondition(target, type, list, damage, period, rounds)
-	if damage <= 0 or not target or target:isImmune(type) then
-		return false
-	end
+	if damage <= 0 or not target or target:isImmune(type) then return false end
 
 	local condition = Condition(type)
 	condition:setParameter(CONDITION_PARAM_OWNER, self:getId())
@@ -142,7 +115,8 @@ function Creature:addDamageCondition(target, type, list, damage, period, rounds)
 
 			if value >= damage then
 				local permille = math.random(10, 1200) / 1000
-				condition:addDamage(1, period or 4000, -math.max(1, math.floor(value * permille + 0.5)))
+				condition:addDamage(1, period or 4000,
+				                    -math.max(1, math.floor(value * permille + 0.5)))
 			else
 				exponent = exponent + 1
 			end

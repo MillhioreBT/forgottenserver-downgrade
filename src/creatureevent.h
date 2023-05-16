@@ -53,10 +53,10 @@ public:
 	                    bool lastHitUnjustified, bool mostDamageUnjustified);
 	void executeOnKill(Creature* creature, Creature* target);
 	bool executeAdvance(Player* player, skills_t, uint32_t, uint32_t);
-	bool executeTextEdit(Player* player, Item* item, const std::string& text);
+	bool executeTextEdit(Player* player, Item* item, std::string_view text, const uint32_t windowTextId);
 	void executeHealthChange(Creature* creature, Creature* attacker, CombatDamage& damage);
 	void executeManaChange(Creature* creature, Creature* attacker, CombatDamage& damage);
-	void executeExtendedOpcode(Player* player, uint8_t opcode, const std::string& buffer);
+	void executeExtendedOpcode(Player* player, uint8_t opcode, std::string_view buffer);
 	//
 
 private:
