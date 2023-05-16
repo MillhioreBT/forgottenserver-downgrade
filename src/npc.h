@@ -91,6 +91,8 @@ class Npc final : public Creature
 public:
 	~Npc();
 
+	using Creature::onWalk;
+
 	// non-copyable
 	Npc(const Npc&) = delete;
 	Npc& operator=(const Npc&) = delete;
@@ -151,8 +153,6 @@ public:
 	NpcScriptInterface* getScriptInterface();
 
 	static uint32_t npcAutoID;
-
-	using Creature::onWalk;
 
 private:
 	explicit Npc(const std::string& name);

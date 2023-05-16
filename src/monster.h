@@ -32,6 +32,8 @@ public:
 	explicit Monster(MonsterType* mType);
 	~Monster();
 
+	using Creature::onWalk;
+
 	// non-copyable
 	Monster(const Monster&) = delete;
 	Monster& operator=(const Monster&) = delete;
@@ -90,7 +92,6 @@ public:
 
 	bool isWalkingToSpawn() const { return walkingToSpawn; }
 	bool walkToSpawn();
-	using Creature::onWalk;
 	void onWalk() override;
 	void onWalkComplete() override;
 	bool getNextStep(Direction& direction, uint32_t& flags) override;

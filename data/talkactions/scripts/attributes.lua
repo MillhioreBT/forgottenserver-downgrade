@@ -1,3 +1,18 @@
+local function setAttribute(player, thing, attribute, value)
+	local attributeId = Game.getItemAttributeByName(attribute)
+	if attributeId == ITEM_ATTRIBUTE_NONE then return "Invalid attribute name." end
+
+	if not thing:setAttribute(attribute, value) then
+		return "Could not set attribute."
+	end
+
+	player:sendTextMessage(MESSAGE_STATUS_CONSOLE_BLUE,
+	                       string.format("Attribute %s set to: %s", attribute,
+	                                     thing:getAttribute(attributeId)))
+	position:sendMagicEffect(CONST_ME_MAGIC_GREEN)
+	return true
+end
+
 function onSay(player, words, param)
 	local position = player:getPosition()
 	position:getNextPosition(player:getDirection())
@@ -16,36 +31,39 @@ function onSay(player, words, param)
 		return false
 	end
 
-	local separatorPos = param:find(',')
-	if not separatorPos then
+	local attribute, value, extra = unpack(param:splitTrimmed(","))
+	if attribute == "" then
 		player:sendTextMessage(MESSAGE_STATUS_CONSOLE_BLUE,
 		                       string.format("Usage: %s attribute, value.", words))
 		return false
 	end
 
-	local attribute = string.trim(param:sub(0, separatorPos - 1))
-	local value = string.trim(param:sub(separatorPos + 1))
-
 	if thing:isItem() then
-		local attributeId = Game.getItemAttributeByName(attribute)
-		if attributeId == ITEM_ATTRIBUTE_NONE then
-			player:sendTextMessage(MESSAGE_STATUS_CONSOLE_BLUE, "Invalid attribute name.")
-			return false
-		end
+		local response = setAttribute(player, thing, attribute, value)
+		if response == true then return true end
 
-		if not thing:setAttribute(attribute, value) then
+		if attribute == "custom" then
+			if not extra then
+				player:sendCancelMessage("You need to specify a custom attribute.")
+				return false
+			end
+
+			if not thing:setCustomAttribute(value, extra) then
+				player:sendTextMessage(MESSAGE_STATUS_CONSOLE_BLUE,
+				                       "Could not set custom attribute.")
+				return false
+			end
+
 			player:sendTextMessage(MESSAGE_STATUS_CONSOLE_BLUE,
-			                       "Could not set attribute.")
-			return false
+			                       string.format("Custom attribute %s set to: %s", value,
+			                                     thing:getCustomAttribute(value)))
+			position:sendMagicEffect(CONST_ME_MAGIC_GREEN)
+		else
+			player:sendTextMessage(MESSAGE_STATUS_CONSOLE_BLUE, response)
 		end
-
-		player:sendTextMessage(MESSAGE_STATUS_CONSOLE_BLUE,
-		                       string.format("Attribute %s set to: %s", attribute,
-		                                     thing:getAttribute(attributeId)))
-		position:sendMagicEffect(CONST_ME_MAGIC_GREEN)
 	else
 		player:sendTextMessage(MESSAGE_STATUS_CONSOLE_BLUE,
 		                       "Thing in front of you is not supported.")
-		return false
 	end
+	return false
 end

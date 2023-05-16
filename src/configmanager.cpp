@@ -224,6 +224,7 @@ bool ConfigManager::load()
 	    getGlobalBoolean(L, "onlyInvitedCanMoveHouseItems", true);
 	booleans[ConfigKeysBoolean::REMOVE_ON_DESPAWN] = getGlobalBoolean(L, "removeOnDespawn", true);
 	booleans[ConfigKeysBoolean::MONSTER_OVERSPAWN] = getGlobalBoolean(L, "monsterOverspawn", false);
+	booleans[ConfigKeysBoolean::SHOW_HPMPCHANGE_PREFIX] = getGlobalBoolean(L, "showHpMpChangePrefix", true);
 
 	strings[ConfigKeysString::DEFAULT_PRIORITY] = getGlobalString(L, "defaultPriority", "high");
 	strings[ConfigKeysString::SERVER_NAME] = getGlobalString(L, "serverName", "");
@@ -271,6 +272,9 @@ bool ConfigManager::load()
 	integers[ConfigKeysInteger::DEPOT_PREMIUM_LIMIT] = getGlobalInteger(L, "depotPremiumLimit", 15000);
 	integers[ConfigKeysInteger::STAMINA_REGEN_MINUTE] = getGlobalInteger(L, "timeToRegenMinuteStamina", 3 * 60);
 	integers[ConfigKeysInteger::STAMINA_REGEN_PREMIUM] = getGlobalInteger(L, "timeToRegenMinutePremiumStamina", 6 * 60);
+	integers[ConfigKeysInteger::HEALTH_GAIN_COLOUR] = getGlobalInteger(L, "healthGainColour", TEXTCOLOR_MAYABLUE);
+	integers[ConfigKeysInteger::MANA_GAIN_COLOUR] = getGlobalInteger(L, "manaGainColour", TEXTCOLOR_BLUE);
+	integers[ConfigKeysInteger::MANA_LOSS_COLOUR] = getGlobalInteger(L, "manaLossColour", TEXTCOLOR_BLUE);
 
 	expStages = loadXMLStages();
 	if (expStages.empty()) {
