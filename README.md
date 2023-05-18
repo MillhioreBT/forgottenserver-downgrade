@@ -1,10 +1,10 @@
-# TFS Nekiro's Downgrade - 860
-## by 𝓜𝓲𝓵𝓵𝓱𝓲𝓸𝓻𝓮 𝓑𝓣
+# 🍒 TFS Nekiro Downgrade 🍒
+## 🌺 𝓜𝓲𝓵𝓵𝓱𝓲𝓸𝓻𝓮 𝓑𝓣 🌺
 
-This downgrade is not download and run distribution, monsters and spells are probably not 100% correct.
-You are welcome to submit a pull request though.
+- This downgrade is not download and run distribution, monsters and spells are probably not 100% correct.
+- You are welcome to submit a pull request though.
 
-But currently it's being updated with tfs-master code.
+## 🛠 It is currently under development. ⚙
 
 ## How to compile
 
