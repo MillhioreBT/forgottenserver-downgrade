@@ -22,7 +22,7 @@ bool Events::load()
 	info = {};
 
 	std::set<std::string> classes;
-	for (auto eventNode : doc.child("events").children()) {
+	for (auto& eventNode : doc.child("events").children()) {
 		if (!eventNode.attribute("enabled").as_bool()) {
 			continue;
 		}
@@ -108,6 +108,8 @@ bool Events::load()
 				info.playerOnUpdateStorage = event;
 			} else if (methodName == "onUpdateInventory") {
 				info.playerOnUpdateInventory = event;
+			} else if (methodName == "onAccountManager") {
+				info.playerOnAccountManager = event;
 			} else {
 				std::cout << "[Warning - Events::load] Unknown player method: " << methodName << std::endl;
 			}
@@ -1102,6 +1104,32 @@ void Events::eventPlayerOnUpdateInventory(Player* player, Item* item, const slot
 	LuaScriptInterface::pushBoolean(L, equip);
 
 	scriptInterface.callVoidFunction(4);
+}
+
+void Events::eventPlayerOnAccountManager(Player* player, std::string_view text)
+{
+	// Player:onAccountManager(text)
+	if (info.playerOnAccountManager == -1) {
+		return;
+	}
+
+	if (!scriptInterface.reserveScriptEnv()) {
+		std::cout << "[Error - Events::eventPlayerOnAccountManager] Call stack overflow" << std::endl;
+		return;
+	}
+
+	ScriptEnvironment* env = scriptInterface.getScriptEnv();
+	env->setScriptId(info.playerOnAccountManager, &scriptInterface);
+
+	lua_State* L = scriptInterface.getLuaState();
+	scriptInterface.pushFunction(info.playerOnAccountManager);
+
+	LuaScriptInterface::pushUserdata<Player>(L, player);
+	LuaScriptInterface::setMetatable(L, -1, "Player");
+
+	LuaScriptInterface::pushString(L, text);
+
+	scriptInterface.callVoidFunction(2);
 }
 
 void Events::eventMonsterOnDropLoot(Monster* monster, Container* corpse)

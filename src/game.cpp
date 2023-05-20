@@ -1777,6 +1777,17 @@ void Game::playerMove(uint32_t playerId, Direction direction)
 	player->startAutoWalk(direction);
 }
 
+// only for Account Manager
+void Game::playerCancelMove(uint32_t playerId)
+{
+	Player* player = getPlayerByID(playerId);
+	if (!player) {
+		return;
+	}
+
+	player->sendCancelWalk();
+}
+
 bool Game::playerBroadcastMessage(Player* player, std::string_view text) const
 {
 	if (!player->hasFlag(PlayerFlag_CanBroadcast)) {
@@ -3265,6 +3276,15 @@ void Game::playerSay(uint32_t playerId, uint16_t channelId, SpeakClasses type, s
 		return;
 	}
 
+	if (g_config[ConfigKeysBoolean::ACCOUNT_MANAGER] && player->isAccountManager()) {
+		if (player->isMuted() > 0) {
+			player->removeMessageBuffer();
+		}
+
+		g_events->eventPlayerOnAccountManager(player, text);
+		return;
+	}
+
 	player->resetIdleTime();
 
 	if (playerSaySpell(player, type, text)) {
@@ -3685,10 +3705,6 @@ bool Game::combatBlockHit(CombatDamage& damage, Creature* attacker, Creature* ta
 		return true;
 	}
 
-	if (damage.primary.value > 0) {
-		return false;
-	}
-
 	static const auto sendBlockEffect = [this](BlockType_t blockType, CombatType_t combatType,
 	                                           const Position& targetPos) {
 		if (blockType == BLOCK_DEFENSE) {
@@ -3728,22 +3744,26 @@ bool Game::combatBlockHit(CombatDamage& damage, Creature* attacker, Creature* ta
 
 	BlockType_t primaryBlockType, secondaryBlockType;
 	if (damage.primary.type != COMBAT_NONE) {
-		damage.primary.value = -damage.primary.value;
+		damage.primary.value = std::abs(damage.primary.value);
 		primaryBlockType = target->blockHit(attacker, damage.primary.type, damage.primary.value, checkDefense,
 		                                    checkArmor, field, ignoreResistances);
 
-		damage.primary.value = -damage.primary.value;
-		sendBlockEffect(primaryBlockType, damage.primary.type, target->getPosition());
+		if (damage.primary.type != COMBAT_HEALING) {
+			damage.primary.value = -damage.primary.value;
+			sendBlockEffect(primaryBlockType, damage.primary.type, target->getPosition());
+		}
 	} else {
 		primaryBlockType = BLOCK_NONE;
 	}
 
 	if (damage.secondary.type != COMBAT_NONE) {
-		damage.secondary.value = -damage.secondary.value;
+		damage.secondary.value = std::abs(damage.secondary.value);
 		secondaryBlockType = target->blockHit(attacker, damage.secondary.type, damage.secondary.value, false, false,
 		                                      field, ignoreResistances);
-		damage.secondary.value = -damage.secondary.value;
-		sendBlockEffect(secondaryBlockType, damage.secondary.type, target->getPosition());
+		if (damage.secondary.type != COMBAT_HEALING) {
+			damage.secondary.value = -damage.secondary.value;
+			sendBlockEffect(secondaryBlockType, damage.secondary.type, target->getPosition());
+		}
 	} else {
 		secondaryBlockType = BLOCK_NONE;
 	}
@@ -3849,16 +3869,6 @@ void Game::combatGetTypeInfo(CombatType_t combatType, Creature* target, TextColo
 	}
 }
 
-namespace {
-std::string getHealthChangeText(const int32_t& healthChange, const bool& showHpMpChangePrefix)
-{
-	if (showHpMpChangePrefix) {
-		return fmt::format("{}{}", healthChange > 0 ? "+" : "-", healthChange);
-	}
-}
-
-} // namespace
-
 bool Game::combatChangeHealth(Creature* attacker, Creature* target, CombatDamage& damage)
 {
 	const Position& targetPos = target->getPosition();
@@ -3943,7 +3953,7 @@ bool Game::combatChangeHealth(Creature* attacker, Creature* target, CombatDamage
 				tmpPlayer->sendTextMessage(message);
 			}
 		}
-	} else {
+	} else if (damage.primary.type != COMBAT_HEALING) {
 		if (!target->isAttackable()) {
 			if (!target->isInGhostMode()) {
 				addMagicEffect(targetPos, CONST_ME_POFF);
@@ -3999,7 +4009,7 @@ bool Game::combatChangeHealth(Creature* attacker, Creature* target, CombatDamage
 
 				std::string spectatorMessage;
 
-				addAnimatedText(fmt::format("{:+d}", manaDamage), targetPos,
+				addAnimatedText(fmt::format("{:+d}", -manaDamage), targetPos,
 				                static_cast<TextColor_t>(g_config[ConfigKeysInteger::MANA_GAIN_COLOUR]));
 
 				for (Creature* spectator : spectators) {
@@ -4097,7 +4107,7 @@ bool Game::combatChangeHealth(Creature* attacker, Creature* target, CombatDamage
 			}
 
 			if (message.primary.color != TEXTCOLOR_NONE) {
-				addAnimatedText(fmt::format("{:+d}", message.primary.value), targetPos, message.primary.color);
+				addAnimatedText(fmt::format("{:+d}", -message.primary.value), targetPos, message.primary.color);
 			}
 		}
 
@@ -4108,7 +4118,7 @@ bool Game::combatChangeHealth(Creature* attacker, Creature* target, CombatDamage
 			}
 
 			if (message.secondary.color != TEXTCOLOR_NONE) {
-				addAnimatedText(fmt::format("{:+d}", message.secondary.value), targetPos, message.secondary.color);
+				addAnimatedText(fmt::format("{:+d}", -message.secondary.value), targetPos, message.secondary.color);
 			}
 		}
 

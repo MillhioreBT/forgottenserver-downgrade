@@ -1049,8 +1049,10 @@ void Player::onCreatureAppear(Creature* creature, bool isLogin)
 			}
 		}
 
-		g_game.checkPlayersRecord();
-		IOLoginData::updateOnlineStatus(guid, true);
+		if (!isAccountManager()) {
+			g_game.checkPlayersRecord();
+			IOLoginData::updateOnlineStatus(guid, true);
+		}
 	}
 }
 
@@ -1143,7 +1145,9 @@ void Player::onRemoveCreature(Creature* creature, bool isLogout)
 			guild->removeMember(this);
 		}
 
-		IOLoginData::updateOnlineStatus(guid, false);
+		if (!isAccountManager()) {
+			IOLoginData::updateOnlineStatus(guid, false);
+		}
 
 		bool saved = false;
 		for (uint32_t tries = 0; tries < 3; ++tries) {
@@ -1813,7 +1817,7 @@ BlockType_t Player::blockHit(Creature* attacker, CombatType_t combatType, int32_
 	BlockType_t blockType =
 	    Creature::blockHit(attacker, combatType, damage, checkDefense, checkArmor, field, ignoreResistances);
 
-	if (attacker) {
+	if (attacker && combatType != COMBAT_HEALING) {
 		sendCreatureSquare(attacker, SQ_COLOR_BLACK);
 	}
 

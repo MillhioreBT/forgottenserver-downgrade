@@ -3,7 +3,7 @@ combat:setParameter(COMBAT_PARAM_TYPE, COMBAT_ENERGYDAMAGE)
 combat:setParameter(COMBAT_PARAM_EFFECT, CONST_ME_ENERGYAREA)
 combat:setParameter(COMBAT_PARAM_DISTANCEEFFECT, CONST_ANI_ENERGY)
 
-function onTargetCreature(creature, target)
+local function callback(creature, target)
 	local min = (creature:getLevel() / 80) + (creature:getMagicLevel() * 0.15) + 1
 	local max = (creature:getLevel() / 80) + (creature:getMagicLevel() * 0.25) + 1
 	local rounds = math.random(math.floor(min), math.floor(max))
@@ -12,6 +12,6 @@ function onTargetCreature(creature, target)
 	                            target:isPlayer() and 13 or 25, {10, 12}, rounds)
 end
 
-combat:setCallback(CALLBACK_PARAM_TARGETCREATURE, "onTargetCreature")
+combat:setCallback(CallBackParam.TARGETCREATURE, callback)
 
 function onCastSpell(creature, variant) return combat:execute(creature, variant) end

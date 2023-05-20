@@ -540,7 +540,14 @@ ReturnValue Tile::queryAdd(int32_t, const Thing& thing, uint32_t, uint32_t flags
 				}
 			}
 
-			if (player->getParent() == nullptr && hasFlag(TILESTATE_NOLOGOUT)) {
+			if (MagicField* field = getFieldItem()) {
+				if (field->getDamage() != 0 && hasBitSet(FLAG_PATHFINDING, flags) &&
+				    !hasBitSet(FLAG_IGNOREFIELDDAMAGE, flags)) {
+					return RETURNVALUE_NOTPOSSIBLE;
+				}
+			}
+
+			if (!player->getParent() && hasFlag(TILESTATE_NOLOGOUT)) {
 				// player is trying to login to a "no logout" tile
 				return RETURNVALUE_NOTPOSSIBLE;
 			}

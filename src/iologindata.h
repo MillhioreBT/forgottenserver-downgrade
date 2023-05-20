@@ -21,6 +21,9 @@ public:
 	                                                             std::string_view characterName);
 	static uint32_t getAccountIdByPlayerName(std::string_view playerName);
 	static uint32_t getAccountIdByPlayerId(uint32_t playerId);
+	static std::pair<uint32_t, uint32_t> getAccountIdByAccountName(std::string_view accountName,
+	                                                               std::string_view password,
+	                                                               std::string_view characterName);
 
 	static AccountType_t getAccountType(uint32_t accountId);
 	static void setAccountType(uint32_t accountId, AccountType_t accountType);

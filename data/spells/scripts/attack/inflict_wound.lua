@@ -13,7 +13,7 @@ local function getHighestSkillLevel(creature)
 	return skillLevel
 end
 
-function onTargetCreature(creature, target)
+local function callback(creature, target)
 	local skill = getHighestSkillLevel(creature)
 	local min = (creature:getLevel() / 80) + (skill * 0.2) + 2
 	local max = (creature:getLevel() / 80) + (skill * 0.4) + 2
@@ -24,6 +24,6 @@ function onTargetCreature(creature, target)
 	                            target:isPlayer() and damage / 4 or damage)
 end
 
-combat:setCallback(CALLBACK_PARAM_TARGETCREATURE, "onTargetCreature")
+combat:setCallback(CallBackParam.TARGETCREATURE, callback)
 
 function onCastSpell(creature, variant) return combat:execute(creature, variant) end

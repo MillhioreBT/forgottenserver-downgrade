@@ -58,6 +58,7 @@ ec.onLoseExperience = {[2] = 1}
 ec.onGainSkillTries = {[3] = 1}
 ec.onUpdateStorage = {}
 ec.onUpdateInventory = {}
+ec.onAccountManager = {}
 -- Monster
 ec.onDropLoot = {}
 ec.onSpawn = {}

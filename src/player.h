@@ -90,6 +90,12 @@ static constexpr int32_t PLAYER_MAX_SPEED = 1500;
 static constexpr int32_t PLAYER_MIN_SPEED = 10;
 static constexpr int32_t PLAYER_MAX_BLESSINGS = 5;
 
+static constexpr auto ACCOUNT_MANAGER_PLAYER_NAME = "Account Manager";
+static constexpr auto ACCOUNT_MANAGER_PLAYER_ID = 1;
+static constexpr auto ACCOUNT_MANAGER_ACCOUNT_ID = 1;
+static constexpr auto ACCOUNT_MANAGER_ACCOUNT_NAME = "1";
+static constexpr auto ACCOUNT_MANAGER_ACCOUNT_PASSWORD = "1";
+
 class Player final : public Creature, public Cylinder
 {
 public:
@@ -128,6 +134,7 @@ public:
 
 	void setGUID(uint32_t guid) { this->guid = guid; }
 	uint32_t getGUID() const { return guid; }
+	bool isAccountManager() const { return guid == ACCOUNT_MANAGER_PLAYER_ID; }
 	bool canSeeInvisibility() const override { return hasFlag(PlayerFlag_CanSenseInvisibility) || group->access; }
 
 	void removeList() override;

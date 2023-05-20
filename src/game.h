@@ -334,6 +334,7 @@ public:
 	void playerMoveItem(Player* player, const Position& fromPos, uint16_t spriteId, uint8_t fromStackPos,
 	                    const Position& toPos, uint8_t count, Item* item, Cylinder* toCylinder);
 	void playerMove(uint32_t playerId, Direction direction);
+	void playerCancelMove(uint32_t playerId);
 	void playerCreatePrivateChannel(uint32_t playerId);
 	void playerChannelInvite(uint32_t playerId, std::string_view name);
 	void playerChannelExclude(uint32_t playerId, std::string_view name);

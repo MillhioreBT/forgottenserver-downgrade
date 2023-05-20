@@ -80,6 +80,10 @@ bool IOLoginData::loginserverAuthentication(std::string_view name, std::string_v
 	account.accountType = static_cast<AccountType_t>(result->getNumber<int32_t>("type"));
 	account.premiumEndsAt = result->getNumber<time_t>("premium_ends_at");
 
+	if (g_config[ConfigKeysBoolean::ACCOUNT_MANAGER] && account.id != ACCOUNT_MANAGER_ACCOUNT_ID) {
+		account.characters.push_back(ACCOUNT_MANAGER_PLAYER_NAME);
+	}
+
 	result = db.storeQuery(fmt::format(
 	    "SELECT `name` FROM `players` WHERE `account_id` = {:d} AND `deletion` = 0 ORDER BY `name` ASC", account.id));
 	if (result) {
@@ -103,7 +107,6 @@ std::pair<uint32_t, uint32_t> IOLoginData::gameworldAuthentication(std::string_v
 	}
 
 	if (transformToSHA1(password) != result->getString("password")) {
-		// fmt::print("{} != {}\n", transformToSHA1(password), result->getString("password"));
 		return {};
 	}
 
@@ -134,6 +137,34 @@ uint32_t IOLoginData::getAccountIdByPlayerId(uint32_t playerId)
 		return 0;
 	}
 	return result->getNumber<uint32_t>("account_id");
+}
+
+std::pair<uint32_t, uint32_t> IOLoginData::getAccountIdByAccountName(std::string_view accountName,
+                                                                     std::string_view password,
+                                                                     std::string_view characterName)
+{
+	Database& db = Database::getInstance();
+
+	DBResult_ptr result = db.storeQuery(
+	    fmt::format("SELECT `id`, `password` FROM `accounts` WHERE `name` = {:s}", db.escapeString(accountName)));
+	if (!result) {
+		return {};
+	}
+
+	if (transformToSHA1(password) != result->getString("password")) {
+		return {};
+	}
+
+	uint32_t accountId = result->getNumber<uint32_t>("id");
+
+	result =
+	    db.storeQuery(fmt::format("SELECT `id` FROM `players` WHERE `name` = {:s}", db.escapeString(characterName)));
+	if (!result) {
+		return {};
+	}
+
+	uint32_t characterId = result->getNumber<uint32_t>("id");
+	return std::make_pair(accountId, characterId);
 }
 
 AccountType_t IOLoginData::getAccountType(uint32_t accountId)

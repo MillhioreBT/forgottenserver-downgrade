@@ -153,6 +153,7 @@ enum class LuaErrorCode
 	VARIANT_NOT_FOUND,
 	VARIANT_UNKNOWN,
 	SPELL_NOT_FOUND,
+	CALLBACK_NOT_FOUND,
 };
 
 class LuaScriptInterface
@@ -380,9 +381,7 @@ public:
 
 	static Thing* getThing(lua_State* L, int32_t arg);
 	static Creature* getCreature(lua_State* L, int32_t arg);
-	static void getCreatures(lua_State* L, int32_t arg, SpectatorVec& spectators);
 	static Player* getPlayer(lua_State* L, int32_t arg);
-	static void getPlayers(lua_State* L, int32_t arg, SpectatorVec& spectators);
 
 	template <typename T>
 	static typename std::enable_if<std::is_enum<T>::value || std::is_integral<T>::value, T>::type getField(
@@ -493,8 +492,8 @@ private:
 	void registerTable(std::string_view tableName);
 	void registerMetaMethod(std::string_view className, std::string_view methodName, lua_CFunction func);
 	void registerGlobalMethod(std::string_view functionName, lua_CFunction func);
-	void registerVariable(std::string_view tableName, std::string_view name, lua_Number value);
-	void registerGlobalVariable(std::string_view name, lua_Number value);
+	void registerVariable(std::string_view tableName, std::string_view name, lua_Integer value);
+	void registerGlobalVariable(std::string_view name, lua_Integer value);
 	void registerGlobalBoolean(std::string_view name, bool value);
 
 	static std::string getStackTrace(lua_State* L, std::string_view error_desc);
@@ -503,6 +502,9 @@ private:
 
 	// lua functions
 	static int luaDoPlayerAddItem(lua_State* L);
+
+	// transformToSHA1
+	static int luaTransformToSHA1(lua_State* L);
 
 	// get item info
 	static int luaGetDepotId(lua_State* L);
@@ -871,10 +873,13 @@ private:
 
 	static int luaCreatureGetZone(lua_State* L);
 
+	static int luaCreatureSendCreatureSquare(lua_State* L);
+
 	// Player
 	static int luaPlayerCreate(lua_State* L);
 
 	static int luaPlayerIsPlayer(lua_State* L);
+	static int luaPlayerIsAccountManager(lua_State* L);
 
 	static int luaPlayerGetGuid(lua_State* L);
 	static int luaPlayerGetIp(lua_State* L);
@@ -1029,8 +1034,6 @@ private:
 	static int luaPlayerGetFightMode(lua_State* L);
 
 	static int luaPlayerGetIdleTime(lua_State* L);
-
-	static int luaPlayerSendCreatureSquare(lua_State* L);
 
 	// OfflinePlayer
 	static int luaOfflinePlayerCreate(lua_State* L);

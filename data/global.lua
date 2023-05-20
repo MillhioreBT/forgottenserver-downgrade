@@ -111,6 +111,17 @@ string.trim = function(str)
 	return str:match '^()%s*$' and '' or str:match '^%s*(.*%S)'
 end
 
+do
+	local function tchelper(first, rest) return first:upper() .. rest:lower() end
+
+	-- Add extra characters to the pattern if you need to. _ and ' are
+	--  found in the middle of identifiers and English words.
+	-- We must also put %w_' into [%w_'] to make it handle normal stuff
+	-- and extra stuff the same.
+	-- This also turns hex numbers into, eg. 0Xa7d4
+	string.titleCase = function(str) return str:gsub("(%a)([%w_']*)", tchelper) end
+end
+
 if not nextUseStaminaTime then nextUseStaminaTime = {} end
 
 function getPlayerDatabaseInfo(name_or_guid)

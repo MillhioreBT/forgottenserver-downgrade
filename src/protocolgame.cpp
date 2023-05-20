@@ -137,7 +137,9 @@ void ProtocolGame::login(uint32_t characterId, uint32_t accountId, OperatingSyst
 {
 	// dispatcher thread
 	Player* foundPlayer = g_game.getPlayerByGUID(characterId);
-	if (!foundPlayer || g_config[ConfigKeysBoolean::ALLOW_CLONES]) {
+	const bool isAccountManager =
+	    g_config[ConfigKeysBoolean::ACCOUNT_MANAGER] && characterId == ACCOUNT_MANAGER_PLAYER_ID;
+	if (!foundPlayer || g_config[ConfigKeysBoolean::ALLOW_CLONES] || isAccountManager) {
 		player = new Player(getThis());
 		player->setGUID(characterId);
 
@@ -164,8 +166,8 @@ void ProtocolGame::login(uint32_t characterId, uint32_t accountId, OperatingSyst
 			return;
 		}
 
-		if (g_config[ConfigKeysBoolean::ONE_PLAYER_ON_ACCOUNT] && player->getAccountType() < ACCOUNT_TYPE_GAMEMASTER &&
-		    g_game.getPlayerByAccount(player->getAccount())) {
+		if (g_config[ConfigKeysBoolean::ONE_PLAYER_ON_ACCOUNT] && !isAccountManager &&
+		    player->getAccountType() < ACCOUNT_TYPE_GAMEMASTER && g_game.getPlayerByAccount(player->getAccount())) {
 			disconnectClient("You may only login with one character\nof your account at the same time.");
 			return;
 		}
@@ -208,6 +210,10 @@ void ProtocolGame::login(uint32_t characterId, uint32_t accountId, OperatingSyst
 		}
 
 		player->setOperatingSystem(operatingSystem);
+
+		if (isAccountManager) {
+			player->accountNumber = accountId;
+		}
 
 		if (!g_game.placeCreature(player, player->getLoginPosition())) {
 			if (!g_game.placeCreature(player, player->getTemplePosition(), false, true)) {
@@ -351,6 +357,12 @@ void ProtocolGame::onRecvFirstMessage(NetworkMessage& msg)
 	auto characterName = msg.getString();
 	auto password = msg.getString();
 
+	const auto& accountManager = g_config[ConfigKeysBoolean::ACCOUNT_MANAGER];
+	if (accountManager && accountName.empty() && password.empty()) {
+		accountName = ACCOUNT_MANAGER_ACCOUNT_NAME;
+		password = ACCOUNT_MANAGER_ACCOUNT_PASSWORD;
+	}
+
 	if (accountName.empty()) {
 		disconnectClient("You must enter your account name.");
 		return;
@@ -390,6 +402,13 @@ void ProtocolGame::onRecvFirstMessage(NetworkMessage& msg)
 	}
 
 	auto [accountId, characterId] = IOLoginData::gameworldAuthentication(accountName, password, characterName);
+	if (accountManager && characterName == ACCOUNT_MANAGER_PLAYER_NAME) {
+		if (accountId == 0) {
+			std::tie(accountId, characterId) =
+			    IOLoginData::getAccountIdByAccountName(accountName, password, characterName);
+		}
+	}
+
 	if (accountId == 0) {
 		disconnectClient("Account name or password is not correct.");
 		return;
@@ -467,6 +486,56 @@ void ProtocolGame::parsePacket(NetworkMessage& msg)
 		if (recvbyte != 0x14) {
 			return;
 		}
+	}
+
+	// Account Manager
+	if (player->isAccountManager()) {
+		switch (recvbyte) {
+			case 0x14:
+				g_dispatcher.addTask([thisPtr = getThis()]() { thisPtr->logout(true, false); });
+				break;
+			case 0x1E:
+				g_dispatcher.addTask([playerID = player->getID()]() { g_game.playerReceivePing(playerID); });
+				break;
+			case 0x32:
+				parseExtendedOpcode(msg);
+				break; // otclient extended opcode
+			case 0x64:
+			case 0x65:
+			case 0x66:
+			case 0x67:
+			case 0x68:
+			case 0x69:
+			case 0x6A:
+			case 0x6B:
+			case 0x6C:
+			case 0x6D:
+				g_dispatcher.addTask([playerID = player->getID()]() { g_game.playerCancelMove(playerID); });
+				break;
+			case 0x89:
+				parseTextWindow(msg);
+				break;
+			case 0x8A:
+				parseHouseWindow(msg);
+				break;
+			case 0x8C:
+				parseLookAt(msg);
+				break;
+			case 0x8E: /* join aggression */
+				break;
+			case 0x96:
+				parseSay(msg);
+				break;
+			case 0xC9: /* update tile */
+				break;
+			default:
+				break;
+		}
+
+		if (msg.isOverrun()) {
+			disconnect();
+		}
+		return;
 	}
 
 	switch (recvbyte) {

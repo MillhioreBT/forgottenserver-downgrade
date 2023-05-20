@@ -224,7 +224,7 @@ bool ConfigManager::load()
 	    getGlobalBoolean(L, "onlyInvitedCanMoveHouseItems", true);
 	booleans[ConfigKeysBoolean::REMOVE_ON_DESPAWN] = getGlobalBoolean(L, "removeOnDespawn", true);
 	booleans[ConfigKeysBoolean::MONSTER_OVERSPAWN] = getGlobalBoolean(L, "monsterOverspawn", false);
-	booleans[ConfigKeysBoolean::SHOW_HPMPCHANGE_PREFIX] = getGlobalBoolean(L, "showHpMpChangePrefix", true);
+	booleans[ConfigKeysBoolean::ACCOUNT_MANAGER] = getGlobalBoolean(L, "accountManager", true);
 
 	strings[ConfigKeysString::DEFAULT_PRIORITY] = getGlobalString(L, "defaultPriority", "high");
 	strings[ConfigKeysString::SERVER_NAME] = getGlobalString(L, "serverName", "");
