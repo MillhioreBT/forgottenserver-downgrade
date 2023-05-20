@@ -475,25 +475,25 @@ int32_t Combat::getParam(CombatParam_t param)
 	}
 }
 
-bool Combat::setCallback(CallBackParam_t key)
+bool Combat::setCallback(CallBackParam key)
 {
 	switch (key) {
-		case CALLBACK_PARAM_LEVELMAGICVALUE: {
+		case CallBackParam::LEVELMAGICVALUE: {
 			params.valueCallback.reset(new ValueCallback(COMBAT_FORMULA_LEVELMAGIC));
 			return true;
 		}
 
-		case CALLBACK_PARAM_SKILLVALUE: {
+		case CallBackParam::SKILLVALUE: {
 			params.valueCallback.reset(new ValueCallback(COMBAT_FORMULA_SKILL));
 			return true;
 		}
 
-		case CALLBACK_PARAM_TARGETTILE: {
+		case CallBackParam::TARGETTILE: {
 			params.tileCallback.reset(new TileCallback());
 			return true;
 		}
 
-		case CALLBACK_PARAM_TARGETCREATURE: {
+		case CallBackParam::TARGETCREATURE: {
 			params.targetCallback.reset(new TargetCallback());
 			return true;
 		}
@@ -501,23 +501,36 @@ bool Combat::setCallback(CallBackParam_t key)
 	return false;
 }
 
-CallBack* Combat::getCallback(CallBackParam_t key)
+CallBack* Combat::getCallback(CallBackParam key)
 {
 	switch (key) {
-		case CALLBACK_PARAM_LEVELMAGICVALUE:
-		case CALLBACK_PARAM_SKILLVALUE: {
+		case CallBackParam::LEVELMAGICVALUE:
+		case CallBackParam::SKILLVALUE: {
 			return params.valueCallback.get();
 		}
 
-		case CALLBACK_PARAM_TARGETTILE: {
+		case CallBackParam::TARGETTILE: {
 			return params.tileCallback.get();
 		}
 
-		case CALLBACK_PARAM_TARGETCREATURE: {
+		case CallBackParam::TARGETCREATURE: {
 			return params.targetCallback.get();
 		}
 	}
 	return nullptr;
+}
+
+bool Combat::loadCallBack(CallBackParam key, LuaScriptInterface* scriptInterface)
+{
+	if (!setCallback(key)) {
+		return false;
+	}
+
+	if (auto callback = getCallback(key)) {
+		return callback->loadCallBack(scriptInterface);
+	}
+
+	return false;
 }
 
 void Combat::combatTileEffects(const SpectatorVec& spectators, Creature* caster, Tile* tile, const CombatParams& params)
@@ -841,7 +854,7 @@ void Combat::doTargetCombat(Creature* caster, Creature* target, CombatDamage& da
 			}
 		}
 
-		if (damage.critical) {
+		if (damage.critical && target) {
 			g_game.addMagicEffect(target->getPosition(), CONST_ME_BLOODYSTEPS);
 		}
 

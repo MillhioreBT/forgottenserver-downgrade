@@ -13,13 +13,13 @@ function spellCallback(cid, position, count)
 	end
 end
 
-function onTargetTile(creature, position)
+local function callback(creature, position)
 	spellCallback(creature:getId(), position, 0)
 end
 
 local combat = Combat()
 combat:setArea(createCombatArea(AREA_CIRCLE5X5))
-combat:setCallback(CALLBACK_PARAM_TARGETTILE, "onTargetTile")
+combat:setCallback(CallBackParam.TARGETTILE, callback)
 
 function onCastSpell(creature, variant, isHotkey)
 	return combat:execute(creature, variant)

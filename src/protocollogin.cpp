@@ -49,13 +49,15 @@ void ProtocolLogin::getCharacterList(std::string_view accountName, std::string_v
 	output->addByte(0x64);
 
 	uint8_t size = std::min<size_t>(std::numeric_limits<uint8_t>::max(), account.characters.size());
-	output->addByte(size);
 	auto IP = getIP(g_config[ConfigKeysString::IP]);
+	auto serverName = g_config[ConfigKeysString::SERVER_NAME];
+	const auto& gamePort = g_config[ConfigKeysInteger::GAME_PORT];
+	output->addByte(size);
 	for (uint8_t i = 0; i < size; i++) {
 		output->addString(account.characters[i]);
-		output->addString(g_config[ConfigKeysString::SERVER_NAME]);
+		output->addString(serverName);
 		output->add<uint32_t>(IP);
-		output->add<uint16_t>(g_config[ConfigKeysInteger::GAME_PORT]);
+		output->add<uint16_t>(gamePort);
 	}
 
 	// Add premium days
@@ -137,14 +139,26 @@ void ProtocolLogin::onRecvFirstMessage(NetworkMessage& msg)
 		return;
 	}
 
+	const auto& accountManager = g_config[ConfigKeysBoolean::ACCOUNT_MANAGER];
 	auto accountName = msg.getString();
-	if (accountName.empty()) {
+	auto password = msg.getString();
+
+	const bool accountNameEmpty = accountName.empty();
+	const bool passwordEmpty = password.empty();
+
+	if (accountManager && accountNameEmpty && passwordEmpty) {
+		g_dispatcher.addTask([=, thisPtr = std::static_pointer_cast<ProtocolLogin>(shared_from_this())]() {
+			thisPtr->getCharacterList(ACCOUNT_MANAGER_ACCOUNT_NAME, ACCOUNT_MANAGER_ACCOUNT_PASSWORD);
+		});
+		return;
+	}
+
+	if (accountNameEmpty) {
 		disconnectClient("Invalid account name.");
 		return;
 	}
 
-	auto password = msg.getString();
-	if (password.empty()) {
+	if (passwordEmpty) {
 		disconnectClient("Invalid password.");
 		return;
 	}

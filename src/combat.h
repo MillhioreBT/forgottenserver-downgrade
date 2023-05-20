@@ -110,8 +110,9 @@ public:
 	static void doAreaCombat(Creature* caster, const Position& position, const AreaCombat* area, CombatDamage& damage,
 	                         const CombatParams& params);
 
-	bool setCallback(CallBackParam_t key);
-	CallBack* getCallback(CallBackParam_t key);
+	bool setCallback(CallBackParam key);
+	CallBack* getCallback(CallBackParam key);
+	bool loadCallBack(CallBackParam key, LuaScriptInterface* scriptInterface);
 
 	bool setParam(CombatParam_t param, uint32_t value);
 	int32_t getParam(CombatParam_t param);

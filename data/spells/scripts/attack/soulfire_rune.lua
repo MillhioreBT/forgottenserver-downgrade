@@ -3,7 +3,7 @@ combat:setParameter(COMBAT_PARAM_TYPE, COMBAT_FIREDAMAGE)
 combat:setParameter(COMBAT_PARAM_EFFECT, CONST_ME_HITBYFIRE)
 combat:setParameter(COMBAT_PARAM_DISTANCEEFFECT, CONST_ANI_FIRE)
 
-function onTargetCreature(creature, target)
+local function callback(creature, target)
 	local min = (creature:getLevel() / 80) + (creature:getMagicLevel() * 0.3) + 2
 	local max = (creature:getLevel() / 80) + (creature:getMagicLevel() * 0.6) + 4
 	local rounds = math.random(math.floor(min), math.floor(max))
@@ -11,7 +11,7 @@ function onTargetCreature(creature, target)
 	                            target:isPlayer() and 5 or 10, {8, 10}, rounds)
 end
 
-combat:setCallback(CALLBACK_PARAM_TARGETCREATURE, "onTargetCreature")
+combat:setCallback(CallBackParam.TARGETCREATURE, callback)
 
 function onCastSpell(creature, variant, isHotkey)
 	return combat:execute(creature, variant)

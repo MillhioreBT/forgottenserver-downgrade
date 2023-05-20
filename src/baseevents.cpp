@@ -174,3 +174,23 @@ bool CallBack::loadCallBack(LuaScriptInterface* interface, std::string_view name
 	loaded = true;
 	return true;
 }
+
+bool CallBack::loadCallBack(LuaScriptInterface* interface)
+{
+	if (!interface) {
+		std::cout << "Failure: [CallBack::loadCallBack] scriptInterface == nullptr" << std::endl;
+		return false;
+	}
+
+	scriptInterface = interface;
+
+	int32_t id = scriptInterface->getEvent();
+	if (id == -1) {
+		std::cout << "[Warning - CallBack::loadCallBack] Event not found. " << std::endl;
+		return false;
+	}
+
+	scriptId = id;
+	loaded = true;
+	return true;
+}

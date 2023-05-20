@@ -835,7 +835,7 @@ BlockType_t Creature::blockHit(Creature* attacker, CombatType_t combatType, int3
 	if (isImmune(combatType)) {
 		damage = 0;
 		blockType = BLOCK_IMMUNITY;
-	} else if (checkDefense || checkArmor) {
+	} else if (combatType != COMBAT_HEALING && (checkDefense || checkArmor)) {
 		bool hasDefense = false;
 
 		if (blockCount > 0) {
@@ -872,12 +872,14 @@ BlockType_t Creature::blockHit(Creature* attacker, CombatType_t combatType, int3
 		}
 	}
 
-	if (attacker) {
+	if (combatType != COMBAT_HEALING) {
 		attacker->onAttackedCreature(this);
 		attacker->onAttackedCreatureBlockHit(blockType);
 	}
 
-	onAttacked();
+	if (combatType != COMBAT_HEALING) {
+		onAttacked();
+	}
 	return blockType;
 }
 
@@ -1023,16 +1025,9 @@ void Creature::addDamagePoints(Creature* attacker, int32_t damagePoints)
 
 	uint32_t attackerId = attacker->id;
 
-	auto it = damageMap.find(attackerId);
-	if (it == damageMap.end()) {
-		CountBlock_t cb;
-		cb.ticks = OTSYS_TIME();
-		cb.total = damagePoints;
-		damageMap[attackerId] = cb;
-	} else {
-		it->second.total += damagePoints;
-		it->second.ticks = OTSYS_TIME();
-	}
+	auto& cb = damageMap[attackerId];
+	cb.ticks = OTSYS_TIME();
+	cb.total += damagePoints;
 
 	lastHitCreatureId = attackerId;
 }

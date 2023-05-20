@@ -57,6 +57,7 @@ class Events
 		int32_t playerOnNetworkMessage = -1;
 		int32_t playerOnUpdateStorage = -1;
 		int32_t playerOnUpdateInventory = -1;
+		int32_t playerOnAccountManager = -1;
 
 		// Monster
 		int32_t monsterOnDropLoot = -1;
@@ -109,6 +110,7 @@ public:
 	void eventPlayerOnUpdateStorage(Player* player, const uint32_t key, const int32_t value, const int32_t oldValue,
 	                                bool isLogin);
 	void eventPlayerOnUpdateInventory(Player* player, Item* item, const slots_t slot, const bool equip);
+	void eventPlayerOnAccountManager(Player* player, std::string_view text);
 
 	// Monster
 	void eventMonsterOnDropLoot(Monster* monster, Container* corpse);

@@ -125,9 +125,9 @@ end
 function Player:onNetworkMessage(recvByte, msg)
 	local handler = PacketHandlers[recvByte]
 	if not handler then
-		io.write(string.format(
-			         "Player: %s sent an unknown packet header: 0x%02X with %d bytes!\n",
-			         self:getName(), recvByte, msg:len()))
+		print(string.format(
+			      "Player: %s sent an unknown packet header: 0x%02X with %d bytes!\n",
+			      self:getName(), recvByte, msg:len()))
 		return
 	end
 
@@ -144,4 +144,8 @@ function Player:onUpdateInventory(item, slot, equip)
 	if hasEvent.onUpdateInventory then
 		Event.onUpdateInventory(self, item, slot, equip)
 	end
+end
+
+function Player:onAccountManager(text)
+	if hasEvent.onAccountManager then Event.onAccountManager(self, text) end
 end

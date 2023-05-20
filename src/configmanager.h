@@ -45,7 +45,7 @@ enum class ConfigKeysBoolean
 	ONLY_INVITED_CAN_MOVE_HOUSE_ITEMS,
 	REMOVE_ON_DESPAWN,
 	MONSTER_OVERSPAWN,
-	SHOW_HPMPCHANGE_PREFIX,
+	ACCOUNT_MANAGER,
 
 	LAST /* this must be the last one */
 };
