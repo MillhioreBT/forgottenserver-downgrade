@@ -458,7 +458,7 @@ end
 ---@param days integer
 ---@param reason string
 ---@return boolean
-function banIp(player, days, reason)
+local function banIp(player, days, reason)
 	local ip = player:getIp()
 	local resultId = db.storeQuery("SELECT 1 FROM `ip_bans` WHERE `ip` = " .. ip)
 	if resultId then

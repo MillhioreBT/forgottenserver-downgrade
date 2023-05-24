@@ -18,3 +18,7 @@ end
 function Creature:onHear(speaker, words, type)
 	if hasEvent.onHear then Event.onHear(self, speaker, words, type) end
 end
+
+function Creature:onChangeZone(fromZone, toZone)
+	if hasEvent.onChangeZone then Event.onChangeZone(self, fromZone, toZone) end
+end
