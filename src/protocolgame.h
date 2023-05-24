@@ -70,7 +70,7 @@ private:
 
 	void release() override;
 
-	void checkCreatureAsKnown(uint32_t id, bool& known, uint32_t& removedKnown);
+	std::pair<bool, uint32_t> isKnownCreature(uint32_t id);
 
 	bool canSee(int32_t x, int32_t y, int32_t z) const;
 	bool canSee(const Creature*) const;
@@ -198,7 +198,6 @@ private:
 	void sendUpdateTileItem(const Position& pos, uint32_t stackpos, const Item* item);
 	void sendRemoveTileThing(const Position& pos, uint32_t stackpos);
 	void sendUpdateTileCreature(const Position& pos, uint32_t stackpos, const Creature* creature);
-	void sendRemoveTileCreature(const Creature* creature, const Position& pos, uint32_t stackpos);
 	void sendUpdateTile(const Tile* tile, const Position& pos);
 
 	void sendAddCreature(const Creature* creature, const Position& pos, int32_t stackpos, bool isLogin);
@@ -237,8 +236,6 @@ private:
 
 	// tiles
 	static void RemoveTileThing(NetworkMessage& msg, const Position& pos, uint32_t stackpos);
-	static void RemoveTileCreature(NetworkMessage& msg, const Creature* creature, const Position& pos,
-	                               uint32_t stackpos);
 
 	void MoveUpCreature(NetworkMessage& msg, const Creature* creature, const Position& newPos, const Position& oldPos);
 	void MoveDownCreature(NetworkMessage& msg, const Creature* creature, const Position& newPos,

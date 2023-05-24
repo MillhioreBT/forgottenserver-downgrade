@@ -20,6 +20,8 @@ class BedItem;
 using CreatureVector = std::vector<Creature*>;
 using ItemVector = std::vector<Item*>;
 
+static constexpr int32_t MAX_STACKPOS_THINGS = 10;
+
 enum tileflags_t : uint32_t
 {
 	TILESTATE_NONE = 0,

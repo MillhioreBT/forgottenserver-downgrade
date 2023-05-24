@@ -1,7 +1,12 @@
 -- #region Configuration
 local ACCOUNT_MANAGER_ACCOUNT_ID = 1
 local ACCOUNT_MANAGER_STORAGE = {}
-local ACCOUNT_MANAGER_LOGOUT_DELAY = 60 -- 60 seconds
+local ACCOUNT_MANAGER_LOGOUT_DELAY = 1 * 60 -- 1 minute
+
+local ACCOUNT_MANAGER_LOGINS = {}
+local ACCOUNT_MANAGER_LOGIN_TRIES = 5
+local ACCOUNT_MANAGER_LOGIN_TIMEOUT = 30 -- 30 seconds
+local ACCOUNT_MANAGER_BAN_TIME = 1 * 60 -- 10 minutes
 
 local CREATE_ACCOUNT_TABLE = {}
 local CREATE_ACCOUNT_EXHAUST = 30 * 60 -- 30 minutes
@@ -449,13 +454,50 @@ local function logoutEvent(player, playerId)
 	if player then player:remove() end
 end
 
+---@param player Player
+---@param days integer
+---@param reason string
+---@return boolean
+function banIp(player, days, reason)
+	local ip = player:getIp()
+	local resultId = db.storeQuery("SELECT 1 FROM `ip_bans` WHERE `ip` = " .. ip)
+	if resultId then
+		result.free(resultId)
+		return false
+	end
+
+	local timeNow = os.time()
+	db.query(string.format(
+		         "INSERT INTO `ip_bans` (`ip`, `reason`, `banned_at`, `expires_at`, `banned_by`) VALUES (%d, %s, %d, %d, %d)",
+		         ip, db.escapeString(reason), timeNow, timeNow + (days * 86400),
+		         player:getGuid()))
+	return true
+end
+
 local login = CreatureEvent("Account Manager Login")
 
 function login.onLogin(player)
 	if player:isAccountManager() then
+		local playerIp = player:getIp()
+		-- Protect
+		local tries = ACCOUNT_MANAGER_LOGINS[playerIp]
+		if tries and tries >= ACCOUNT_MANAGER_LOGIN_TRIES then
+			banIp(player, ACCOUNT_MANAGER_BAN_TIME, "Too many login attempts.")
+			return false
+		end
+
+		ACCOUNT_MANAGER_LOGINS[playerIp] = tries and tries + 1 or 1
+		-- Decrease Tries
+		addEvent(function(playerIp)
+			ACCOUNT_MANAGER_LOGINS[playerIp] = ACCOUNT_MANAGER_LOGINS[playerIp] - 1
+			if ACCOUNT_MANAGER_LOGINS[playerIp] <= 0 then
+				ACCOUNT_MANAGER_LOGINS[playerIp] = nil
+			end
+		end, ACCOUNT_MANAGER_LOGIN_TIMEOUT * 1000, playerIp)
+
 		-- Logout Event
 		addEvent(logoutEvent, ACCOUNT_MANAGER_LOGOUT_DELAY * 1000, player,
-		         player:getId())
+		         player:getIp())
 
 		-- Initial Message
 		local send = sender(player)

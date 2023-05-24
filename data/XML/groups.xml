@@ -142,6 +142,7 @@
 			<flag isalwayspremium="1" />
 			<flag ignoreyellcheck="1" />
 			<flag ignoresendprivatecheck="1" />
+			<flag canthrowfar="1" />
 		</flags>
 	</group>
 </groups>

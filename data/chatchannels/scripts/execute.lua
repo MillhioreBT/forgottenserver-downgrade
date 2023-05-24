@@ -1,4 +1,4 @@
-local CHAT_ID<const> = 9
+local CHAT_ID<const> = 7
 
 function canJoin(player) return player:getAccountType() >= ACCOUNT_TYPE_GOD end
 

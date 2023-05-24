@@ -546,7 +546,7 @@ bool Game::removeCreature(Creature* creature, bool isLogout /* = true*/)
 	for (Creature* spectator : spectators) {
 		if (Player* player = spectator->getPlayer()) {
 			if (player->canSeeCreature(creature)) {
-				player->sendRemoveTileCreature(creature, tilePosition, oldStackPosVector[i++]);
+				player->sendRemoveTileThing(tilePosition, oldStackPosVector[i++]);
 			}
 		}
 	}
@@ -672,9 +672,11 @@ void Game::playerMoveCreature(Player* player, Creature* movingCreature, const Po
 		return;
 	}
 
+	const bool canThrowFar = player->hasFlag(PlayerFlag_CanThrowFar);
+
 	player->setNextActionTask(nullptr);
 
-	if (!Position::areInRange<1, 1, 0>(movingCreatureOrigPos, player->getPosition())) {
+	if (!canThrowFar && !Position::areInRange<1, 1, 0>(movingCreatureOrigPos, player->getPosition())) {
 		// need to walk to the creature first before moving it
 		std::vector<Direction> listDir;
 		if (player->getPathTo(movingCreatureOrigPos, listDir, 0, 1, true, true)) {
@@ -693,31 +695,35 @@ void Game::playerMoveCreature(Player* player, Creature* movingCreature, const Po
 		return;
 	}
 
-	if ((!movingCreature->isPushable() && !player->hasFlag(PlayerFlag_CanPushAllCreatures)) ||
-	    (movingCreature->isInGhostMode() && !player->canSeeGhostMode(movingCreature))) {
-		player->sendCancelMessage(RETURNVALUE_NOTMOVEABLE);
-		return;
+	if (!canThrowFar) {
+		if ((!movingCreature->isPushable() && !player->hasFlag(PlayerFlag_CanPushAllCreatures)) ||
+		    (movingCreature->isInGhostMode() && !player->canSeeGhostMode(movingCreature))) {
+			player->sendCancelMessage(RETURNVALUE_NOTMOVEABLE);
+			return;
+		}
 	}
 
 	// check throw distance
 	const Position& movingCreaturePos = movingCreature->getPosition();
 	const Position& toPos = toTile->getPosition();
-	if ((Position::getDistanceX(movingCreaturePos, toPos) > movingCreature->getThrowRange()) ||
-	    (Position::getDistanceY(movingCreaturePos, toPos) > movingCreature->getThrowRange()) ||
-	    (Position::getDistanceZ(movingCreaturePos, toPos) * 4 > movingCreature->getThrowRange())) {
-		player->sendCancelMessage(RETURNVALUE_DESTINATIONOUTOFREACH);
-		return;
+	if (!canThrowFar) {
+		if ((Position::getDistanceX(movingCreaturePos, toPos) > movingCreature->getThrowRange()) ||
+		    (Position::getDistanceY(movingCreaturePos, toPos) > movingCreature->getThrowRange()) ||
+		    (Position::getDistanceZ(movingCreaturePos, toPos) * 4 > movingCreature->getThrowRange())) {
+			player->sendCancelMessage(RETURNVALUE_DESTINATIONOUTOFREACH);
+			return;
+		}
 	}
 
 	if (player != movingCreature) {
-		if (toTile->hasFlag(TILESTATE_BLOCKPATH)) {
+		if (!canThrowFar && toTile->hasFlag(TILESTATE_BLOCKPATH)) {
 			player->sendCancelMessage(RETURNVALUE_NOTENOUGHROOM);
 			return;
 		} else if ((movingCreature->getZone() == ZONE_PROTECTION && !toTile->hasFlag(TILESTATE_PROTECTIONZONE)) ||
 		           (movingCreature->getZone() == ZONE_NOPVP && !toTile->hasFlag(TILESTATE_NOPVPZONE))) {
 			player->sendCancelMessage(RETURNVALUE_NOTPOSSIBLE);
 			return;
-		} else {
+		} else if (!canThrowFar) {
 			if (CreatureVector* tileCreatures = toTile->getCreatures()) {
 				for (Creature* tileCreature : *tileCreatures) {
 					if (!tileCreature->isInGhostMode()) {
@@ -739,7 +745,7 @@ void Game::playerMoveCreature(Player* player, Creature* movingCreature, const Po
 		return;
 	}
 
-	ReturnValue ret = internalMoveCreature(*movingCreature, *toTile);
+	ReturnValue ret = internalMoveCreature(*movingCreature, *toTile, canThrowFar ? FLAG_NOLIMIT : 0);
 	if (ret != RETURNVALUE_NOERROR) {
 		player->sendCancelMessage(ret);
 	}
@@ -913,15 +919,17 @@ void Game::playerMoveItem(Player* player, const Position& fromPos, uint16_t spri
 		return;
 	}
 
+	const bool canThrowFar = player->hasFlag(PlayerFlag_CanThrowFar);
+
 	const Position& playerPos = player->getPosition();
 	const Position& mapFromPos = fromCylinder->getTile()->getPosition();
-	if (playerPos.z != mapFromPos.z) {
+	if (!canThrowFar && playerPos.z != mapFromPos.z) {
 		player->sendCancelMessage(playerPos.z > mapFromPos.z ? RETURNVALUE_FIRSTGOUPSTAIRS
 		                                                     : RETURNVALUE_FIRSTGODOWNSTAIRS);
 		return;
 	}
 
-	if (!Position::areInRange<1, 1>(playerPos, mapFromPos)) {
+	if (!canThrowFar && !Position::areInRange<1, 1>(playerPos, mapFromPos)) {
 		// need to walk to the item first before using it
 		std::vector<Direction> listDir;
 		if (player->getPathTo(item->getPosition(), listDir, 0, 1, true, true)) {
@@ -1004,21 +1012,23 @@ void Game::playerMoveItem(Player* player, const Position& fromPos, uint16_t spri
 		}
 	}
 
-	if (!item->isPickupable() && playerPos.z != mapToPos.z) {
+	if (!canThrowFar && !item->isPickupable() && playerPos.z != mapToPos.z) {
 		player->sendCancelMessage(RETURNVALUE_DESTINATIONOUTOFREACH);
 		return;
 	}
 
-	int32_t throwRange = item->getThrowRange();
-	if ((Position::getDistanceX(playerPos, mapToPos) > throwRange) ||
-	    (Position::getDistanceY(playerPos, mapToPos) > throwRange)) {
-		player->sendCancelMessage(RETURNVALUE_DESTINATIONOUTOFREACH);
-		return;
-	}
+	if (!canThrowFar) {
+		int32_t throwRange = item->getThrowRange();
+		if ((Position::getDistanceX(playerPos, mapToPos) > throwRange) ||
+		    (Position::getDistanceY(playerPos, mapToPos) > throwRange)) {
+			player->sendCancelMessage(RETURNVALUE_DESTINATIONOUTOFREACH);
+			return;
+		}
 
-	if (!canThrowObjectTo(mapFromPos, mapToPos, true, false, throwRange, throwRange)) {
-		player->sendCancelMessage(RETURNVALUE_CANNOTTHROW);
-		return;
+		if (!canThrowObjectTo(mapFromPos, mapToPos, true, false, throwRange, throwRange)) {
+			player->sendCancelMessage(RETURNVALUE_CANNOTTHROW);
+			return;
+		}
 	}
 
 	uint8_t toIndex = 0;
@@ -1030,8 +1040,8 @@ void Game::playerMoveItem(Player* player, const Position& fromPos, uint16_t spri
 		}
 	}
 
-	ReturnValue ret =
-	    internalMoveItem(fromCylinder, toCylinder, toIndex, item, count, nullptr, 0, player, nullptr, &fromPos, &toPos);
+	ReturnValue ret = internalMoveItem(fromCylinder, toCylinder, toIndex, item, count, nullptr,
+	                                   canThrowFar ? FLAG_NOLIMIT : 0, player, nullptr, &fromPos, &toPos);
 	if (ret != RETURNVALUE_NOERROR) {
 		player->sendCancelMessage(ret);
 	}
@@ -1105,7 +1115,7 @@ ReturnValue Game::internalMoveItem(Cylinder* fromCylinder, Cylinder* toCylinder,
 					fromCylinder->postAddNotification(toItem, toCylinder, newToItemIndex);
 				}
 
-				ret = toCylinder->queryAdd(index, *item, count, flags);
+				ret = toCylinder->queryAdd(index, *item, count, flags, actor);
 
 				if (actorPlayer && fromPos && toPos && !toItem->isRemoved()) {
 					g_events->eventPlayerOnItemMoved(actorPlayer, toItem, static_cast<uint16_t>(count), *toPos,

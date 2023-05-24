@@ -2,7 +2,7 @@ local function hasPendingReport(name, targetName, reportType)
 	local f = io.open(string.format("data/reports/players/%s-%s-%d.txt", name,
 	                                targetName, reportType), "r")
 	if f then
-		io.close(f)
+		f:close()
 		return true
 	else
 		return false
@@ -27,18 +27,17 @@ event.onReportRuleViolation = function(self, targetName, reportType,
 		return
 	end
 
-	io.output(file)
-	io.write("------------------------------\n")
-	io.write("Reported by: " .. name .. "\n")
-	io.write("Target: " .. targetName .. "\n")
-	io.write("Type: " .. reportType .. "\n")
-	io.write("Reason: " .. reportReason .. "\n")
-	io.write("Comment: " .. comment .. "\n")
+	file:write("------------------------------\n")
+	file:write("Reported by: " .. name .. "\n")
+	file:write("Target: " .. targetName .. "\n")
+	file:write("Type: " .. reportType .. "\n")
+	file:write("Reason: " .. reportReason .. "\n")
+	file:write("Comment: " .. comment .. "\n")
 	if reportType ~= REPORT_TYPE_BOT then
-		io.write("Translation: " .. translation .. "\n")
+		file:write("Translation: " .. translation .. "\n")
 	end
-	io.write("------------------------------\n")
-	io.close(file)
+	file:write("------------------------------\n")
+	file:close()
 	self:sendTextMessage(MESSAGE_EVENT_ADVANCE, string.format(
 		                     "Thank you for reporting %s. Your report will be processed by %s team as soon as possible.",
 		                     targetName,

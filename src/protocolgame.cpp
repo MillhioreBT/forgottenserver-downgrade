@@ -764,38 +764,48 @@ void ProtocolGame::GetTileDescription(const Tile* tile, NetworkMessage& msg)
 		count = 0;
 	}
 
+	const bool isStacked = player->getPosition() == tile->getPosition();
+
 	const TileItemVector* items = tile->getItemList();
 	if (items) {
 		for (auto it = items->getBeginTopItem(), end = items->getEndTopItem(); it != end; ++it) {
 			msg.addItem(*it);
 
-			if (++count == 10) {
+			if (++count == 9 && isStacked) {
 				break;
+			} else if (count == MAX_STACKPOS_THINGS) {
+				return;
 			}
 		}
 	}
 
 	const CreatureVector* creatures = tile->getCreatures();
 	if (creatures) {
+		bool playerAdded = false;
 		for (auto it = creatures->rbegin(), end = creatures->rend(); it != end; ++it) {
 			const Creature* creature = (*it);
 			if (!player->canSeeCreature(creature)) {
 				continue;
 			}
 
-			bool known;
-			uint32_t removedKnown;
-			checkCreatureAsKnown(creature->getID(), known, removedKnown);
+			if (count == 9 && isStacked && !playerAdded) {
+				playerAdded = true;
+				creature = player;
+			}
+
+			auto [known, removedKnown] = isKnownCreature(creature->getID());
 			AddCreature(msg, creature, known, removedKnown);
-			++count;
+			if (++count == MAX_STACKPOS_THINGS) {
+				return;
+			}
 		}
 	}
 
-	if (items && count < 10) {
+	if (items) {
 		for (auto it = items->getBeginDownItem(), end = items->getEndDownItem(); it != end; ++it) {
 			msg.addItem(*it);
 
-			if (++count == 10) {
+			if (++count == MAX_STACKPOS_THINGS) {
 				return;
 			}
 		}
@@ -854,38 +864,33 @@ void ProtocolGame::GetFloorDescription(NetworkMessage& msg, int32_t x, int32_t y
 	}
 }
 
-void ProtocolGame::checkCreatureAsKnown(uint32_t id, bool& known, uint32_t& removedKnown)
+std::pair<bool, uint32_t> ProtocolGame::isKnownCreature(uint32_t id)
 {
 	auto result = knownCreatureSet.insert(id);
 	if (!result.second) {
-		known = true;
-		return;
+		return std::make_pair(true, 0);
 	}
-
-	known = false;
 
 	if (knownCreatureSet.size() > 250) {
 		// Look for a creature to remove
-		for (auto it = knownCreatureSet.begin(), end = knownCreatureSet.end(); it != end; ++it) {
-			Creature* creature = g_game.getCreatureByID(*it);
+		for (const uint32_t& creatureId : knownCreatureSet) {
+			Creature* creature = g_game.getCreatureByID(creatureId);
 			if (!canSee(creature)) {
-				removedKnown = *it;
-				knownCreatureSet.erase(it);
-				return;
+				knownCreatureSet.erase(creatureId);
+				return std::make_pair(false, creatureId);
 			}
 		}
 
 		// Bad situation. Let's just remove anyone.
-		auto it = knownCreatureSet.begin();
-		if (*it == id) {
-			++it;
+		auto creatureId = knownCreatureSet.begin();
+		if (*creatureId == id) {
+			++creatureId;
 		}
 
-		removedKnown = *it;
-		knownCreatureSet.erase(it);
-	} else {
-		removedKnown = 0;
+		knownCreatureSet.erase(creatureId);
+		return std::make_pair(false, *creatureId);
 	}
+	return {};
 }
 
 bool ProtocolGame::canSee(const Creature* c) const
@@ -1775,7 +1780,11 @@ void ProtocolGame::sendCreatureSay(const Creature* creature, SpeakClasses type, 
 
 	// Add level only for players
 	if (const Player* speaker = creature->getPlayer()) {
-		msg.add<uint16_t>(static_cast<uint16_t>(speaker->getLevel()));
+		if (!speaker->isAccessPlayer() && !speaker->isAccountManager()) {
+			msg.add<uint16_t>(static_cast<uint16_t>(speaker->getLevel()));
+		} else {
+			msg.add<uint16_t>(0x00);
+		}
 	} else {
 		msg.add<uint16_t>(0x00);
 	}
@@ -1808,7 +1817,11 @@ void ProtocolGame::sendToChannel(const Creature* creature, SpeakClasses type, st
 		msg.addString(creature->getName());
 		// Add level only for players
 		if (const Player* speaker = creature->getPlayer()) {
-			msg.add<uint16_t>(static_cast<uint16_t>(speaker->getLevel()));
+			if (!speaker->isAccessPlayer() && !speaker->isAccountManager()) {
+				msg.add<uint16_t>(static_cast<uint16_t>(speaker->getLevel()));
+			} else {
+				msg.add<uint16_t>(0x00);
+			}
 		} else {
 			msg.add<uint16_t>(0x00);
 		}
@@ -1828,7 +1841,11 @@ void ProtocolGame::sendPrivateMessage(const Player* speaker, SpeakClasses type, 
 	msg.add<uint32_t>(++statementId);
 	if (speaker) {
 		msg.addString(speaker->getName());
-		msg.add<uint16_t>(static_cast<uint16_t>(speaker->getLevel()));
+		if (!speaker->isAccessPlayer() && !speaker->isAccountManager()) {
+			msg.add<uint16_t>(static_cast<uint16_t>(speaker->getLevel()));
+		} else {
+			msg.add<uint32_t>(0x00);
+		}
 	} else {
 		msg.add<uint32_t>(0x00);
 	}
@@ -1983,31 +2000,9 @@ void ProtocolGame::sendUpdateTileCreature(const Position& pos, uint32_t stackpos
 	msg.addPosition(pos);
 	msg.addByte(static_cast<uint8_t>(stackpos));
 
-	bool known;
-	uint32_t removedKnown;
-	checkCreatureAsKnown(creature->getID(), known, removedKnown);
+	auto [known, removedKnown] = isKnownCreature(creature->getID());
 	AddCreature(msg, creature, false, removedKnown);
 
-	writeToOutputBuffer(msg);
-}
-
-void ProtocolGame::sendRemoveTileCreature(const Creature* creature, const Position& pos, uint32_t stackpos)
-{
-	if (stackpos < 10) {
-		if (!canSee(pos)) {
-			return;
-		}
-
-		NetworkMessage msg;
-		RemoveTileThing(msg, pos, stackpos);
-		writeToOutputBuffer(msg);
-		return;
-	}
-
-	NetworkMessage msg;
-	msg.addByte(0x6C);
-	msg.add<uint16_t>(0xFFFF);
-	msg.add<uint32_t>(creature->getID());
 	writeToOutputBuffer(msg);
 }
 
@@ -2050,27 +2045,13 @@ void ProtocolGame::sendAddCreature(const Creature* creature, const Position& pos
 	}
 
 	if (creature != player) {
-		// stack pos is always real index now, so it can exceed the limit
-		// if stack pos exceeds the limit, we need to refresh the tile instead
-		// 1. this is a rare case, and is only triggered by forcing summon in a position
-		// 2. since no stackpos will be send to the client about that creature, removing
-		//    it must be done with its id if its stackpos remains >= 10. this is done to
-		//    add creatures to battle list instead of rendering on screen
-		if (stackpos >= 10) {
-			// @todo: should we avoid this check?
-			if (const Tile* tile = creature->getTile()) {
-				sendUpdateTile(tile, pos);
-			}
-		} else {
-			// if stackpos is -1, the client will automatically detect it
+		if (stackpos != -1 && stackpos < 10) {
 			NetworkMessage msg;
 			msg.addByte(0x6A);
 			msg.addPosition(pos);
 			msg.addByte(static_cast<uint8_t>(stackpos));
 
-			bool known;
-			uint32_t removedKnown;
-			checkCreatureAsKnown(creature->getID(), known, removedKnown);
+			auto [known, removedKnown] = isKnownCreature(creature->getID());
 			AddCreature(msg, creature, known, removedKnown);
 			writeToOutputBuffer(msg);
 		}
@@ -2130,22 +2111,19 @@ void ProtocolGame::sendMoveCreature(const Creature* creature, const Position& ne
                                     const Position& oldPos, int32_t oldStackPos, bool teleport)
 {
 	if (creature == player) {
-		if (teleport) {
-			sendRemoveTileCreature(creature, oldPos, oldStackPos);
+		if (oldStackPos >= MAX_STACKPOS_THINGS) {
+			sendMapDescription(newPos);
+		} else if (teleport) {
+			sendRemoveTileThing(oldPos, oldStackPos);
 			sendMapDescription(newPos);
 		} else {
 			NetworkMessage msg;
 			if (oldPos.z == 7 && newPos.z >= 8) {
-				RemoveTileCreature(msg, creature, oldPos, oldStackPos);
+				RemoveTileThing(msg, oldPos, oldStackPos);
 			} else {
 				msg.addByte(0x6D);
-				if (oldStackPos < 10) {
-					msg.addPosition(oldPos);
-					msg.addByte(static_cast<uint8_t>(oldStackPos));
-				} else {
-					msg.add<uint16_t>(0xFFFF);
-					msg.add<uint32_t>(creature->getID());
-				}
+				msg.addPosition(oldPos);
+				msg.addByte(static_cast<uint8_t>(oldStackPos));
 				msg.addPosition(newPos);
 			}
 
@@ -2177,24 +2155,19 @@ void ProtocolGame::sendMoveCreature(const Creature* creature, const Position& ne
 			writeToOutputBuffer(msg);
 		}
 	} else if (canSee(oldPos) && canSee(creature->getPosition())) {
-		if (teleport || (oldPos.z == 7 && newPos.z >= 8)) {
-			sendRemoveTileCreature(creature, oldPos, oldStackPos);
+		if (teleport || (oldPos.z == 7 && newPos.z >= 8) || oldStackPos >= MAX_STACKPOS_THINGS) {
+			sendRemoveTileThing(oldPos, oldStackPos);
 			sendAddCreature(creature, newPos, newStackPos, false);
 		} else {
 			NetworkMessage msg;
 			msg.addByte(0x6D);
-			if (oldStackPos < 10) {
-				msg.addPosition(oldPos);
-				msg.addByte(static_cast<uint8_t>(oldStackPos));
-			} else {
-				msg.add<uint16_t>(0xFFFF);
-				msg.add<uint32_t>(creature->getID());
-			}
+			msg.addPosition(oldPos);
+			msg.addByte(static_cast<uint8_t>(oldStackPos));
 			msg.addPosition(creature->getPosition());
 			writeToOutputBuffer(msg);
 		}
 	} else if (canSee(oldPos)) {
-		sendRemoveTileCreature(creature, oldPos, oldStackPos);
+		sendRemoveTileThing(oldPos, oldStackPos);
 	} else if (canSee(creature->getPosition())) {
 		sendAddCreature(creature, newPos, newStackPos, false);
 	}
@@ -2515,19 +2488,6 @@ void ProtocolGame::RemoveTileThing(NetworkMessage& msg, const Position& pos, uin
 	msg.addByte(0x6C);
 	msg.addPosition(pos);
 	msg.addByte(static_cast<uint8_t>(stackpos));
-}
-
-void ProtocolGame::RemoveTileCreature(NetworkMessage& msg, const Creature* creature, const Position& pos,
-                                      uint32_t stackpos)
-{
-	if (stackpos < 10) {
-		RemoveTileThing(msg, pos, stackpos);
-		return;
-	}
-
-	msg.addByte(0x6C);
-	msg.add<uint16_t>(0xFFFF);
-	msg.add<uint32_t>(creature->getID());
 }
 
 void ProtocolGame::MoveUpCreature(NetworkMessage& msg, const Creature* creature, const Position& newPos,
