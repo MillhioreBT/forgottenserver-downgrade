@@ -755,13 +755,10 @@ void ProtocolGame::parsePacket(NetworkMessage& msg)
 
 void ProtocolGame::GetTileDescription(const Tile* tile, NetworkMessage& msg)
 {
-	int32_t count;
-	Item* ground = tile->getGround();
-	if (ground) {
+	int32_t count = 0;
+	if (const auto ground = tile->getGround()) {
 		msg.addItem(ground);
-		count = 1;
-	} else {
-		count = 0;
+		++count;
 	}
 
 	const bool isStacked = player->getPosition() == tile->getPosition();
@@ -781,20 +778,20 @@ void ProtocolGame::GetTileDescription(const Tile* tile, NetworkMessage& msg)
 
 	const CreatureVector* creatures = tile->getCreatures();
 	if (creatures) {
-		bool playerAdded = false;
 		for (auto it = creatures->rbegin(), end = creatures->rend(); it != end; ++it) {
-			const Creature* creature = (*it);
-			if (!player->canSeeCreature(creature)) {
-				continue;
+			if (count == 9 && isStacked) {
+				auto [known, removedKnown] = isKnownCreature(player->getID());
+				AddCreature(msg, player, known, removedKnown);
+			} else {
+				const Creature* creature = (*it);
+				if (!player->canSeeCreature(creature)) {
+					continue;
+				}
+
+				auto [known, removedKnown] = isKnownCreature(creature->getID());
+				AddCreature(msg, creature, known, removedKnown);
 			}
 
-			if (count == 9 && isStacked && !playerAdded) {
-				playerAdded = true;
-				creature = player;
-			}
-
-			auto [known, removedKnown] = isKnownCreature(creature->getID());
-			AddCreature(msg, creature, known, removedKnown);
 			if (++count == MAX_STACKPOS_THINGS) {
 				return;
 			}
@@ -853,12 +850,12 @@ void ProtocolGame::GetFloorDescription(NetworkMessage& msg, int32_t x, int32_t y
 
 				skip = 0;
 				GetTileDescription(tile, msg);
-			} else if (skip == 0xFE) {
-				msg.addByte(0xFF);
-				msg.addByte(0xFF);
-				skip = -1;
 			} else {
-				++skip;
+				if (++skip == 0xFF) {
+					msg.addByte(0xFF);
+					msg.addByte(0xFF);
+					skip = -1;
+				}
 			}
 		}
 	}
@@ -1745,19 +1742,14 @@ void ProtocolGame::sendCloseContainer(uint8_t cid)
 
 void ProtocolGame::sendCreatureTurn(const Creature* creature, uint32_t stackPos)
 {
-	if (!canSee(creature)) {
+	if (stackPos == -1 || stackPos >= MAX_STACKPOS_THINGS || !canSee(creature)) {
 		return;
 	}
 
 	NetworkMessage msg;
 	msg.addByte(0x6B);
-	if (stackPos >= 10) {
-		msg.add<uint16_t>(0xFFFF);
-		msg.add<uint32_t>(creature->getID());
-	} else {
-		msg.addPosition(creature->getPosition());
-		msg.addByte(static_cast<uint8_t>(stackPos));
-	}
+	msg.addPosition(creature->getPosition());
+	msg.addByte(static_cast<uint8_t>(stackPos));
 
 	msg.add<uint16_t>(0x63);
 	msg.add<uint32_t>(creature->getID());
@@ -1991,7 +1983,7 @@ void ProtocolGame::sendRemoveTileThing(const Position& pos, uint32_t stackpos)
 
 void ProtocolGame::sendUpdateTileCreature(const Position& pos, uint32_t stackpos, const Creature* creature)
 {
-	if (!canSee(pos)) {
+	if (stackpos == -1 || stackpos >= MAX_STACKPOS_THINGS || !canSee(pos)) {
 		return;
 	}
 
@@ -2045,7 +2037,7 @@ void ProtocolGame::sendAddCreature(const Creature* creature, const Position& pos
 	}
 
 	if (creature != player) {
-		if (stackpos != -1 && stackpos < 10) {
+		if (stackpos != -1 && stackpos < MAX_STACKPOS_THINGS) {
 			NetworkMessage msg;
 			msg.addByte(0x6A);
 			msg.addPosition(pos);
@@ -2133,24 +2125,31 @@ void ProtocolGame::sendMoveCreature(const Creature* creature, const Position& ne
 				MoveUpCreature(msg, creature, newPos, oldPos);
 			}
 
-			if (oldPos.y > newPos.y) { // north, for old x
-				msg.addByte(0x65);
-				GetMapDescription(oldPos.x - Map::maxClientViewportX, newPos.y - Map::maxClientViewportY, newPos.z,
-				                  (Map::maxClientViewportX * 2) + 2, 1, msg);
-			} else if (oldPos.y < newPos.y) { // south, for old x
-				msg.addByte(0x67);
-				GetMapDescription(oldPos.x - Map::maxClientViewportX, newPos.y + (Map::maxClientViewportY + 1),
-				                  newPos.z, (Map::maxClientViewportX * 2) + 2, 1, msg);
-			}
+			if (newStackPos >= MAX_STACKPOS_THINGS) {
+				msg.addByte(0x64);
+				msg.addPosition(player->getPosition());
+				GetMapDescription(newPos.x - Map::maxClientViewportX, newPos.y - Map::maxClientViewportY, newPos.z,
+				                  (Map::maxClientViewportX * 2) + 2, (Map::maxClientViewportY * 2) + 2, msg);
+			} else {
+				if (oldPos.y > newPos.y) { // north, for old x
+					msg.addByte(0x65);
+					GetMapDescription(oldPos.x - Map::maxClientViewportX, newPos.y - Map::maxClientViewportY, newPos.z,
+					                  (Map::maxClientViewportX * 2) + 2, 1, msg);
+				} else if (oldPos.y < newPos.y) { // south, for old x
+					msg.addByte(0x67);
+					GetMapDescription(oldPos.x - Map::maxClientViewportX, newPos.y + (Map::maxClientViewportY + 1),
+					                  newPos.z, (Map::maxClientViewportX * 2) + 2, 1, msg);
+				}
 
-			if (oldPos.x < newPos.x) { // east, [with new y]
-				msg.addByte(0x66);
-				GetMapDescription(newPos.x + (Map::maxClientViewportX + 1), newPos.y - Map::maxClientViewportY,
-				                  newPos.z, 1, (Map::maxClientViewportY * 2) + 2, msg);
-			} else if (oldPos.x > newPos.x) { // west, [with new y]
-				msg.addByte(0x68);
-				GetMapDescription(newPos.x - Map::maxClientViewportX, newPos.y - Map::maxClientViewportY, newPos.z, 1,
-				                  (Map::maxClientViewportY * 2) + 2, msg);
+				if (oldPos.x < newPos.x) { // east, [with new y]
+					msg.addByte(0x66);
+					GetMapDescription(newPos.x + (Map::maxClientViewportX + 1), newPos.y - Map::maxClientViewportY,
+					                  newPos.z, 1, (Map::maxClientViewportY * 2) + 2, msg);
+				} else if (oldPos.x > newPos.x) { // west, [with new y]
+					msg.addByte(0x68);
+					GetMapDescription(newPos.x - Map::maxClientViewportX, newPos.y - Map::maxClientViewportY, newPos.z,
+					                  1, (Map::maxClientViewportY * 2) + 2, msg);
+				}
 			}
 			writeToOutputBuffer(msg);
 		}
@@ -2481,7 +2480,7 @@ void ProtocolGame::AddCreatureLight(NetworkMessage& msg, const Creature* creatur
 // tile
 void ProtocolGame::RemoveTileThing(NetworkMessage& msg, const Position& pos, uint32_t stackpos)
 {
-	if (stackpos >= 10) {
+	if (stackpos == -1 || stackpos >= MAX_STACKPOS_THINGS) {
 		return;
 	}
 

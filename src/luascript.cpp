@@ -2816,6 +2816,7 @@ void LuaScriptInterface::registerFunctions()
 
 	registerMethod("MonsterType", "name", LuaScriptInterface::luaMonsterTypeName);
 	registerMethod("MonsterType", "nameDescription", LuaScriptInterface::luaMonsterTypeNameDescription);
+	registerMethod("MonsterType", "raceId", LuaScriptInterface::luaMonsterTypeRaceId);
 
 	registerMethod("MonsterType", "health", LuaScriptInterface::luaMonsterTypeHealth);
 	registerMethod("MonsterType", "maxHealth", LuaScriptInterface::luaMonsterTypeMaxHealth);
@@ -12755,8 +12756,14 @@ int LuaScriptInterface::luaOutfitCompare(lua_State* L)
 // MonsterType
 int LuaScriptInterface::luaMonsterTypeCreate(lua_State* L)
 {
-	// MonsterType(name)
-	MonsterType* monsterType = g_monsters.getMonsterType(getString(L, 2));
+	// MonsterType(name or raceId)
+	MonsterType* monsterType;
+	if (isInteger(L, 2)) {
+		monsterType = g_monsters.getMonsterType(getInteger<uint32_t>(L, 2));
+	} else {
+		monsterType = g_monsters.getMonsterType(getString(L, 2));
+	}
+
 	if (monsterType) {
 		pushUserdata<MonsterType>(L, monsterType);
 		setMetatable(L, -1, "MonsterType");
@@ -13047,6 +13054,24 @@ int LuaScriptInterface::luaMonsterTypeNameDescription(lua_State* L)
 			pushString(L, monsterType->nameDescription);
 		} else {
 			monsterType->nameDescription = getString(L, 2);
+			pushBoolean(L, true);
+		}
+	} else {
+		lua_pushnil(L);
+	}
+	return 1;
+}
+
+int32_t LuaScriptInterface::luaMonsterTypeRaceId(lua_State* L)
+{
+	// get: monsterType:raceId() set: monsterType:raceId(raceId)
+	MonsterType* monsterType = getUserdata<MonsterType>(L, 1);
+	if (monsterType) {
+		if (lua_gettop(L) == 1) {
+			lua_pushinteger(L, monsterType->raceId);
+		} else {
+			monsterType->raceId = getInteger<uint32_t>(L, 2);
+			g_monsters.registerBestiaryMonster(monsterType);
 			pushBoolean(L, true);
 		}
 	} else {

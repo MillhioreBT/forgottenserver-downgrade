@@ -53,17 +53,17 @@ bool Monsters::loadFromXml(bool reloading /*= false*/)
 
 	loaded = true;
 
-	for (auto monsterNode : doc.child("monsters").children()) {
+	for (auto& monsterNode : doc.child("monsters").children()) {
 		std::string name = boost::algorithm::to_lower_copy<std::string>(monsterNode.attribute("name").as_string());
 		std::string file = "data/monster/" + std::string{monsterNode.attribute("file").as_string()};
 		unloadedMonsters.emplace(name, file);
 	}
 
-	bool forceLoad = g_config[ConfigKeysBoolean::FORCE_MONSTERTYPE_LOAD];
+	const bool& forceLoad = g_config[ConfigKeysBoolean::FORCE_MONSTERTYPE_LOAD];
 
-	for (auto it : unloadedMonsters) {
-		if ((forceLoad || reloading) && monsters.find(it.first) != monsters.end()) {
-			loadMonster(it.second, it.first, reloading);
+	for (const auto& [monsterName, file] : unloadedMonsters) {
+		if (forceLoad || (reloading && monsters.find(monsterName) != monsters.end())) {
+			loadMonster(file, monsterName, reloading);
 		}
 	}
 
@@ -868,6 +868,18 @@ MonsterType* Monsters::loadMonster(const std::string& file, const std::string& m
 		mType->info.skull = getSkullType(boost::algorithm::to_lower_copy<std::string>(attr.as_string()));
 	}
 
+	if ((attr = monsterNode.attribute("raceId"))) {
+		const auto raceId = pugi::cast<uint32_t>(attr.value());
+		if (raceId != 0) {
+			mType->raceId = raceId;
+			registerBestiaryMonster(mType);
+		} else {
+			std::cout << "[Warning - Monsters::loadMonster] Invalid raceId 0. " << file << std::endl;
+		}
+	} else {
+		mType->raceId = 0;
+	}
+
 	if ((attr = monsterNode.attribute("script"))) {
 		if (!scriptInterface) {
 			scriptInterface.reset(new LuaScriptInterface("Monster Interface"));
@@ -1441,11 +1453,6 @@ bool Monsters::loadLootItem(const pugi::xml_node& node, LootBlock& lootBlock)
 
 	if ((attr = node.attribute("countmax"))) {
 		int32_t lootCountMax = pugi::cast<int32_t>(attr.value());
-		if (lootCountMax > 100) {
-			std::cout << "[Warning - Monsters::loadMonster] Invalid \"countmax\" " << lootCountMax
-			          << " used for loot, the max allowed value is 100. " << std::endl;
-			return false;
-		}
 		lootBlock.countmax = std::max<int32_t>(1, lootCountMax);
 	} else {
 		lootBlock.countmax = 1;
@@ -1516,4 +1523,24 @@ MonsterType* Monsters::getMonsterType(const std::string& name, bool loadFromFile
 		return loadMonster(it2->second, name);
 	}
 	return &it->second;
+}
+
+MonsterType* Monsters::getMonsterType(uint32_t raceId)
+{
+	auto it = bestiaryMonsters.find(raceId);
+	if (it != bestiaryMonsters.end()) {
+		return getMonsterType(it->second);
+	}
+
+	return nullptr;
+}
+
+bool Monsters::registerBestiaryMonster(const MonsterType* mType)
+{
+	auto [it, success] = bestiaryMonsters.insert_or_assign(mType->raceId, mType->name);
+	/*if (!success) {
+		std::cout << "[Warning - Monsters::registerBestiaryMonster] Monster raceId " << mType->raceId
+		          << " already exists but was overwritten for the monster " << mType->name << ". " << std::endl;
+	}*/
+	return success;
 }

@@ -3145,7 +3145,7 @@ void Player::doAttacking(uint32_t)
 		Item* tool = getWeapon();
 		const Weapon* weapon = g_weapons->getWeapon(tool);
 		uint32_t delay = getAttackSpeed();
-		bool classicSpeed = g_config[ConfigKeysBoolean::CLASSIC_ATTACK_SPEED];
+		const bool& classicSpeed = g_config[ConfigKeysBoolean::CLASSIC_ATTACK_SPEED];
 
 		if (weapon) {
 			if (!weapon->interruptSwing()) {
@@ -3179,7 +3179,7 @@ uint64_t Player::getGainedExperience(Creature* attacker) const
 	if (g_config[ConfigKeysBoolean::EXPERIENCE_FROM_PLAYERS]) {
 		Player* attackerPlayer = attacker->getPlayer();
 		if (attackerPlayer && attackerPlayer != this && skillLoss &&
-		    std::abs(static_cast<int32_t>(attackerPlayer->getLevel() - level)) <=
+		    std::abs(static_cast<int64_t>(attackerPlayer->getLevel() - level)) <=
 		        g_config[ConfigKeysInteger::EXP_FROM_PLAYERS_LEVEL_RANGE]) {
 			return std::max<uint64_t>(0, std::floor(getLostExperience() * getDamageRatio(attacker) * 0.75));
 		}

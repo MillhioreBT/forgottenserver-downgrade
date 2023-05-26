@@ -1325,6 +1325,7 @@ private:
 
 	static int luaMonsterTypeName(lua_State* L);
 	static int luaMonsterTypeNameDescription(lua_State* L);
+	static int luaMonsterTypeRaceId(lua_State* L);
 
 	static int luaMonsterTypeHealth(lua_State* L);
 	static int luaMonsterTypeMaxHealth(lua_State* L);

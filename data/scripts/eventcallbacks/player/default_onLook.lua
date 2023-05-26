@@ -37,6 +37,9 @@ event.onLook = function(self, thing, position, distance, description)
 			if thing:isPlayer() and thing:getMaxMana() > 0 then
 				str = string.format("%s, Mana: %d / %d", str, thing:getMana(),
 				                    thing:getMaxMana())
+			elseif thing:isMonster() then
+				local raceId = thing:getType():raceId()
+				if raceId ~= 0 then str = string.format("%s\nRaceId: %d", str, raceId) end
 			end
 			description = string.format(str, description, thing:getHealth(),
 			                            thing:getMaxHealth()) .. "."
