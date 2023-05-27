@@ -2,7 +2,7 @@ name: Docker
 
 on:
   push:
-    # Publish `master` as Docker `latest` image.
+    # Publish `main` as Docker `latest` image.
     branches:
       - main
 
@@ -11,7 +11,7 @@ on:
       - v*
 
 env:
-  IMAGE_NAME: forgottenserver
+  IMAGE_NAME: forgottenserver-downgrade
 
 jobs:
   # Push image to GitHub Package Registry.

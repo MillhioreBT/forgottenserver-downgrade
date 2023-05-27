@@ -6,8 +6,8 @@ on:
     - cron: '0 0 * * 5' # Weekly at 00:00 UTC
 
 env:
-  COVERITY_PROJECT: otland/forgottenserver
-  COVERITY_EMAIL: coverity@otland.net
+  COVERITY_PROJECT: MillhioreBT/forgottenserver-downgrade
+  COVERITY_EMAIL: sarahelizabetwesker@gmail.com
 
 jobs:
   scan:
@@ -51,13 +51,13 @@ jobs:
       - name: Submit the result to Coverity Scan
         run: |
           cd ${{ runner.workspace }}
-          tar czvf forgottenserver.tgz cov-int
-          du -hs forgottenserver.tgz
+          tar czvf forgottenserver-downgrade.tgz cov-int
+          du -hs forgottenserver-downgrade.tgz
           curl \
             --form project=$COVERITY_PROJECT \
             --form token=$TOKEN \
             --form email=$COVERITY_EMAIL \
-            --form file=@forgottenserver.tgz \
+            --form file=@forgottenserver-downgrade.tgz \
             --form version=$GITHUB_SHA \
             https://scan.coverity.com/builds?project=$COVERITY_PROJECT
         env:

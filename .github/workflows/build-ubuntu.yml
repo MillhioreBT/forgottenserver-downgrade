@@ -21,7 +21,7 @@ on:
 
 jobs:
   build-ubuntu:
-    name: ubuntu-${{ matrix.buildtype }}-luajit=${{ matrix.luajit }}
+    name: ubuntu-${{ matrix.buildtype }}
     runs-on: ubuntu-latest
     strategy:
       matrix:

@@ -14,7 +14,7 @@ jobs:
         os: [ubuntu, macos, windows]
 
     env:
-      VCPKG_FEATURE_FLAGS: luajit
+      VCPKG_FEATURE_FLAGS: lua
 
     steps:
       - uses: actions/checkout@v3
@@ -49,7 +49,7 @@ jobs:
         with:
           type: zip
           filename: tfs-${{ github.ref_name }}-${{ matrix.os }}.zip
-          path: forgottenserver
+          path: forgottenserver-downgrade
           directory: ../
 
       - name: Upload release artifact
