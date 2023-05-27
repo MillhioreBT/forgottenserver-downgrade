@@ -6,15 +6,15 @@ RUN apk add --no-cache --repository http://dl-cdn.alpinelinux.org/alpine/edge/co
   cmake \
   crypto++-dev \
   fmt-dev \
-  luajit-dev \
+  lua5.4 \
   mariadb-connector-c-dev \
   pugixml-dev \
   samurai
 
-COPY cmake /usr/src/forgottenserver/cmake/
-COPY src /usr/src/forgottenserver/src/
-COPY CMakeLists.txt CMakePresets.json /usr/src/forgottenserver/
-WORKDIR /usr/src/forgottenserver
+COPY cmake /usr/src/forgottenserver-downgrade/cmake/
+COPY src /usr/src/forgottenserver-downgrade/src/
+COPY CMakeLists.txt CMakePresets.json /usr/src/forgottenserver-downgrade/
+WORKDIR /usr/src/forgottenserver-downgrade
 RUN cmake --preset default && cmake --build --config RelWithDebInfo --preset default
 
 FROM alpine:3.17.3
@@ -24,11 +24,11 @@ RUN apk add --no-cache --repository http://dl-cdn.alpinelinux.org/alpine/edge/co
   boost-system \
   crypto++ \
   fmt \
-  luajit \
+  lua5.4 \
   mariadb-connector-c \
   pugixml
 
-COPY --from=build /usr/src/forgottenserver/build/tfs /bin/tfs
+COPY --from=build /usr/src/forgottenserver-downgrade/build/tfs /bin/tfs
 COPY data /srv/data/
 COPY LICENSE README.md *.dist *.sql key.pem /srv/
 

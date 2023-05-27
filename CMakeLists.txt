@@ -48,19 +48,7 @@ endif ()
 
 find_package(Threads REQUIRED)
 find_package(PugiXML CONFIG REQUIRED)
-
-# Selects LuaJIT if user defines or auto-detected
-if (DEFINED USE_LUAJIT AND NOT USE_LUAJIT)
-    set(FORCE_LUAJIT ${USE_LUAJIT})
-else ()
-    find_package(LuaJIT)
-    set(FORCE_LUAJIT ${LuaJIT_FOUND})
-endif ()
-option(USE_LUAJIT "Use LuaJIT" ${FORCE_LUAJIT})
-
-if (NOT FORCE_LUAJIT)
-    find_package(Lua REQUIRED)
-endif ()
+find_package(Lua REQUIRED)
 
 find_package(Boost 1.66.0 REQUIRED COMPONENTS system iostreams)
 

@@ -9,15 +9,8 @@
         "cryptopp",
         "fmt",
         "libmariadb",
-        "lua",
+        "lua5.4",
         "pugixml"
     ],
-    "features": {
-        "luajit": {
-            "description": "Use LuaJIT instead of Lua",
-            "dependencies": [
-                "luajit"
-            ]
-        }
-    }
+    "features": {}
 }
