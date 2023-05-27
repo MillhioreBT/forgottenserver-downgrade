@@ -167,6 +167,7 @@ target_link_libraries(tfslib PRIVATE
 	pugixml::pugixml
 	${CMAKE_THREAD_LIBS_INIT}
 	${Crypto++_LIBRARIES}
+	${LUA_LIBRARIES}
 	${MYSQL_CLIENT_LIBS}
 	)
 
