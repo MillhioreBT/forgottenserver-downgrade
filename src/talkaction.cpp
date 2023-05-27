@@ -40,7 +40,7 @@ Event_ptr TalkActions::getEvent(std::string_view nodeName)
 bool TalkActions::registerEvent(Event_ptr event, const pugi::xml_node&)
 {
 	TalkAction_ptr talkAction{static_cast<TalkAction*>(event.release())}; // event is guaranteed to be a TalkAction
-	const std::vector<std::string>& words = talkAction->getWordsMap();
+	const auto& words = talkAction->stealWordsMap();
 
 	for (const auto& word : words) {
 		talkActions.emplace(word, *talkAction);
@@ -51,7 +51,7 @@ bool TalkActions::registerEvent(Event_ptr event, const pugi::xml_node&)
 bool TalkActions::registerLuaEvent(TalkAction* event)
 {
 	TalkAction_ptr talkAction{event};
-	const std::vector<std::string>& words = talkAction->getWordsMap();
+	const auto& words = talkAction->stealWordsMap();
 
 	if (words.empty()) {
 		std::cout << "[Warning - TalkActions::registerLuaEvent] Missing words for talk action." << std::endl;

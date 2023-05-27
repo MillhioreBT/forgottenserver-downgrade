@@ -26,7 +26,12 @@ public:
 	bool configureEvent(const pugi::xml_node& node) override;
 
 	std::string_view getWords() const { return words; }
-	const std::vector<std::string>& getWordsMap() const { return wordsMap; }
+	auto stealWordsMap()
+	{
+		std::vector<std::string> ret{};
+		std::swap(wordsMap, ret);
+		return ret;
+	}
 	void setWords(const std::string& word)
 	{
 		words = word;
@@ -70,6 +75,8 @@ public:
 
 	bool registerLuaEvent(TalkAction* event);
 	void clear(bool fromLua) override final;
+
+	const auto& getTalkactions() const { return talkActions; }
 
 private:
 	LuaScriptInterface& getScriptInterface() override;

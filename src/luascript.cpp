@@ -2065,6 +2065,7 @@ void LuaScriptInterface::registerFunctions()
 	registerMethod("Game", "getMonsterTypes", LuaScriptInterface::luaGameGetMonsterTypes);
 	registerMethod("Game", "getCurrencyItems", LuaScriptInterface::luaGameGetCurrencyItems);
 	registerMethod("Game", "getItemTypeByClientId", LuaScriptInterface::luaGameGetItemTypeByClientId);
+	registerMethod("Game", "getTalkactions", LuaScriptInterface::luaGameGetTalkactions);
 
 	registerMethod("Game", "getTowns", LuaScriptInterface::luaGameGetTowns);
 	registerMethod("Game", "getHouses", LuaScriptInterface::luaGameGetHouses);
@@ -3003,6 +3004,7 @@ void LuaScriptInterface::registerFunctions()
 	registerClass("TalkAction", "", LuaScriptInterface::luaCreateTalkaction);
 	registerMethod("TalkAction", "onSay", LuaScriptInterface::luaTalkactionOnSay);
 	registerMethod("TalkAction", "register", LuaScriptInterface::luaTalkactionRegister);
+	registerMethod("TalkAction", "getWords", LuaScriptInterface::luaTalkactionGetWords);
 	registerMethod("TalkAction", "separator", LuaScriptInterface::luaTalkactionSeparator);
 	registerMethod("TalkAction", "access", LuaScriptInterface::luaTalkactionAccess);
 	registerMethod("TalkAction", "accountType", LuaScriptInterface::luaTalkactionAccountType);
@@ -4351,6 +4353,22 @@ int LuaScriptInterface::luaGameGetItemTypeByClientId(lua_State* L)
 	return 1;
 }
 
+int LuaScriptInterface::luaGameGetTalkactions(lua_State* L)
+{
+	// Game.getTalkactions()
+	const auto& talkactions = g_talkActions->getTalkactions();
+	lua_createtable(L, talkactions.size(), 0);
+
+	int index = 0;
+	for (const auto& talkEntry : talkactions) {
+		pushUserdata<const TalkAction>(L, &talkEntry.second);
+		setMetatable(L, -1, "TalkAction");
+		lua_rawseti(L, -2, ++index);
+	}
+
+	return 1;
+}
+
 int LuaScriptInterface::luaGameGetTowns(lua_State* L)
 {
 	// Game.getTowns()
@@ -4358,7 +4376,7 @@ int LuaScriptInterface::luaGameGetTowns(lua_State* L)
 	lua_createtable(L, towns.size(), 0);
 
 	int index = 0;
-	for (auto townEntry : towns) {
+	for (auto& townEntry : towns) {
 		pushUserdata<Town>(L, townEntry.second);
 		setMetatable(L, -1, "Town");
 		lua_rawseti(L, -2, ++index);
@@ -4373,7 +4391,7 @@ int LuaScriptInterface::luaGameGetHouses(lua_State* L)
 	lua_createtable(L, houses.size(), 0);
 
 	int index = 0;
-	for (auto houseEntry : houses) {
+	for (auto& houseEntry : houses) {
 		pushUserdata<House>(L, houseEntry.second);
 		setMetatable(L, -1, "House");
 		lua_rawseti(L, -2, ++index);
@@ -15647,13 +15665,29 @@ int LuaScriptInterface::luaTalkactionRegister(lua_State* L)
 	return 1;
 }
 
-int LuaScriptInterface::luaTalkactionSeparator(lua_State* L)
+int LuaScriptInterface::luaTalkactionGetWords(lua_State* L)
 {
-	// talkAction:separator(sep)
+	// talkAction:words()
 	TalkAction* talk = getUserdata<TalkAction>(L, 1);
 	if (talk) {
-		talk->setSeparator(getString(L, 2).c_str());
-		pushBoolean(L, true);
+		pushString(L, talk->getWords());
+	} else {
+		lua_pushnil(L);
+	}
+	return 1;
+}
+
+int LuaScriptInterface::luaTalkactionSeparator(lua_State* L)
+{
+	// get: talkAction:separator() set: talkAction:separator(sep)
+	TalkAction* talk = getUserdata<TalkAction>(L, 1);
+	if (talk) {
+		if (lua_gettop(L) == 1) {
+			pushString(L, talk->getSeparator());
+		} else {
+			talk->setSeparator(getString(L, 2));
+			pushBoolean(L, true);
+		}
 	} else {
 		lua_pushnil(L);
 	}
@@ -15662,11 +15696,15 @@ int LuaScriptInterface::luaTalkactionSeparator(lua_State* L)
 
 int LuaScriptInterface::luaTalkactionAccess(lua_State* L)
 {
-	// talkAction:access(needAccess = false)
+	// get: talkAction:access() set: talkAction:access(needAccess = false)
 	TalkAction* talk = getUserdata<TalkAction>(L, 1);
 	if (talk) {
-		talk->setNeedAccess(getBoolean(L, 2));
-		pushBoolean(L, true);
+		if (lua_gettop(L) == 1) {
+			pushBoolean(L, talk->getNeedAccess());
+		} else {
+			talk->setNeedAccess(getBoolean(L, 2));
+			pushBoolean(L, true);
+		}
 	} else {
 		lua_pushnil(L);
 	}
@@ -15675,11 +15713,15 @@ int LuaScriptInterface::luaTalkactionAccess(lua_State* L)
 
 int LuaScriptInterface::luaTalkactionAccountType(lua_State* L)
 {
-	// talkAction:accountType(AccountType_t = ACCOUNT_TYPE_NORMAL)
+	// get: talkAction:accountType() set: talkAction:accountType(AccountType_t = ACCOUNT_TYPE_NORMAL)
 	TalkAction* talk = getUserdata<TalkAction>(L, 1);
 	if (talk) {
-		talk->setRequiredAccountType(getInteger<AccountType_t>(L, 2));
-		pushBoolean(L, true);
+		if (lua_gettop(L) == 1) {
+			lua_pushinteger(L, talk->getRequiredAccountType());
+		} else {
+			talk->setRequiredAccountType(getInteger<AccountType_t>(L, 2));
+			pushBoolean(L, true);
+		}
 	} else {
 		lua_pushnil(L);
 	}

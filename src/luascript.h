@@ -210,24 +210,23 @@ public:
 	static void pushString(lua_State* L, std::string_view value);
 	static void pushCallback(lua_State* L, int32_t callback);
 	static void pushCylinder(lua_State* L, Cylinder* cylinder);
-	static void pushItems(lua_State* L, std::vector<const Item*> items);
 
 	static std::string popString(lua_State* L);
 	static int32_t popCallback(lua_State* L);
 
 	// Userdata
 	template <class T>
-	static void pushUserdata(lua_State* L, T* value)
+	static void pushUserdata(lua_State* L, T* value, int nuvalue = 1)
 	{
-		T** userdata = static_cast<T**>(lua_newuserdata(L, sizeof(T*)));
+		T** userdata = static_cast<T**>(lua_newuserdatauv(L, sizeof(T*), nuvalue));
 		*userdata = value;
 	}
 
 	// Shared Ptr
 	template <class T>
-	static void pushSharedPtr(lua_State* L, T value)
+	static void pushSharedPtr(lua_State* L, T value, int nuvalue = 1)
 	{
-		new (lua_newuserdata(L, sizeof(T))) T(std::move(value));
+		new (lua_newuserdatauv(L, sizeof(T), nuvalue)) T(std::move(value));
 	}
 
 	// Metatables
@@ -596,6 +595,7 @@ private:
 	static int luaGameGetMonsterTypes(lua_State* L);
 	static int luaGameGetCurrencyItems(lua_State* L);
 	static int luaGameGetItemTypeByClientId(lua_State* L);
+	static int luaGameGetTalkactions(lua_State* L);
 
 	static int luaGameGetTowns(lua_State* L);
 	static int luaGameGetHouses(lua_State* L);
@@ -1498,6 +1498,7 @@ private:
 	static int luaCreateTalkaction(lua_State* L);
 	static int luaTalkactionOnSay(lua_State* L);
 	static int luaTalkactionRegister(lua_State* L);
+	static int luaTalkactionGetWords(lua_State* L);
 	static int luaTalkactionSeparator(lua_State* L);
 	static int luaTalkactionAccess(lua_State* L);
 	static int luaTalkactionAccountType(lua_State* L);
