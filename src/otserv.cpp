@@ -125,7 +125,8 @@ void printServerVersion()
 	std::cout << "Visit our forum for updates, support, and resources: http://otland.net/." << std::endl;
 	std::cout << std::endl;
 
-	std::cout << "Repository: " << fmt::format(fg(fmt::color::floral_white), "{}", STATUS_SERVER_REPOSITORY) << std::endl;
+	std::cout << "Repository: " << fmt::format(fg(fmt::color::floral_white), "{}", STATUS_SERVER_REPOSITORY)
+	          << std::endl;
 	std::cout << std::endl;
 }
 

@@ -13,6 +13,6 @@ round_keys expand_key(const key& k);
 void encrypt(uint8_t* data, size_t length, const round_keys& k);
 void decrypt(uint8_t* data, size_t length, const round_keys& k);
 
-} // namespace xtea test
+} // namespace xtea
 
 #endif // FS_XTEA_H

@@ -1539,8 +1539,8 @@ bool Monsters::registerBestiaryMonster(const MonsterType* mType)
 {
 	auto [it, success] = bestiaryMonsters.insert_or_assign(mType->raceId, mType->name);
 	/*if (!success) {
-		std::cout << "[Warning - Monsters::registerBestiaryMonster] Monster raceId " << mType->raceId
-		          << " already exists but was overwritten for the monster " << mType->name << ". " << std::endl;
+	    std::cout << "[Warning - Monsters::registerBestiaryMonster] Monster raceId " << mType->raceId
+	              << " already exists but was overwritten for the monster " << mType->name << ". " << std::endl;
 	}*/
 	return success;
 }
