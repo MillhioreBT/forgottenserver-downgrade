@@ -48,10 +48,6 @@ endif ()
 
 find_package(Threads REQUIRED)
 find_package(PugiXML CONFIG REQUIRED)
-
-set(LUA_LIBRARIES "/usr/lib/liblua5.4.so")
-set(LUA_INCLUDE_DIR "/usr/include/lua5.4/lua.h") 
-
 find_package(Lua REQUIRED)
 
 find_package(Boost 1.66.0 REQUIRED COMPONENTS system iostreams)
