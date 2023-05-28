@@ -1740,16 +1740,16 @@ void ProtocolGame::sendCloseContainer(uint8_t cid)
 	writeToOutputBuffer(msg);
 }
 
-void ProtocolGame::sendCreatureTurn(const Creature* creature, uint32_t stackPos)
+void ProtocolGame::sendCreatureTurn(const Creature* creature, uint32_t stackpos)
 {
-	if (stackPos == -1 || stackPos >= MAX_STACKPOS_THINGS || !canSee(creature)) {
+	if (stackpos >= MAX_STACKPOS_THINGS || !canSee(creature)) {
 		return;
 	}
 
 	NetworkMessage msg;
 	msg.addByte(0x6B);
 	msg.addPosition(creature->getPosition());
-	msg.addByte(static_cast<uint8_t>(stackPos));
+	msg.addByte(static_cast<uint8_t>(stackpos));
 
 	msg.add<uint16_t>(0x63);
 	msg.add<uint32_t>(creature->getID());
@@ -1944,7 +1944,7 @@ void ProtocolGame::sendMapDescription(const Position& pos)
 
 void ProtocolGame::sendAddTileItem(const Position& pos, uint32_t stackpos, const Item* item)
 {
-	if (!canSee(pos)) {
+	if (stackpos >= MAX_STACKPOS_THINGS || !canSee(pos)) {
 		return;
 	}
 
@@ -1958,7 +1958,7 @@ void ProtocolGame::sendAddTileItem(const Position& pos, uint32_t stackpos, const
 
 void ProtocolGame::sendUpdateTileItem(const Position& pos, uint32_t stackpos, const Item* item)
 {
-	if (!canSee(pos)) {
+	if (stackpos >= MAX_STACKPOS_THINGS || !canSee(pos)) {
 		return;
 	}
 
@@ -1983,7 +1983,7 @@ void ProtocolGame::sendRemoveTileThing(const Position& pos, uint32_t stackpos)
 
 void ProtocolGame::sendUpdateTileCreature(const Position& pos, uint32_t stackpos, const Creature* creature)
 {
-	if (stackpos == -1 || stackpos >= MAX_STACKPOS_THINGS || !canSee(pos)) {
+	if (stackpos >= MAX_STACKPOS_THINGS || !canSee(pos)) {
 		return;
 	}
 
@@ -2037,7 +2037,7 @@ void ProtocolGame::sendAddCreature(const Creature* creature, const Position& pos
 	}
 
 	if (creature != player) {
-		if (stackpos != -1 && stackpos < MAX_STACKPOS_THINGS) {
+		if (stackpos < MAX_STACKPOS_THINGS) {
 			NetworkMessage msg;
 			msg.addByte(0x6A);
 			msg.addPosition(pos);
@@ -2103,9 +2103,7 @@ void ProtocolGame::sendMoveCreature(const Creature* creature, const Position& ne
                                     const Position& oldPos, int32_t oldStackPos, bool teleport)
 {
 	if (creature == player) {
-		if (oldStackPos >= MAX_STACKPOS_THINGS) {
-			sendMapDescription(newPos);
-		} else if (teleport) {
+		if (teleport || oldStackPos >= MAX_STACKPOS_THINGS) {
 			sendRemoveTileThing(oldPos, oldStackPos);
 			sendMapDescription(newPos);
 		} else {
@@ -2480,7 +2478,7 @@ void ProtocolGame::AddCreatureLight(NetworkMessage& msg, const Creature* creatur
 // tile
 void ProtocolGame::RemoveTileThing(NetworkMessage& msg, const Position& pos, uint32_t stackpos)
 {
-	if (stackpos == -1 || stackpos >= MAX_STACKPOS_THINGS) {
+	if (stackpos >= MAX_STACKPOS_THINGS) {
 		return;
 	}
 

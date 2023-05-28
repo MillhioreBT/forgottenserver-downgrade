@@ -76,4 +76,10 @@ int64_t OTSYS_TIME();
 
 SpellGroup_t stringToSpellGroup(std::string_view value);
 
+template <typename E>
+auto format_as(E e)
+{
+	return fmt::underlying(e);
+}
+
 #endif
