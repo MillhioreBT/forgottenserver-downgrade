@@ -4675,7 +4675,7 @@ int LuaScriptInterface::luaGameStartRaid(lua_State* L)
 
 int LuaScriptInterface::luaGameSendAnimatedText(lua_State* L)
 {
-	// Game.sendAnimatedText(message, position, color)
+	// Game.sendAnimatedText(message, position, color[, players])
 	int parameters = lua_gettop(L);
 	if (parameters < 3) {
 		pushBoolean(L, false);
@@ -4691,7 +4691,17 @@ int LuaScriptInterface::luaGameSendAnimatedText(lua_State* L)
 		return 1;
 	}
 
-	g_game.addAnimatedText(message, position, color);
+	SpectatorVec spectators;
+	if (parameters >= 4) {
+		getSpectators<Player>(L, 4, spectators);
+	}
+
+	if (spectators.empty()) {
+		g_game.addAnimatedText(message, position, color);
+	} else {
+		g_game.addAnimatedText(spectators, message, position, color);
+	}
+
 	pushBoolean(L, true);
 	return 1;
 }
@@ -16717,7 +16727,7 @@ int LuaScriptInterface::luaWeaponCharges(lua_State* L)
 		uint16_t id = weapon->getID();
 		ItemType& it = Item::items.getItemType(id);
 
-		it.charges = getInteger<uint8_t>(L, 2);
+		it.charges = getInteger<uint32_t>(L, 2);
 		it.showCharges = showCharges;
 		pushBoolean(L, true);
 	} else {

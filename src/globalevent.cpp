@@ -115,7 +115,7 @@ void GlobalEvents::startup() const { execute(GLOBALEVENT_STARTUP); }
 
 void GlobalEvents::timer()
 {
-	time_t now = time(nullptr);
+	auto now = OTSYS_TIME();
 
 	int64_t nextScheduledTime = std::numeric_limits<int64_t>::max();
 
@@ -138,7 +138,7 @@ void GlobalEvents::timer()
 			continue;
 		}
 
-		nextExecutionTime = 86400;
+		nextExecutionTime = 86400000;
 		if (nextExecutionTime < nextScheduledTime) {
 			nextScheduledTime = nextExecutionTime;
 		}
@@ -149,13 +149,13 @@ void GlobalEvents::timer()
 	}
 
 	if (nextScheduledTime != std::numeric_limits<int64_t>::max()) {
-		thinkEventId = g_scheduler.addEvent(createSchedulerTask(nextScheduledTime, [this]() { think(); }));
+		thinkEventId = g_scheduler.addEvent(createSchedulerTask(nextScheduledTime, [this]() { timer(); }));
 	}
 }
 
 void GlobalEvents::think()
 {
-	int64_t now = OTSYS_TIME();
+	auto now = OTSYS_TIME();
 
 	int64_t nextScheduledTime = std::numeric_limits<int64_t>::max();
 	for (auto& it : thinkMap) {
@@ -184,7 +184,7 @@ void GlobalEvents::think()
 
 	if (nextScheduledTime != std::numeric_limits<int64_t>::max()) {
 		timerEventId = g_scheduler.addEvent(
-		    createSchedulerTask(std::max<int64_t>(1000, nextScheduledTime * 1000), [this]() { timer(); }));
+		    createSchedulerTask(std::max<int64_t>(1000, nextScheduledTime), [this]() { think(); }));
 	}
 }
 
@@ -279,7 +279,7 @@ bool GlobalEvent::configureEvent(const pugi::xml_node& node)
 			difference += 86400;
 		}
 
-		nextExecution = current_time + difference;
+		nextExecution = (current_time + difference) * 1000;
 		eventType = GLOBALEVENT_TIMER;
 	} else if ((attr = node.attribute("type"))) {
 		const char* value = attr.value();
