@@ -26,7 +26,6 @@ jobs:
     strategy:
       matrix:
         buildtype: [Debug, Release]
-        luajit: [on, off]
 
     steps:
       - uses: actions/checkout@v3

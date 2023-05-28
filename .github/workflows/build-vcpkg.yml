@@ -29,7 +29,6 @@ jobs:
       matrix:
         os: [ubuntu, macos, windows]
         buildtype: [Debug, Release]
-        luajit: [on, off]
 
     steps:
       - uses: actions/checkout@v3

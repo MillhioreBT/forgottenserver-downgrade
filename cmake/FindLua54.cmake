@@ -1,4 +1,4 @@
-# Locate Lua library
+# Locate Lua5.4 library
 # This module defines
 #  LUA_FOUND, if false, do not try to link to Lua
 #  LUA_LIBRARIES
