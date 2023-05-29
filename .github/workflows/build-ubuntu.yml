@@ -37,7 +37,7 @@ jobs:
       - name: Install dependencies
         run: >
           sudo apt update -q &&
-          sudo apt install -yq build-essential liblua5.4-dev libmysqlclient-dev
+          sudo apt install -yq build-essential lua libmysqlclient-dev
           libboost-system-dev libboost-iostreams-dev
           libpugixml-dev libcrypto++-dev libfmt-dev
 

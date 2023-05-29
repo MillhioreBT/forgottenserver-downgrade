@@ -6,7 +6,7 @@ RUN apk add --no-cache --repository http://dl-cdn.alpinelinux.org/alpine/edge/co
   cmake \
   crypto++-dev \
   fmt-dev \
-  lua5.4 \
+  lua \
   mariadb-connector-c-dev \
   pugixml-dev \
   samurai
@@ -24,7 +24,7 @@ RUN apk add --no-cache --repository http://dl-cdn.alpinelinux.org/alpine/edge/co
   boost-system \
   crypto++ \
   fmt \
-  lua5.4 \
+  lua \
   mariadb-connector-c \
   pugixml
 
