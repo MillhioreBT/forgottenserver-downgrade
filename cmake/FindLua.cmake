@@ -1,16 +1,16 @@
-# Locate Lua5.4 library
+# Locate Lua library
 # This module defines
 #  LUA_FOUND, if false, do not try to link to Lua
 #  LUA_LIBRARIES
 #  LUA_INCLUDE_DIR, where to find lua.h
 #  LUA_VERSION_STRING, the version of Lua found (since CMake 2.8.8)
 
-## Copied from default CMake FindLua54.cmake
+## Copied from default CMake FindLua.cmake
 
 find_path(LUA_INCLUDE_DIR lua.h
   HINTS
     ENV LUA_DIR
-  PATH_SUFFIXES include/lua54 include/lua5.4 include/lua-5.4 include/lua-5.4.4 include lua
+  PATH_SUFFIXES include/lua include lua
   PATHS
   ~/Library/Frameworks
   /Library/Frameworks
@@ -21,7 +21,7 @@ find_path(LUA_INCLUDE_DIR lua.h
 )
 
 find_library(LUA_LIBRARY
-  NAMES lua-5.4 lua5.4 lua54
+  NAMES lua
   HINTS
     ENV LUA_DIR
   PATH_SUFFIXES lib
