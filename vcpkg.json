@@ -9,7 +9,7 @@
         "cryptopp",
         "fmt",
         "libmariadb",
-        "lua5.4",
+        "lua54",
         "pugixml"
     ],
     "features": {}
