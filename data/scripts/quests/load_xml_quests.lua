@@ -17,9 +17,11 @@ function xmlQuest.onStartup()
 				storageId = tonumber(missionNode:attribute("storageid")),
 				startValue = tonumber(missionNode:attribute("startvalue")),
 				endValue = tonumber(missionNode:attribute("endvalue")),
-				ignoreEndValue = tobool(missionNode:attribute("ignoreendvalue")),
 				description = missionNode:attribute("description")
 			}
+
+			local ignoreEndValue = missionNode:attribute("ignoreendvalue")
+			if ignoreEndValue then mission.ignoreEndValue = tobool(ignoreEndValue) end
 
 			if not mission.description then
 				local description = {}
