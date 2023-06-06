@@ -2037,7 +2037,7 @@ void ProtocolGame::sendAddCreature(const Creature* creature, const Position& pos
 	}
 
 	if (creature != player) {
-		if (stackpos < MAX_STACKPOS_THINGS) {
+		if (stackpos != -1 && stackpos < MAX_STACKPOS_THINGS) {
 			NetworkMessage msg;
 			msg.addByte(0x6A);
 			msg.addPosition(pos);
