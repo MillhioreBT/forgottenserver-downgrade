@@ -567,7 +567,7 @@ bool IOLoginData::loadPlayer(Player* player, DBResult_ptr result)
 	if ((result = db.storeQuery(
 	         fmt::format("SELECT `key`, `value` FROM `player_storage` WHERE `player_id` = {:d}", player->getGUID())))) {
 		do {
-			player->addStorageValue(result->getNumber<uint32_t>("key"), result->getNumber<int32_t>("value"), true);
+			player->setStorageValue(result->getNumber<uint32_t>("key"), result->getNumber<int64_t>("value"), true);
 		} while (result->next());
 	}
 
@@ -576,6 +576,14 @@ bool IOLoginData::loadPlayer(Player* player, DBResult_ptr result)
 	                                        player->getAccount())))) {
 		do {
 			player->addVIPInternal(result->getNumber<uint32_t>("player_id"));
+		} while (result->next());
+	}
+
+	// load outfits & addons
+	if ((result = db.storeQuery(fmt::format(
+	         "SELECT `outfit_id`, `addons` FROM `player_outfits` WHERE `player_id` = {:d}", player->getGUID())))) {
+		do {
+			player->addOutfit(result->getNumber<uint16_t>("outfit_id"), result->getNumber<uint8_t>("addons"));
 		} while (result->next());
 	}
 
@@ -866,7 +874,6 @@ bool IOLoginData::savePlayer(Player* player)
 	}
 
 	DBInsert storageQuery("INSERT INTO `player_storage` (`player_id`, `key`, `value`) VALUES ");
-	player->genReservedStorageRange();
 
 	for (const auto& it : player->storageMap) {
 		if (!storageQuery.addRow(fmt::format("{:d}, {:d}, {:d}", player->getGUID(), it.first, it.second))) {
@@ -875,6 +882,23 @@ bool IOLoginData::savePlayer(Player* player)
 	}
 
 	if (!storageQuery.execute()) {
+		return false;
+	}
+
+	// save outfits & addons
+	if (!db.executeQuery(fmt::format("DELETE FROM `player_outfits` WHERE `player_id` = {:d}", player->getGUID()))) {
+		return false;
+	}
+
+	DBInsert outfitQuery("INSERT INTO `player_outfits` (`player_id`, `outfit_id`, `addons`) VALUES ");
+
+	for (const auto& [lookType, addon] : player->outfits) {
+		if (!outfitQuery.addRow(fmt::format("{:d}, {:d}, {:d}", player->getGUID(), lookType, addon))) {
+			return false;
+		}
+	}
+
+	if (!outfitQuery.execute()) {
 		return false;
 	}
 

@@ -109,8 +109,8 @@ public:
 	void eventPlayerOnLoseExperience(Player* player, uint64_t& exp);
 	void eventPlayerOnGainSkillTries(Player* player, skills_t skill, uint64_t& tries);
 	void eventPlayerOnNetworkMessage(Player* player, uint8_t recvByte, NetworkMessage* msg);
-	void eventPlayerOnUpdateStorage(Player* player, const uint32_t key, const int32_t value, const int32_t oldValue,
-	                                bool isLogin);
+	void eventPlayerOnUpdateStorage(Player* player, const uint32_t key, const StorageValue value,
+	                                const StorageValue oldValue, bool isLogin);
 	void eventPlayerOnUpdateInventory(Player* player, Item* item, const slots_t slot, const bool equip);
 	void eventPlayerOnAccountManager(Player* player, std::string_view text);
 

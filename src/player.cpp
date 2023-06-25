@@ -625,23 +625,12 @@ uint16_t Player::getLookCorpse() const
 	return ITEM_MALE_CORPSE;
 }
 
-void Player::addStorageValue(const uint32_t key, const int32_t value, const bool isLogin /* = false*/)
+void Player::setStorageValue(const uint32_t key, const StorageValue value, const bool isLogin /* = false*/)
 {
-	if (IS_IN_KEYRANGE(key, RESERVED_RANGE)) {
-		if (IS_IN_KEYRANGE(key, OUTFITS_RANGE)) {
-			outfits.emplace_back(value >> 16, value & 0xFF);
-			return;
-		} else {
-			std::cout << "Warning: unknown reserved key: " << key << " player: " << getName() << std::endl;
-			return;
-		}
-	}
+	const auto& oldValue = getStorageValue(key);
 
-	int32_t oldValue;
-	getStorageValue(key, oldValue);
-
-	if (value != -1) {
-		storageMap[key] = value;
+	if (value) {
+		storageMap[key] = value.value();
 	} else {
 		storageMap.erase(key);
 	}
@@ -649,16 +638,14 @@ void Player::addStorageValue(const uint32_t key, const int32_t value, const bool
 	g_events->eventPlayerOnUpdateStorage(this, key, oldValue, value, isLogin);
 }
 
-bool Player::getStorageValue(const uint32_t key, int32_t& value) const
+StorageValue Player::getStorageValue(const uint32_t key) const
 {
 	auto it = storageMap.find(key);
 	if (it == storageMap.end()) {
-		value = -1;
-		return false;
+		return std::nullopt;
 	}
 
-	value = it->second;
-	return true;
+	return it->second;
 }
 
 bool Player::canSee(const Position& pos) const
@@ -2777,7 +2764,7 @@ void Player::removeThing(Thing* thing, uint32_t count)
 
 int32_t Player::getThingIndex(const Thing* thing) const
 {
-	for (int i = CONST_SLOT_FIRST; i <= CONST_SLOT_LAST; ++i) {
+	for (int32_t i = CONST_SLOT_FIRST; i <= CONST_SLOT_LAST; ++i) {
 		if (inventory[i] == thing) {
 			return i;
 		}
@@ -3602,7 +3589,7 @@ bool Player::canWear(uint32_t lookType, uint8_t addons) const
 		return true;
 	}
 
-	const Outfit* outfit = Outfits::getInstance().getOutfitByLookType(sex, static_cast<uint16_t>(lookType));
+	const Outfit* outfit = Outfits::getInstance().getOutfitByLookType(static_cast<uint16_t>(lookType));
 	if (!outfit) {
 		return false;
 	}
@@ -3615,9 +3602,9 @@ bool Player::canWear(uint32_t lookType, uint8_t addons) const
 		return true;
 	}
 
-	for (const OutfitEntry& outfitEntry : outfits) {
-		if (outfitEntry.lookType == lookType) {
-			if (outfitEntry.addons == addons || outfitEntry.addons == 3 || addons == 0) {
+	for (const auto& [outfitLookType, addon] : outfits) {
+		if (outfitLookType == lookType) {
+			if (addon == addons || addon == 3 || addons == 0) {
 				return true;
 			}
 			return false; // have lookType on list and addons don't match
@@ -3628,7 +3615,7 @@ bool Player::canWear(uint32_t lookType, uint8_t addons) const
 
 bool Player::hasOutfit(uint32_t lookType, uint8_t addons)
 {
-	const Outfit* outfit = Outfits::getInstance().getOutfitByLookType(sex, static_cast<uint16_t>(lookType));
+	const Outfit* outfit = Outfits::getInstance().getOutfitByLookType(static_cast<uint16_t>(lookType));
 	if (!outfit) {
 		return false;
 	}
@@ -3637,9 +3624,9 @@ bool Player::hasOutfit(uint32_t lookType, uint8_t addons)
 		return true;
 	}
 
-	for (const OutfitEntry& outfitEntry : outfits) {
-		if (outfitEntry.lookType == lookType) {
-			if (outfitEntry.addons == addons || outfitEntry.addons == 3 || addons == 0) {
+	for (const auto& [outfitLookType, addon] : outfits) {
+		if (outfitLookType == lookType) {
+			if (addon == addons || addon == 3 || addons == 0) {
 				return true;
 			}
 			return false; // have lookType on list and addons don't match
@@ -3648,32 +3635,22 @@ bool Player::hasOutfit(uint32_t lookType, uint8_t addons)
 	return false;
 }
 
-void Player::genReservedStorageRange()
-{
-	// generate outfits range
-	uint32_t base_key = PSTRG_OUTFITS_RANGE_START;
-	for (const OutfitEntry& entry : outfits) {
-		storageMap[++base_key] = (entry.lookType << 16) | entry.addons;
-	}
-}
-
 void Player::addOutfit(uint16_t lookType, uint8_t addons)
 {
-	for (OutfitEntry& outfitEntry : outfits) {
-		if (outfitEntry.lookType == lookType) {
-			outfitEntry.addons |= addons;
+	for (auto& [outfit, addon] : outfits) {
+		if (outfit == lookType) {
+			addon |= addons;
 			return;
 		}
 	}
-	outfits.emplace_back(lookType, addons);
+	outfits.emplace(lookType, addons);
 }
 
 bool Player::removeOutfit(uint16_t lookType)
 {
-	for (auto it = outfits.begin(), end = outfits.end(); it != end; ++it) {
-		OutfitEntry& entry = *it;
-		if (entry.lookType == lookType) {
-			outfits.erase(it);
+	for (const auto& [outfit, _] : outfits) {
+		if (outfit == lookType) {
+			outfits.erase(outfit);
 			return true;
 		}
 	}
@@ -3682,9 +3659,9 @@ bool Player::removeOutfit(uint16_t lookType)
 
 bool Player::removeOutfitAddon(uint16_t lookType, uint8_t addons)
 {
-	for (OutfitEntry& outfitEntry : outfits) {
-		if (outfitEntry.lookType == lookType) {
-			outfitEntry.addons &= ~addons;
+	for (auto& [outfit, addon] : outfits) {
+		if (outfit == lookType) {
+			addon &= ~addons;
 			return true;
 		}
 	}
@@ -3702,12 +3679,12 @@ bool Player::getOutfitAddons(const Outfit& outfit, uint8_t& addons) const
 		return false;
 	}
 
-	for (const OutfitEntry& outfitEntry : outfits) {
-		if (outfitEntry.lookType != outfit.lookType) {
+	for (const auto& [lookType, addon] : outfits) {
+		if (lookType != outfit.lookType) {
 			continue;
 		}
 
-		addons = outfitEntry.addons;
+		addons = addon;
 		return true;
 	}
 
@@ -4064,7 +4041,7 @@ bool Player::toggleMount(bool mount)
             return false;
         }
 
-        const Outfit* playerOutfit = Outfits::getInstance().getOutfitByLookType(getSex(), defaultOutfit.lookType);
+        const Outfit* playerOutfit = Outfits::getInstance().getOutfitByLookType(defaultOutfit.lookType);
         if (!playerOutfit) {
             return false;
         }
@@ -4347,36 +4324,6 @@ void Player::clearModalWindows()
     modalWindows.clear();
 }
 */
-
-uint16_t Player::getHelpers() const
-{
-	uint16_t helpers;
-
-	if (guild && party) {
-		std::unordered_set<Player*> helperSet;
-
-		const auto& guildMembers = guild->getMembersOnline();
-		helperSet.insert(guildMembers.begin(), guildMembers.end());
-
-		const auto& partyMembers = party->getMembers();
-		helperSet.insert(partyMembers.begin(), partyMembers.end());
-
-		const auto& partyInvitees = party->getInvitees();
-		helperSet.insert(partyInvitees.begin(), partyInvitees.end());
-
-		helperSet.insert(party->getLeader());
-
-		helpers = helperSet.size();
-	} else if (guild) {
-		helpers = guild->getMembersOnline().size();
-	} else if (party) {
-		helpers = party->getMemberCount() + party->getInvitationCount() + 1;
-	} else {
-		helpers = 0;
-	}
-
-	return helpers;
-}
 
 void Player::sendClosePrivate(uint16_t channelId)
 {

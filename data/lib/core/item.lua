@@ -73,7 +73,7 @@ do
 		local name = obj:getName()
 		if name ~= "" then
 			if it:isStackable() and subType > 1 then
-				if it:hasShowCount() then ss:append("%d", subType) end
+				if it:hasShowCount() then ss:append("%d ", subType) end
 				ss:append("%s", obj:getPluralName())
 			else
 				if addArticle and obj:getArticle() ~= "" then

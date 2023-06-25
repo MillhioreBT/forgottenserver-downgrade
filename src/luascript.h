@@ -159,7 +159,7 @@ enum class LuaErrorCode
 class LuaScriptInterface
 {
 public:
-	explicit LuaScriptInterface(std::string interfaceName);
+	explicit LuaScriptInterface(std::string_view interfaceName);
 	virtual ~LuaScriptInterface();
 
 	// non-copyable
@@ -175,6 +175,7 @@ public:
 	int32_t getEvent(std::string_view eventName);
 	int32_t getEvent();
 	int32_t getMetaEvent(std::string_view globalName, std::string_view eventName);
+	void removeEvent(int32_t scriptId);
 
 	static ScriptEnvironment* getScriptEnv()
 	{
@@ -909,6 +910,7 @@ private:
 	static int luaPlayerGetMagicLevel(lua_State* L);
 	static int luaPlayerGetBaseMagicLevel(lua_State* L);
 	static int luaPlayerGetMana(lua_State* L);
+	static int luaPlayerSetMana(lua_State* L);
 	static int luaPlayerAddMana(lua_State* L);
 	static int luaPlayerGetMaxMana(lua_State* L);
 	static int luaPlayerSetMaxMana(lua_State* L);
@@ -1034,6 +1036,9 @@ private:
 	static int luaPlayerGetFightMode(lua_State* L);
 
 	static int luaPlayerGetIdleTime(lua_State* L);
+
+	static int luaPlayerOpenContainer(lua_State* L);
+	static int luaPlayerCloseContainer(lua_State* L);
 
 	// OfflinePlayer
 	static int luaOfflinePlayerCreate(lua_State* L);

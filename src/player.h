@@ -67,14 +67,6 @@ struct OpenContainer
 	uint16_t index;
 };
 
-struct OutfitEntry
-{
-	constexpr OutfitEntry(uint16_t lookType, uint8_t addons) : lookType(lookType), addons(addons) {}
-
-	uint16_t lookType;
-	uint8_t addons;
-};
-
 static constexpr int16_t MINIMUM_SKILL_LEVEL = 10;
 
 struct Skill
@@ -230,9 +222,8 @@ public:
 
 	bool canOpenCorpse(uint32_t ownerId) const;
 
-	void addStorageValue(const uint32_t key, const int32_t value, const bool isLogin = false);
-	bool getStorageValue(const uint32_t key, int32_t& value) const;
-	void genReservedStorageRange();
+	void setStorageValue(const uint32_t key, const StorageValue value, const bool isLogin = false);
+	StorageValue getStorageValue(const uint32_t key) const;
 
 	void setGroup(Group* newGroup) { group = newGroup; }
 	Group* getGroup() const { return group; }
@@ -259,8 +250,6 @@ public:
 	bool isAccessPlayer() const { return group->access; }
 	bool isPremium() const;
 	void setPremiumTime(time_t premiumEndsAt);
-
-	uint16_t getHelpers() const;
 
 	bool setVocation(uint16_t vocId);
 	uint16_t getVocationId() const { return vocation->getId(); }
@@ -915,6 +904,8 @@ public:
 
 	void updateRegeneration();
 
+	const auto& getOpenContainers() const { return openContainers; }
+
 private:
 	std::forward_list<Condition*> getMuteConditions() const;
 
@@ -969,9 +960,9 @@ private:
 	std::map<uint8_t, OpenContainer> openContainers;
 	std::map<uint32_t, DepotLocker_ptr> depotLockerMap;
 	std::map<uint32_t, DepotChest*> depotChests;
-	std::map<uint32_t, int32_t> storageMap;
+	std::map<uint32_t, int64_t> storageMap;
 
-	std::vector<OutfitEntry> outfits;
+	std::unordered_map<uint16_t, uint8_t> outfits;
 	GuildWarVector guildWarVector;
 
 	std::list<ShopInfo> shopItemList;

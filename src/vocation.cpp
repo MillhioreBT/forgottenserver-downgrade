@@ -134,7 +134,7 @@ uint16_t Vocations::getPromotedVocation(uint16_t id) const
 {
 	auto it = std::find_if(vocationsMap.begin(), vocationsMap.end(),
 	                       [id](auto it) { return it.second.fromVocation == id && it.first != id; });
-	return it != vocationsMap.end() ? it->first : VOCATION_NONE;
+	return it != vocationsMap.end() ? it->first : static_cast<uint16_t>(VOCATION_NONE);
 }
 
 static const uint32_t skillBase[SKILL_LAST + 1] = {50, 50, 50, 50, 30, 100, 20};

@@ -486,15 +486,4 @@ static constexpr int32_t CHANNEL_GUILD = 0x00;
 static constexpr int32_t CHANNEL_PARTY = 0x01;
 static constexpr int32_t CHANNEL_PRIVATE = 0xFFFF;
 
-// Reserved player storage key ranges;
-//[10000000 - 20000000];
-static constexpr int32_t PSTRG_RESERVED_RANGE_START = 10000000;
-static constexpr int32_t PSTRG_RESERVED_RANGE_SIZE = 10000000;
-//[1000 - 1500];
-static constexpr int32_t PSTRG_OUTFITS_RANGE_START = (PSTRG_RESERVED_RANGE_START + 1000);
-static constexpr int32_t PSTRG_OUTFITS_RANGE_SIZE = 500;
-
-#define IS_IN_KEYRANGE(key, range) \
-	(key >= PSTRG_##range##_START && ((key - PSTRG_##range##_START) <= PSTRG_##range##_SIZE))
-
 #endif

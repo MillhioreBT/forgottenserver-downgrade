@@ -271,7 +271,7 @@ std::string_view LuaScriptInterface::getErrorDesc(LuaErrorCode code)
 ScriptEnvironment LuaScriptInterface::scriptEnv[16];
 int32_t LuaScriptInterface::scriptEnvIndex = -1;
 
-LuaScriptInterface::LuaScriptInterface(std::string interfaceName) : interfaceName(std::move(interfaceName))
+LuaScriptInterface::LuaScriptInterface(std::string_view interfaceName) : interfaceName{interfaceName}
 {
 	if (!g_luaEnvironment.getLuaState()) {
 		g_luaEnvironment.initState();
@@ -420,6 +420,27 @@ int32_t LuaScriptInterface::getMetaEvent(std::string_view globalName, std::strin
 
 	cacheFiles[runningEventId] = fmt::format("{}:{}@{}", loadingFile, globalName, eventName);
 	return runningEventId++;
+}
+
+void LuaScriptInterface::removeEvent(int32_t scriptId)
+{
+	if (scriptId == -1) {
+		return;
+	}
+
+	// get our events table
+	lua_rawgeti(luaState, LUA_REGISTRYINDEX, eventTableRef);
+	if (!isTable(luaState, -1)) {
+		lua_pop(luaState, 1);
+		return;
+	}
+
+	// remove event from table
+	lua_pushnil(luaState);
+	lua_rawseti(luaState, -2, scriptId);
+	lua_pop(luaState, 1);
+
+	cacheFiles.erase(scriptId);
 }
 
 std::string_view LuaScriptInterface::getFileById(int32_t scriptId)
@@ -782,11 +803,12 @@ Outfit_t LuaScriptInterface::getOutfit(lua_State* L, int32_t arg)
 Outfit LuaScriptInterface::getOutfitClass(lua_State* L, int32_t arg)
 {
 	uint16_t lookType = getField<uint16_t>(L, arg, "lookType");
+	PlayerSex_t sex = getField<PlayerSex_t>(L, arg, "sex");
 	auto name = getFieldString(L, arg, "name");
 	bool premium = getField<uint8_t>(L, arg, "premium") == 1;
 	bool unlocked = getField<uint8_t>(L, arg, "unlocked") == 1;
-	lua_pop(L, 4);
-	return Outfit(name, lookType, premium, unlocked);
+	lua_pop(L, 5);
+	return {name, lookType, sex, premium, unlocked};
 }
 
 namespace {
@@ -1001,8 +1023,9 @@ void LuaScriptInterface::pushOutfit(lua_State* L, const Outfit_t& outfit)
 
 void LuaScriptInterface::pushOutfit(lua_State* L, const Outfit* outfit)
 {
-	lua_createtable(L, 0, 4);
+	lua_createtable(L, 0, 5);
 	setField(L, "lookType", outfit->lookType);
+	setField(L, "sex", outfit->sex);
 	setField(L, "name", outfit->name);
 	setField(L, "premium", outfit->premium);
 	setField(L, "unlocked", outfit->unlocked);
@@ -2387,6 +2410,7 @@ void LuaScriptInterface::registerFunctions()
 	registerMethod("Player", "getMagicLevel", LuaScriptInterface::luaPlayerGetMagicLevel);
 	registerMethod("Player", "getBaseMagicLevel", LuaScriptInterface::luaPlayerGetBaseMagicLevel);
 	registerMethod("Player", "getMana", LuaScriptInterface::luaPlayerGetMana);
+	registerMethod("Player", "setMana", LuaScriptInterface::luaPlayerSetMana);
 	registerMethod("Player", "addMana", LuaScriptInterface::luaPlayerAddMana);
 	registerMethod("Player", "getMaxMana", LuaScriptInterface::luaPlayerGetMaxMana);
 	registerMethod("Player", "setMaxMana", LuaScriptInterface::luaPlayerSetMaxMana);
@@ -2511,6 +2535,9 @@ void LuaScriptInterface::registerFunctions()
 	registerMethod("Player", "getFightMode", LuaScriptInterface::luaPlayerGetFightMode);
 
 	registerMethod("Player", "getIdleTime", LuaScriptInterface::luaPlayerGetIdleTime);
+
+	registerMethod("Player", "openContainer", LuaScriptInterface::luaPlayerOpenContainer);
+	registerMethod("Player", "closeContainer", LuaScriptInterface::luaPlayerCloseContainer);
 
 	// OfflinePlayer
 	registerClass("OfflinePlayer", "Player", LuaScriptInterface::luaOfflinePlayerCreate);
@@ -3794,7 +3821,7 @@ int LuaScriptInterface::luaAddEvent(lua_State* L)
 	eventDesc.function = luaL_ref(L, LUA_REGISTRYINDEX);
 	eventDesc.scriptId = getScriptEnv()->getScriptId();
 
-	auto& lastTimerEventId = g_luaEnvironment.lastEventTimerId;
+	auto lastTimerEventId = g_luaEnvironment.lastEventTimerId;
 	eventDesc.eventId = g_scheduler.addEvent(
 	    createSchedulerTask(delay, [=]() { g_luaEnvironment.executeTimerEvent(lastTimerEventId); }));
 
@@ -8288,6 +8315,22 @@ int LuaScriptInterface::luaPlayerGetMana(lua_State* L)
 	return 1;
 }
 
+int LuaScriptInterface::luaPlayerSetMana(lua_State* L)
+{
+	// player:setMana(mana)
+	Player* player = getUserdata<Player>(L, 1);
+	if (!player) {
+		lua_pushnil(L);
+		return 1;
+	}
+
+	auto mana = getInteger<uint32_t>(L, 2);
+	player->mana = std::min<uint32_t>(mana, player->manaMax);
+	player->sendStats();
+	pushBoolean(L, true);
+	return 1;
+}
+
 int LuaScriptInterface::luaPlayerAddMana(lua_State* L)
 {
 	// player:addMana(manaChange[, animationOnLoss = false])
@@ -8328,8 +8371,8 @@ int LuaScriptInterface::luaPlayerSetMaxMana(lua_State* L)
 	// player:setMaxMana(maxMana)
 	Player* player = getPlayer(L, 1);
 	if (player) {
-		player->manaMax = getInteger<int32_t>(L, 2);
-		player->mana = std::min<int32_t>(player->mana, player->manaMax);
+		player->manaMax = getInteger<uint32_t>(L, 2);
+		player->mana = std::min<uint32_t>(player->mana, player->manaMax);
 		player->sendStats();
 		pushBoolean(L, true);
 	} else {
@@ -8723,13 +8766,13 @@ int LuaScriptInterface::luaPlayerGetGuildLevel(lua_State* L)
 int LuaScriptInterface::luaPlayerSetGuildLevel(lua_State* L)
 {
 	// player:setGuildLevel(level)
-	uint8_t level = getInteger<uint8_t>(L, 2);
 	Player* player = getUserdata<Player>(L, 1);
 	if (!player || !player->getGuild()) {
 		lua_pushnil(L);
 		return 1;
 	}
 
+	uint8_t level = getInteger<uint8_t>(L, 2);
 	GuildRank_ptr rank = player->getGuild()->getRankByLevel(level);
 	if (!rank) {
 		pushBoolean(L, false);
@@ -8756,9 +8799,9 @@ int LuaScriptInterface::luaPlayerGetGuildNick(lua_State* L)
 int LuaScriptInterface::luaPlayerSetGuildNick(lua_State* L)
 {
 	// player:setGuildNick(nick)
-	const std::string& nick = getString(L, 2);
 	Player* player = getUserdata<Player>(L, 1);
 	if (player) {
+		const std::string& nick = getString(L, 2);
 		player->setGuildNick(nick);
 		pushBoolean(L, true);
 	} else {
@@ -8814,9 +8857,9 @@ int LuaScriptInterface::luaPlayerGetStamina(lua_State* L)
 int LuaScriptInterface::luaPlayerSetStamina(lua_State* L)
 {
 	// player:setStamina(stamina)
-	uint16_t stamina = getInteger<uint16_t>(L, 2);
 	Player* player = getUserdata<Player>(L, 1);
 	if (player) {
+		uint16_t stamina = getInteger<uint16_t>(L, 2);
 		player->staminaMinutes = std::min<uint16_t>(2520, stamina);
 		player->sendStats();
 		pushBoolean(L, true);
@@ -8841,9 +8884,9 @@ int LuaScriptInterface::luaPlayerGetSoul(lua_State* L)
 int LuaScriptInterface::luaPlayerAddSoul(lua_State* L)
 {
 	// player:addSoul(soulChange)
-	int32_t soulChange = getInteger<int32_t>(L, 2);
 	Player* player = getUserdata<Player>(L, 1);
 	if (player) {
+		int32_t soulChange = getInteger<int32_t>(L, 2);
 		player->changeSoul(soulChange);
 		pushBoolean(L, true);
 	} else {
@@ -8907,11 +8950,13 @@ int LuaScriptInterface::luaPlayerGetStorageValue(lua_State* L)
 	}
 
 	uint32_t key = getInteger<uint32_t>(L, 2);
-	int32_t value;
-	if (player->getStorageValue(key, value)) {
-		lua_pushinteger(L, value);
+	const auto& value = player->getStorageValue(key);
+	if (value) {
+		lua_pushinteger(L, value.value());
+	} else if (isInteger(L, 3)) {
+		lua_pushinteger(L, getInteger<int64_t>(L, 3));
 	} else {
-		lua_pushinteger(L, -1);
+		lua_pushnil(L);
 	}
 	return 1;
 }
@@ -8919,21 +8964,27 @@ int LuaScriptInterface::luaPlayerGetStorageValue(lua_State* L)
 int LuaScriptInterface::luaPlayerSetStorageValue(lua_State* L)
 {
 	// player:setStorageValue(key, value)
-	int32_t value = getInteger<int32_t>(L, 3);
-	uint32_t key = getInteger<uint32_t>(L, 2);
 	Player* player = getUserdata<Player>(L, 1);
-	if (IS_IN_KEYRANGE(key, RESERVED_RANGE)) {
-		reportErrorFunc(L, fmt::format("Accessing reserved range: {:d}", key));
-		pushBoolean(L, false);
+	if (!player) {
+		lua_pushnil(L);
 		return 1;
 	}
 
-	if (player) {
-		player->addStorageValue(key, value);
-		pushBoolean(L, true);
-	} else {
+	if (!isInteger(L, 2)) {
+		reportErrorFunc(L, "Invalid storage key.");
 		lua_pushnil(L);
+		return 1;
 	}
+
+	uint32_t key = getInteger<uint32_t>(L, 2);
+	if (isInteger(L, 3)) {
+		int64_t value = getInteger<int64_t>(L, 3);
+		player->setStorageValue(key, value);
+	} else {
+		player->setStorageValue(key, std::nullopt);
+	}
+
+	pushBoolean(L, true);
 	return 1;
 }
 
@@ -9139,8 +9190,8 @@ int LuaScriptInterface::luaPlayerShowTextDialog(lua_State* L)
 		return 1;
 	}
 
-	int32_t length = getInteger<int32_t>(L, 5, -1);
 	bool canWrite = getBoolean(L, 4, false);
+	int32_t length = getInteger<int32_t>(L, 5, -1);
 	std::string text;
 
 	int parameters = lua_gettop(L);
@@ -9928,6 +9979,59 @@ int LuaScriptInterface::luaPlayerGetIdleTime(lua_State* L)
 	}
 
 	lua_pushinteger(L, player->getIdleTime());
+	return 1;
+}
+
+int LuaScriptInterface::luaPlayerOpenContainer(lua_State* L)
+{
+	// player:openContainer(container)
+	Player* player = getUserdata<Player>(L, 1);
+	if (!player) {
+		lua_pushnil(L);
+		return 1;
+	}
+
+	Container* container = getUserdata<Container>(L, 2);
+	if (!container) {
+		lua_pushnil(L);
+		return 1;
+	}
+
+	if (player->getContainerID(container) == -1) {
+		player->addContainer(player->getOpenContainers().size(), container);
+		player->onSendContainer(container);
+		pushBoolean(L, true);
+		return 1;
+	}
+
+	pushBoolean(L, false);
+	return 1;
+}
+
+int LuaScriptInterface::luaPlayerCloseContainer(lua_State* L)
+{
+	// player:closeContainer(container)
+	Player* player = getUserdata<Player>(L, 1);
+	if (!player) {
+		lua_pushnil(L);
+		return 1;
+	}
+
+	const Container* container = getUserdata<const Container>(L, 2);
+	if (!container) {
+		lua_pushnil(L);
+		return 1;
+	}
+
+	int8_t oldContainerId = player->getContainerID(container);
+	if (oldContainerId != -1) {
+		player->onCloseContainer(container);
+		player->closeContainer(oldContainerId);
+		pushBoolean(L, true);
+		return 1;
+	}
+
+	pushBoolean(L, false);
 	return 1;
 }
 

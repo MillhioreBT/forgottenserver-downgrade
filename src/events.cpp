@@ -1075,8 +1075,8 @@ void Events::eventPlayerOnNetworkMessage(Player* player, uint8_t recvByte, Netwo
 	scriptInterface.callVoidFunction(3);
 }
 
-void Events::eventPlayerOnUpdateStorage(Player* player, const uint32_t key, const int32_t value, const int32_t oldValue,
-                                        bool isLogin)
+void Events::eventPlayerOnUpdateStorage(Player* player, const uint32_t key, const StorageValue value,
+                                        const StorageValue oldValue, bool isLogin)
 {
 	// Player:onUpdateStorage(key, value, oldValue, isLogin)
 	if (info.playerOnUpdateStorage == -1) {
@@ -1098,8 +1098,18 @@ void Events::eventPlayerOnUpdateStorage(Player* player, const uint32_t key, cons
 	LuaScriptInterface::setMetatable(L, -1, "Player");
 
 	lua_pushinteger(L, key);
-	lua_pushinteger(L, value);
-	lua_pushinteger(L, oldValue);
+	if (value) {
+		lua_pushinteger(L, value.value());
+	} else {
+		lua_pushnil(L);
+	}
+
+	if (oldValue) {
+		lua_pushinteger(L, oldValue.value());
+	} else {
+		lua_pushnil(L);
+	}
+
 	LuaScriptInterface::pushBoolean(L, isLogin);
 
 	scriptInterface.callVoidFunction(5);

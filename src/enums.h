@@ -631,4 +631,6 @@ enum MonstersEvent_t : uint8_t
 	MONSTERS_EVENT_SAY = 5,
 };
 
+using StorageValue = std::optional<int64_t>;
+
 #endif

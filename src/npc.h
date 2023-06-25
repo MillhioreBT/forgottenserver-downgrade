@@ -72,9 +72,10 @@ public:
 
 	bool isLoaded() const;
 
+	std::unique_ptr<NpcScriptInterface> scriptInterface;
+
 private:
 	Npc* npc;
-	NpcScriptInterface* scriptInterface;
 
 	int32_t creatureAppearEvent = -1;
 	int32_t creatureDisappearEvent = -1;
@@ -150,7 +151,7 @@ public:
 
 	const auto& getSpectators() { return spectators; }
 
-	NpcScriptInterface* getScriptInterface();
+	auto& getScriptInterface() { return npcEventHandler->scriptInterface; }
 
 	static uint32_t npcAutoID;
 
@@ -191,7 +192,7 @@ private:
 	std::string name;
 	std::string filename;
 
-	NpcEventsHandler* npcEventHandler;
+	std::unique_ptr<NpcEventsHandler> npcEventHandler;
 
 	Position masterPos;
 
@@ -207,8 +208,6 @@ private:
 	bool loaded;
 	bool isIdle;
 	bool pushable;
-
-	static NpcScriptInterface* scriptInterface;
 
 	friend class Npcs;
 	friend class NpcScriptInterface;

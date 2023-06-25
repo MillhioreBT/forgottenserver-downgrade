@@ -8,18 +8,19 @@
 
 struct Outfit
 {
-	Outfit(std::string_view name, uint16_t lookType, bool premium, bool unlocked) :
-	    name{name}, lookType{lookType}, premium{premium}, unlocked{unlocked}
+	Outfit(std::string_view name, uint16_t lookType, PlayerSex_t sex, bool premium, bool unlocked) :
+	    name{name}, lookType{lookType}, sex{sex}, premium{premium}, unlocked{unlocked}
 	{}
 
 	bool operator==(const Outfit& otherOutfit) const
 	{
-		return name == otherOutfit.name && lookType == otherOutfit.lookType && premium == otherOutfit.premium &&
-		       unlocked == otherOutfit.unlocked;
+		return name == otherOutfit.name && lookType == otherOutfit.lookType && sex == otherOutfit.sex &&
+		       premium == otherOutfit.premium && unlocked == otherOutfit.unlocked;
 	}
 
 	std::string name;
 	uint16_t lookType;
+	PlayerSex_t sex;
 	bool premium;
 	bool unlocked;
 };
@@ -46,12 +47,11 @@ public:
 
 	bool loadFromXml();
 
-	const Outfit* getOutfitByLookType(PlayerSex_t sex, uint16_t lookType) const;
 	const Outfit* getOutfitByLookType(uint16_t lookType) const;
-	const std::vector<Outfit>& getOutfits(PlayerSex_t sex) const { return outfits[sex]; }
+	const std::vector<const Outfit*> getOutfits(PlayerSex_t sex) const;
 
 private:
-	std::vector<Outfit> outfits[PLAYERSEX_LAST + 1];
+	std::unordered_map<uint16_t, Outfit> outfits;
 };
 
 #endif

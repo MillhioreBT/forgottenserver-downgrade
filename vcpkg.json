@@ -12,5 +12,13 @@
         "lua",
         "pugixml"
     ],
-    "features": {}
+    "features": {
+        "luajit": {
+            "description": "Use LuaJIT instead of Lua",
+            "dependencies": [
+                "luajit"
+            ]
+        }
+    },
+    "builtin-baseline": "7f59e0013648f0dd80377330b770b414032233cb"
 }

@@ -17,7 +17,6 @@
 #include <fmt/format.h>
 
 extern ConfigManager g_config;
-extern Actions actions;
 extern CreatureEvents* g_creatureEvents;
 extern Chat* g_chat;
 
@@ -2281,7 +2280,7 @@ void ProtocolGame::sendOutfitWindow()
 	Outfit_t currentOutfit = player->getDefaultOutfit();
 	if (currentOutfit.lookType == 0) {
 		Outfit_t newOutfit;
-		newOutfit.lookType = outfits.front().lookType;
+		newOutfit.lookType = outfits.front()->lookType;
 		currentOutfit = newOutfit;
 	}
 
@@ -2292,13 +2291,13 @@ void ProtocolGame::sendOutfitWindow()
 		protocolOutfits.emplace_back("Gamemaster", 75, 0);
 	}
 
-	for (const Outfit& outfit : outfits) {
+	for (const Outfit* outfit : outfits) {
 		uint8_t addons;
-		if (!player->getOutfitAddons(outfit, addons)) {
+		if (!player->getOutfitAddons(*outfit, addons)) {
 			continue;
 		}
 
-		protocolOutfits.emplace_back(outfit.name, outfit.lookType, addons);
+		protocolOutfits.emplace_back(outfit->name, outfit->lookType, addons);
 		if (protocolOutfits.size() == 50) { // Game client doesn't allow more than 50 outfits
 			break;
 		}
@@ -2397,9 +2396,9 @@ void ProtocolGame::AddPlayerStats(NetworkMessage& msg)
 	msg.addByte(0xA0);
 
 	msg.add<uint16_t>(
-	    static_cast<uint16_t>(std::min<int32_t>(player->getHealth(), std::numeric_limits<uint16_t>::max())));
+	    static_cast<uint16_t>(std::min<uint32_t>(player->getHealth(), std::numeric_limits<uint16_t>::max())));
 	msg.add<uint16_t>(
-	    static_cast<uint16_t>(std::min<int32_t>(player->getMaxHealth(), std::numeric_limits<uint16_t>::max())));
+	    static_cast<uint16_t>(std::min<uint32_t>(player->getMaxHealth(), std::numeric_limits<uint16_t>::max())));
 
 	msg.add<uint32_t>(player->hasFlag(PlayerFlag_HasInfiniteCapacity) ? 1000000 : player->getFreeCapacity());
 
@@ -2409,9 +2408,9 @@ void ProtocolGame::AddPlayerStats(NetworkMessage& msg)
 	msg.addByte(player->getLevelPercent());
 
 	msg.add<uint16_t>(
-	    static_cast<uint16_t>(std::min<int32_t>(player->getMana(), std::numeric_limits<uint16_t>::max())));
+	    static_cast<uint16_t>(std::min<uint32_t>(player->getMana(), std::numeric_limits<uint16_t>::max())));
 	msg.add<uint16_t>(
-	    static_cast<uint16_t>(std::min<int32_t>(player->getMaxMana(), std::numeric_limits<uint16_t>::max())));
+	    static_cast<uint16_t>(std::min<uint32_t>(player->getMaxMana(), std::numeric_limits<uint16_t>::max())));
 
 	msg.addByte(static_cast<uint8_t>(std::min<uint32_t>(player->getMagicLevel(), std::numeric_limits<uint8_t>::max())));
 	msg.addByte(player->getMagicLevelPercent());

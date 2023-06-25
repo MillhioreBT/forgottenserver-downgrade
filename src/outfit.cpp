@@ -17,7 +17,7 @@ bool Outfits::loadFromXml()
 		return false;
 	}
 
-	for (auto outfitNode : doc.child("outfits").children()) {
+	for (auto& outfitNode : doc.child("outfits").children()) {
 		pugi::xml_attribute attr;
 		if ((attr = outfitNode.attribute("enabled")) && !attr.as_bool()) {
 			continue;
@@ -40,31 +40,32 @@ bool Outfits::loadFromXml()
 			continue;
 		}
 
-		outfits[type].emplace_back(
-		    outfitNode.attribute("name").as_string(), pugi::cast<uint16_t>(lookTypeAttribute.value()),
-		    outfitNode.attribute("premium").as_bool(), outfitNode.attribute("unlocked").as_bool(true));
+		const auto lookType = pugi::cast<uint16_t>(lookTypeAttribute.value());
+		outfits.emplace(std::piecewise_construct, std::forward_as_tuple(lookType),
+		                std::forward_as_tuple(outfitNode.attribute("name").as_string(), lookType,
+		                                      static_cast<PlayerSex_t>(type), outfitNode.attribute("premium").as_bool(),
+		                                      outfitNode.attribute("unlocked").as_bool(true)));
 	}
 	return true;
 }
 
-const Outfit* Outfits::getOutfitByLookType(PlayerSex_t sex, uint16_t lookType) const
+const Outfit* Outfits::getOutfitByLookType(uint16_t lookType) const
 {
-	for (const Outfit& outfit : outfits[sex]) {
-		if (outfit.lookType == lookType) {
-			return &outfit;
-		}
+	auto it = outfits.find(lookType);
+	if (it != outfits.end()) {
+		return &it->second;
 	}
 	return nullptr;
 }
 
-const Outfit* Outfits::getOutfitByLookType(uint16_t lookType) const
+const std::vector<const Outfit*> Outfits::getOutfits(PlayerSex_t sex) const
 {
-	for (uint8_t sex = PLAYERSEX_FEMALE; sex <= PLAYERSEX_LAST; sex++) {
-		for (const Outfit& outfit : outfits[sex]) {
-			if (outfit.lookType == lookType) {
-				return &outfit;
-			}
+	std::vector<const Outfit*> sexOutfits;
+	for (const auto& it : outfits) {
+		if (it.second.sex == sex) {
+			sexOutfits.push_back(&it.second);
 		}
 	}
-	return nullptr;
+
+	return sexOutfits;
 }

@@ -875,9 +875,11 @@ BlockType_t Creature::blockHit(Creature* attacker, CombatType_t combatType, int3
 		}
 	}
 
-	if (combatType != COMBAT_HEALING) {
-		attacker->onAttackedCreature(this);
-		attacker->onAttackedCreatureBlockHit(blockType);
+	if (attacker) {
+		if (combatType != COMBAT_HEALING) {
+			attacker->onAttackedCreature(this);
+			attacker->onAttackedCreatureBlockHit(blockType);
+		}
 	}
 
 	if (combatType != COMBAT_HEALING) {
