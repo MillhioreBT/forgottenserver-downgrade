@@ -2734,6 +2734,7 @@ void LuaScriptInterface::registerFunctions()
 	registerMethod("ItemType", "getCapacity", LuaScriptInterface::luaItemTypeGetCapacity);
 	registerMethod("ItemType", "getWeight", LuaScriptInterface::luaItemTypeGetWeight);
 	registerMethod("ItemType", "getWorth", LuaScriptInterface::luaItemTypeGetWorth);
+	registerMethod("ItemType", "getStackSize", LuaScriptInterface::luaItemTypeGetStackSize);
 
 	registerMethod("ItemType", "getHitChance", LuaScriptInterface::luaItemTypeGetHitChance);
 	registerMethod("ItemType", "getShootRange", LuaScriptInterface::luaItemTypeGetShootRange);
@@ -3306,7 +3307,7 @@ int LuaScriptInterface::luaDoPlayerAddItem(lua_State* L)
 		itemCount = std::max<int32_t>(1, count);
 	} else if (it.hasSubType()) {
 		if (it.stackable) {
-			itemCount = static_cast<int32_t>(std::ceil(static_cast<float>(count) / 100));
+			itemCount = static_cast<int32_t>(std::ceil(static_cast<float>(count) / static_cast<float>(it.stackSize)));
 		} else {
 			itemCount = 1;
 		}
@@ -3317,8 +3318,8 @@ int LuaScriptInterface::luaDoPlayerAddItem(lua_State* L)
 
 	while (itemCount > 0) {
 		uint16_t stackCount = subType;
-		if (it.stackable && stackCount > 100) {
-			stackCount = 100;
+		if (it.stackable && stackCount > it.stackSize) {
+			stackCount = it.stackSize;
 		}
 
 		Item* newItem = Item::CreateItem(itemId, stackCount);
@@ -3627,7 +3628,7 @@ int LuaScriptInterface::luaDoAddContainerItem(lua_State* L)
 
 	if (it.hasSubType()) {
 		if (it.stackable) {
-			itemCount = static_cast<int32_t>(std::ceil(static_cast<float>(count) / 100));
+			itemCount = static_cast<int32_t>(std::ceil(static_cast<float>(count) / static_cast<float>(it.stackSize)));
 		}
 
 		subType = count;
@@ -3636,7 +3637,7 @@ int LuaScriptInterface::luaDoAddContainerItem(lua_State* L)
 	}
 
 	while (itemCount > 0) {
-		int32_t stackCount = std::min<int32_t>(100, subType);
+		int32_t stackCount = std::min<int32_t>(subType, it.stackSize);
 		Item* newItem = Item::CreateItem(itemId, static_cast<uint16_t>(stackCount));
 		if (!newItem) {
 			reportErrorFunc(L, getErrorDesc(LuaErrorCode::ITEM_NOT_FOUND));
@@ -4490,7 +4491,7 @@ int LuaScriptInterface::luaGameCreateItem(lua_State* L)
 
 	const ItemType& it = Item::items[id];
 	if (it.stackable) {
-		count = std::min<uint16_t>(count, 100);
+		count = std::min<uint16_t>(count, it.stackSize);
 	}
 
 	Item* item = Item::CreateItem(id, count);
@@ -5601,7 +5602,12 @@ int LuaScriptInterface::luaTileAddItem(lua_State* L)
 
 	uint32_t subType = getInteger<uint32_t>(L, 3, 1);
 
-	Item* item = Item::CreateItem(itemId, static_cast<uint16_t>(std::min<uint32_t>(subType, 100)));
+	const ItemType& it = Item::items[itemId];
+	if (it.stackable) {
+		subType = std::min<int32_t>(subType, it.stackSize);
+	}
+
+	Item* item = Item::CreateItem(itemId, static_cast<uint16_t>(subType));
 	if (!item) {
 		lua_pushnil(L);
 		return 1;
@@ -6621,7 +6627,7 @@ int LuaScriptInterface::luaItemTransform(lua_State* L)
 
 	const ItemType& it = Item::items[itemId];
 	if (it.stackable) {
-		subType = std::min<int32_t>(subType, 100);
+		subType = std::min<int32_t>(subType, it.stackSize);
 	}
 
 	ScriptEnvironment* env = getScriptEnv();
@@ -6825,7 +6831,7 @@ int LuaScriptInterface::luaContainerAddItem(lua_State* L)
 	uint16_t count = getInteger<uint16_t>(L, 3, 1);
 	const ItemType& it = Item::items[itemId];
 	if (it.stackable) {
-		count = std::min<uint16_t>(count, 100);
+		count = std::min<uint16_t>(count, it.stackSize);
 	}
 
 	Item* item = Item::CreateItem(itemId, count);
@@ -9019,7 +9025,7 @@ int LuaScriptInterface::luaPlayerAddItem(lua_State* L)
 		itemCount = std::max<int32_t>(1, count);
 	} else if (it.hasSubType()) {
 		if (it.stackable) {
-			itemCount = std::ceil(count / 100.f);
+			itemCount = std::ceil(count / static_cast<float>(it.stackSize));
 		}
 
 		subType = count;
@@ -9040,7 +9046,7 @@ int LuaScriptInterface::luaPlayerAddItem(lua_State* L)
 	for (int32_t i = 1; i <= itemCount; ++i) {
 		int32_t stackCount = subType;
 		if (it.stackable) {
-			stackCount = std::min<int32_t>(stackCount, 100);
+			stackCount = std::min<int32_t>(stackCount, it.stackSize);
 			subType -= stackCount;
 		}
 
@@ -11930,6 +11936,19 @@ int LuaScriptInterface::luaItemTypeGetWorth(lua_State* L)
 	}
 
 	lua_pushinteger(L, itemType->worth);
+	return 1;
+}
+
+int LuaScriptInterface::luaItemTypeGetStackSize(lua_State* L)
+{
+	// itemType:getStackSize()
+	const ItemType* itemType = getUserdata<const ItemType>(L, 1);
+	if (!itemType) {
+		lua_pushnil(L);
+		return 1;
+	}
+
+	lua_pushinteger(L, itemType->stackable ? itemType->stackSize : 1);
 	return 1;
 }
 

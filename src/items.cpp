@@ -137,6 +137,7 @@ const std::unordered_map<std::string, ItemParseAttributes_t> ItemParseAttributes
     {"allowdistread", ITEM_PARSE_ALLOWDISTREAD},
     {"storeitem", ITEM_PARSE_STOREITEM},
     {"worth", ITEM_PARSE_WORTH},
+    {"stacksize", ITEM_PARSE_STACKSIZE},
 };
 
 const std::unordered_map<std::string, ItemTypes_t> ItemTypesMap = {
@@ -1390,6 +1391,17 @@ void Items::parseItemNode(const pugi::xml_node& itemNode, uint16_t id)
 					} else {
 						currencyItems.insert(CurrencyMap::value_type(worth, id));
 						it.worth = worth;
+					}
+					break;
+				}
+
+				case ITEM_PARSE_STACKSIZE: {
+					auto stackSize = pugi::cast<uint16_t>(valueAttribute.value());
+					if (stackSize == 0 || stackSize >= 255) {
+						std::cout << "[Warning - Items::parseItemNode] Invalid stack size. Item " << id
+						          << " has stack size " << stackSize << std::endl;
+					} else {
+						it.stackSize = static_cast<uint8_t>(stackSize);
 					}
 					break;
 				}

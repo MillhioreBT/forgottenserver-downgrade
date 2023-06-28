@@ -159,6 +159,7 @@ enum ItemParseAttributes_t
 	ITEM_PARSE_ALLOWDISTREAD,
 	ITEM_PARSE_STOREITEM,
 	ITEM_PARSE_WORTH,
+	ITEM_PARSE_STACKSIZE,
 };
 
 struct Abilities
@@ -302,6 +303,7 @@ public:
 	RaceType_t corpseType = RACE_NONE;
 	FluidTypes_t fluidSource = FLUID_NONE;
 
+	uint8_t stackSize = 100;
 	uint8_t floorChange = 0;
 	uint8_t alwaysOnTopOrder = 0;
 	uint8_t lightLevel = 0;
