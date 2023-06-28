@@ -145,9 +145,9 @@ public:
 		return vocationSpellMap.empty() || vocationSpellMap.contains(vocationId);
 	}
 
-	const SpellGroup_t getGroup() const { return group; }
+	SpellGroup_t getGroup() const { return group; }
 	void setGroup(SpellGroup_t g) { group = g; }
-	const SpellGroup_t getSecondaryGroup() const { return secondaryGroup; }
+	SpellGroup_t getSecondaryGroup() const { return secondaryGroup; }
 	void setSecondaryGroup(SpellGroup_t g) { secondaryGroup = g; }
 	uint32_t getSecondaryCooldown() const { return secondaryGroupCooldown; }
 	void setSecondaryCooldown(uint32_t cd) { secondaryGroupCooldown = cd; }
