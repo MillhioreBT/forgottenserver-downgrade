@@ -1,16 +1,16 @@
-# Locate LuaJIT library
+# Locate Lua library
 # This module defines
-#  LUAJIT_FOUND, if false, do not try to link to Lua
+#  LUA_FOUND, if false, do not try to link to Lua
 #  LUA_LIBRARIES
 #  LUA_INCLUDE_DIR, where to find lua.h
-#  LUAJIT_VERSION_STRING, the version of Lua found (since CMake 2.8.8)
+#  LUA_VERSION_STRING, the version of Lua found (since CMake 2.8.8)
 
-## Copied from default CMake FindLua51.cmake
+## Copied from default CMake FindLua54.cmake
 
-find_path(LUA_INCLUDE_DIR luajit.h
+find_path(LUA_INCLUDE_DIR lua.h
   HINTS
     ENV LUA_DIR
-  PATH_SUFFIXES include/luajit-2.0 include/luajit-2.1 include luajit
+  PATH_SUFFIXES include/lua-5.4 include/lua54 include/lua5.4 include lua54
   PATHS
   ~/Library/Frameworks
   /Library/Frameworks
@@ -21,7 +21,7 @@ find_path(LUA_INCLUDE_DIR luajit.h
 )
 
 find_library(LUA_LIBRARY
-  NAMES luajit-5.1 lua51
+  NAMES lua54
   HINTS
     ENV LUA_DIR
   PATH_SUFFIXES lib
@@ -45,18 +45,18 @@ if(LUA_LIBRARY)
   endif()
 endif()
 
-if(LUA_INCLUDE_DIR AND EXISTS "${LUA_INCLUDE_DIR}/luajit.h")
-  file(STRINGS "${LUA_INCLUDE_DIR}/luajit.h" luajit_version_str REGEX "^#define[ \t]+LUAJIT_VERSION[ \t]+\"LuaJIT .+\"")
+if(LUA_INCLUDE_DIR AND EXISTS "${LUA_INCLUDE_DIR}/lua.h")
+  file(STRINGS "${LUA_INCLUDE_DIR}/lua.h" lua_version_str REGEX "^#define[ \t]+LUA_VERSION[ \t]+\"Lua .+\"")
 
-  string(REGEX REPLACE "^#define[ \t]+LUAJIT_VERSION[ \t]+\"LuaJIT ([^\"]+)\".*" "\\1" LUAJIT_VERSION_STRING "${luajit_version_str}")
-  unset(luajit_version_str)
+  string(REGEX REPLACE "^#define[ \t]+LUA_VERSION[ \t]+\"Lua ([^\"]+)\".*" "\\1" LUA_VERSION_STRING "${lua_version_str}")
+  unset(lua_version_str)
 endif()
 
 include(FindPackageHandleStandardArgs)
 # handle the QUIETLY and REQUIRED arguments and set LUA_FOUND to TRUE if
 # all listed variables are TRUE
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(LuaJIT
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(Lua
                                   REQUIRED_VARS LUA_LIBRARIES LUA_INCLUDE_DIR
-                                  VERSION_VAR LUAJIT_VERSION_STRING)
+                                  VERSION_VAR LUA_VERSION_STRING)
 
 mark_as_advanced(LUA_INCLUDE_DIR LUA_LIBRARIES LUA_LIBRARY LUA_MATH_LIBRARY)
