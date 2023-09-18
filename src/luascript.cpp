@@ -4375,7 +4375,7 @@ int LuaScriptInterface::luaGameGetCurrencyItems(lua_State* L)
 int LuaScriptInterface::luaGameGetItemTypeByClientId(lua_State* L)
 {
 	// Game.getItemTypeByClientId(clientId)
-	uint16_t spriteId = getNumber<uint16_t>(L, 1);
+	uint16_t spriteId = getInteger<uint16_t>(L, 1);
 	const ItemType& itemType = Item::items.getItemIdByClientId(spriteId);
 	if (itemType.id != 0) {
 		pushUserdata<const ItemType>(L, &itemType);
@@ -4810,7 +4810,7 @@ int LuaScriptInterface::luaVariantCreate(lua_State* L)
 	} else if (isTable(L, 2)) {
 		variant.setPosition(getPosition(L, 2));
 	} else if (isInteger(L, 2)) {
-		variant.setNumber(getNumber<uint32_t>(L, 2));
+		variant.setNumber(getInteger<uint32_t>(L, 2));
 	} else if (isString(L, 2)) {
 		variant.setString(getString(L, 2));
 	}
