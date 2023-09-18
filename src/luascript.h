@@ -320,14 +320,14 @@ public:
 		lua_Number num = lua_tonumberx(L, arg, &isNum);
 		if (isNum == 0) {
 			return 0;
-		} else if (num < static_cast<lua_Number>(typename std::numeric_limits<T>::lowest())) {
+		} else if (num < static_cast<lua_Number>(typename std::numeric_limits<lua_Integer>::lowest())) {
 			reportErrorFunc(L,
 			                fmt::format("Argument {} has out-of-range value for {}: {}", arg, typeid(T).name(), num));
-			return std::numeric_limits<T>::lowest();
-		} else if (num > static_cast<lua_Number>(typename std::numeric_limits<T>::max())) {
+			return std::numeric_limits<lua_Integer>::lowest();
+		} else if (num > static_cast<lua_Number>(typename std::numeric_limits<lua_Integer>::max())) {
 			reportErrorFunc(L,
 			                fmt::format("Argument {} has out-of-range value for {}: {}", arg, typeid(T).name(), num));
-			return std::numeric_limits<T>::max();
+			return std::numeric_limits<lua_Integer>::max();
 		}
 
 		return static_cast<T>(num);
