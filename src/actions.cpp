@@ -61,7 +61,7 @@ bool Actions::registerEvent(Event_ptr event, const pugi::xml_node& node)
 
 	bool success = false;
 	pugi::xml_attribute attr;
-	if (attr = node.attribute("itemid")) {
+	if ((attr = node.attribute("itemid"))) {
 		const std::vector<int32_t>& idList = vectorAtoi(explodeString(attr.as_string(), ";"));
 		for (const auto& id : idList) {
 			auto result = useItemMap.emplace(static_cast<uint16_t>(id), *action);
@@ -103,7 +103,7 @@ bool Actions::registerEvent(Event_ptr event, const pugi::xml_node& node)
 		}
 	}
 
-	if (attr = node.attribute("fromid")) {
+	if ((attr = node.attribute("fromid"))) {
 		if (const auto& toIdAttribute = node.attribute("toid")) {
 			uint16_t fromId = pugi::cast<uint16_t>(attr.value());
 			uint16_t iterId = fromId;
@@ -122,7 +122,7 @@ bool Actions::registerEvent(Event_ptr event, const pugi::xml_node& node)
 		}
 	}
 
-	if (attr = node.attribute("fromuid")) {
+	if ((attr = node.attribute("fromuid"))) {
 		if (const auto& toUidAttribute = node.attribute("touid")) {
 			uint16_t fromUid = pugi::cast<uint16_t>(attr.value());
 			uint16_t iterUid = fromUid;
@@ -142,7 +142,7 @@ bool Actions::registerEvent(Event_ptr event, const pugi::xml_node& node)
 		}
 	}
 
-	if (attr = node.attribute("fromaid")) {
+	if ((attr = node.attribute("fromaid"))) {
 		if (const auto& toAidAttribute = node.attribute("toaid")) {
 			uint16_t fromAid = pugi::cast<uint16_t>(attr.value());
 			uint16_t iterAid = fromAid;
