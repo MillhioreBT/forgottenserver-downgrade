@@ -10,7 +10,7 @@
 find_path(LUA_INCLUDE_DIR lua.h
   HINTS
     ENV LUA_DIR
-  PATH_SUFFIXES usr/include/lua5.4 include/lua5.4 include lua54
+  PATH_SUFFIXES usr/include/lua5.4 include/lua5.4 include lua5.4
   PATHS
   ~/Library/Frameworks
   /Library/Frameworks
@@ -18,6 +18,9 @@ find_path(LUA_INCLUDE_DIR lua.h
   /opt/local # DarwinPorts
   /opt/csw # Blastwave
   /opt
+  /usr
+  /usr/include
+  /usr/include/lua5.4
 )
 
 find_library(LUA_LIBRARY
@@ -32,7 +35,6 @@ find_library(LUA_LIBRARY
   /opt/local
   /opt/csw
   /opt
-  /usr/include/lua5.4
 )
 
 if(LUA_LIBRARY)
