@@ -85,7 +85,7 @@ bool MoveEvents::registerEvent(Event_ptr event, const pugi::xml_node& node)
 	bool success = false;
 
 	pugi::xml_attribute attr;
-	if (attr = node.attribute("itemid")) {
+	if ((attr = node.attribute("itemid"))) {
 		const std::vector<int32_t>& idList = vectorAtoi(explodeString(attr.as_string(), ";"));
 		for (const auto& id : idList) {
 			if (moveEvent->getEventType() == MOVE_EVENT_EQUIP) {
@@ -100,7 +100,7 @@ bool MoveEvents::registerEvent(Event_ptr event, const pugi::xml_node& node)
 		}
 	}
 
-	if (attr = node.attribute("fromid")) {
+	if ((attr = node.attribute("fromid"))) {
 		uint32_t id = pugi::cast<uint32_t>(attr.value());
 		uint32_t endId = pugi::cast<uint32_t>(node.attribute("toid").value());
 
@@ -138,7 +138,7 @@ bool MoveEvents::registerEvent(Event_ptr event, const pugi::xml_node& node)
 		}
 	}
 
-	if (attr = node.attribute("fromuid")) {
+	if ((attr = node.attribute("fromuid"))) {
 		uint32_t id = pugi::cast<uint32_t>(attr.value());
 		uint32_t endId = pugi::cast<uint32_t>(node.attribute("touid").value());
 
@@ -150,7 +150,7 @@ bool MoveEvents::registerEvent(Event_ptr event, const pugi::xml_node& node)
 		}
 	}
 
-	if (attr = node.attribute("actionid")) {
+	if ((attr = node.attribute("actionid"))) {
 		const std::vector<int32_t>& aidList = vectorAtoi(explodeString(attr.as_string(), ";"));
 		for (const auto& aid : aidList) {
 			addEvent(*moveEvent, static_cast<uint16_t>(aid), actionIdMap);
@@ -158,7 +158,7 @@ bool MoveEvents::registerEvent(Event_ptr event, const pugi::xml_node& node)
 		}
 	}
 
-	if (attr = node.attribute("fromaid")) {
+	if ((attr = node.attribute("fromaid"))) {
 		uint32_t id = pugi::cast<uint32_t>(attr.value());
 		uint32_t endId = pugi::cast<uint32_t>(node.attribute("toaid").value());
 
@@ -170,7 +170,7 @@ bool MoveEvents::registerEvent(Event_ptr event, const pugi::xml_node& node)
 		}
 	}
 
-	if (attr = node.attribute("pos")) {
+	if ((attr = node.attribute("pos"))) {
 		const std::vector<int32_t>& posList = vectorAtoi(explodeString(attr.as_string(), ";"));
 		if (posList.size() < 3) {
 			return false;
