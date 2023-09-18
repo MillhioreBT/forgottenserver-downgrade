@@ -1145,8 +1145,8 @@ void ValueCallback::getMinMaxValues(Player* player, CombatDamage& damage) const
 	if (lua_pcall(L, parameters, 2, 0) != 0) {
 		LuaScriptInterface::reportError(nullptr, LuaScriptInterface::popString(L));
 	} else {
-		damage.primary.value =
-		    normal_random(LuaScriptInterface::getNumber<int32_t>(L, -2), LuaScriptInterface::getNumber<int32_t>(L, -1));
+		damage.primary.value = normal_random(LuaScriptInterface::getInteger<int32_t>(L, -2),
+		                                     LuaScriptInterface::getInteger<int32_t>(L, -1));
 		lua_pop(L, 2);
 	}
 
