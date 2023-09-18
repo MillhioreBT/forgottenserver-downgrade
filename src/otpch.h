@@ -38,12 +38,14 @@
 #include <mutex>
 #include <mysql/mysql.h>
 #include <pugixml.hpp>
+#include <optional>
 #include <random>
 #include <set>
 #include <sstream>
 #include <string>
 #include <string_view>
 #include <thread>
+#include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
