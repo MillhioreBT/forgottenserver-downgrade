@@ -314,8 +314,7 @@ public:
 	}
 
 	template <typename T>
-	static typename std::enable_if<std::is_integral<T>::value || std::is_floating_point<T>::value, T>::type getNumber(
-	    lua_State* L, int32_t arg)
+	static typename std::enable_if<std::is_floating_point<T>::value, T>::type getNumber(lua_State* L, int32_t arg)
 	{
 		int isNum = 0;
 		lua_Number num = lua_tonumberx(L, arg, &isNum);
