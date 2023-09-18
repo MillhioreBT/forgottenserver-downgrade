@@ -70,7 +70,7 @@ ReturnValue HouseTile::queryAdd(int32_t index, const Thing& thing, uint32_t coun
 		} else {
 			return RETURNVALUE_NOTPOSSIBLE;
 		}
-	} else if (const Item* item = thing.getItem()) {
+	} else if (thing.getItem()) {
 		if (actor) {
 			Player* actorPlayer = actor->getPlayer();
 			if (!house->isInvited(actorPlayer)) {
