@@ -24,7 +24,9 @@
 #include <cstdlib>
 #include <deque>
 #include <filesystem>
+#include <fmt/chrono.h>
 #include <fmt/color.h>
+#include <fmt/format.h>
 #include <forward_list>
 #include <functional>
 #include <iostream>

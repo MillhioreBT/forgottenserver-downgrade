@@ -50,6 +50,8 @@ bool Events::load()
 				info.creatureOnHear = event;
 			} else if (methodName == "onChangeZone") {
 				info.creatureOnChangeZone = event;
+			} else if (methodName == "onUpdateStorage") {
+				info.creatureOnUpdateStorage = event;
 			} else {
 				std::cout << "[Warning - Events::load] Unknown creature method: " << methodName << std::endl;
 			}
@@ -106,8 +108,6 @@ bool Events::load()
 				info.playerOnGainSkillTries = event;
 			} else if (methodName == "onNetworkMessage") {
 				info.playerOnNetworkMessage = event;
-			} else if (methodName == "onUpdateStorage") {
-				info.playerOnUpdateStorage = event;
 			} else if (methodName == "onUpdateInventory") {
 				info.playerOnUpdateInventory = event;
 			} else if (methodName == "onAccountManager") {
@@ -324,6 +324,46 @@ void Events::eventCreatureOnChangeZone(Creature* creature, ZoneType_t fromZone, 
 	lua_pushinteger(L, toZone);
 
 	scriptInterface.callVoidFunction(3);
+}
+
+void Events::eventCreatureOnUpdateStorage(Creature* creature, const uint32_t key, const std::optional<int32_t> value,
+                                          const std::optional<int32_t> oldValue, bool isSpawn)
+{
+	// Creature:onUpdateStorage(key, value, oldValue, isSpawn)
+	if (info.creatureOnUpdateStorage == -1) {
+		return;
+	}
+
+	if (!scriptInterface.reserveScriptEnv()) {
+		std::cout << "[Error - Events::eventCreatureOnUpdateStorage] Call stack overflow" << std::endl;
+		return;
+	}
+
+	ScriptEnvironment* env = scriptInterface.getScriptEnv();
+	env->setScriptId(info.creatureOnUpdateStorage, &scriptInterface);
+
+	lua_State* L = scriptInterface.getLuaState();
+	scriptInterface.pushFunction(info.creatureOnUpdateStorage);
+
+	LuaScriptInterface::pushUserdata<Creature>(L, creature);
+	LuaScriptInterface::setMetatable(L, -1, "Creature");
+
+	lua_pushinteger(L, key);
+	if (value) {
+		lua_pushinteger(L, value.value());
+	} else {
+		lua_pushnil(L);
+	}
+
+	if (oldValue) {
+		lua_pushinteger(L, oldValue.value());
+	} else {
+		lua_pushnil(L);
+	}
+
+	LuaScriptInterface::pushBoolean(L, isSpawn);
+
+	scriptInterface.callVoidFunction(5);
 }
 
 // Party
@@ -649,18 +689,18 @@ bool Events::eventPlayerOnLookInShop(Player* player, const ItemType* itemType, u
 	return scriptInterface.callFunction(3);
 }
 
-bool Events::eventPlayerOnMoveItem(Player* player, Item* item, uint16_t count, const Position& fromPosition,
-                                   const Position& toPosition, Cylinder* fromCylinder, Cylinder* toCylinder)
+ReturnValue Events::eventPlayerOnMoveItem(Player* player, Item* item, uint16_t count, const Position& fromPosition,
+                                          const Position& toPosition, Cylinder* fromCylinder, Cylinder* toCylinder)
 {
 	// Player:onMoveItem(item, count, fromPosition, toPosition) or Player.onMoveItem(self, item, count, fromPosition,
 	// toPosition, fromCylinder, toCylinder)
 	if (info.playerOnMoveItem == -1) {
-		return true;
+		return RETURNVALUE_NOERROR;
 	}
 
 	if (!scriptInterface.reserveScriptEnv()) {
 		std::cout << "[Error - Events::eventPlayerOnMoveItem] Call stack overflow" << std::endl;
-		return false;
+		return RETURNVALUE_NOTPOSSIBLE;
 	}
 
 	ScriptEnvironment* env = scriptInterface.getScriptEnv();
@@ -682,7 +722,17 @@ bool Events::eventPlayerOnMoveItem(Player* player, Item* item, uint16_t count, c
 	LuaScriptInterface::pushCylinder(L, fromCylinder);
 	LuaScriptInterface::pushCylinder(L, toCylinder);
 
-	return scriptInterface.callFunction(7);
+	ReturnValue returnValue;
+	if (scriptInterface.protectedCall(L, 7, 1) != 0) {
+		returnValue = RETURNVALUE_NOTPOSSIBLE;
+		LuaScriptInterface::reportError(nullptr, LuaScriptInterface::popString(L));
+	} else {
+		returnValue = LuaScriptInterface::getInteger<ReturnValue>(L, -1);
+		lua_pop(L, 1);
+	}
+
+	scriptInterface.resetScriptEnv();
+	return returnValue;
 }
 
 void Events::eventPlayerOnItemMoved(Player* player, Item* item, uint16_t count, const Position& fromPosition,
@@ -1012,9 +1062,9 @@ void Events::eventPlayerOnLoseExperience(Player* player, uint64_t& exp)
 	scriptInterface.resetScriptEnv();
 }
 
-void Events::eventPlayerOnGainSkillTries(Player* player, skills_t skill, uint64_t& tries)
+void Events::eventPlayerOnGainSkillTries(Player* player, skills_t skill, uint64_t& tries, bool artificial)
 {
-	// Player:onGainSkillTries(skill, tries)
+	// Player:onGainSkillTries(skill, tries, artificial)
 	if (info.playerOnGainSkillTries == -1) {
 		return;
 	}
@@ -1036,7 +1086,9 @@ void Events::eventPlayerOnGainSkillTries(Player* player, skills_t skill, uint64_
 	lua_pushinteger(L, skill);
 	lua_pushinteger(L, tries);
 
-	if (scriptInterface.protectedCall(L, 3, 1) != 0) {
+	LuaScriptInterface::pushBoolean(L, artificial);
+
+	if (scriptInterface.protectedCall(L, 4, 1) != 0) {
 		LuaScriptInterface::reportError(nullptr, LuaScriptInterface::popString(L));
 	} else {
 		tries = LuaScriptInterface::getInteger<uint64_t>(L, -1);
@@ -1073,46 +1125,6 @@ void Events::eventPlayerOnNetworkMessage(Player* player, uint8_t recvByte, Netwo
 	LuaScriptInterface::setMetatable(L, -1, "NetworkMessage");
 
 	scriptInterface.callVoidFunction(3);
-}
-
-void Events::eventPlayerOnUpdateStorage(Player* player, const uint32_t key, const StorageValue value,
-                                        const StorageValue oldValue, bool isLogin)
-{
-	// Player:onUpdateStorage(key, value, oldValue, isLogin)
-	if (info.playerOnUpdateStorage == -1) {
-		return;
-	}
-
-	if (!scriptInterface.reserveScriptEnv()) {
-		std::cout << "[Error - Events::eventPlayerOnUpdateStorage] Call stack overflow" << std::endl;
-		return;
-	}
-
-	ScriptEnvironment* env = scriptInterface.getScriptEnv();
-	env->setScriptId(info.playerOnUpdateStorage, &scriptInterface);
-
-	lua_State* L = scriptInterface.getLuaState();
-	scriptInterface.pushFunction(info.playerOnUpdateStorage);
-
-	LuaScriptInterface::pushUserdata<Player>(L, player);
-	LuaScriptInterface::setMetatable(L, -1, "Player");
-
-	lua_pushinteger(L, key);
-	if (value) {
-		lua_pushinteger(L, value.value());
-	} else {
-		lua_pushnil(L);
-	}
-
-	if (oldValue) {
-		lua_pushinteger(L, oldValue.value());
-	} else {
-		lua_pushnil(L);
-	}
-
-	LuaScriptInterface::pushBoolean(L, isLogin);
-
-	scriptInterface.callVoidFunction(5);
 }
 
 void Events::eventPlayerOnUpdateInventory(Player* player, Item* item, const slots_t slot, const bool equip)

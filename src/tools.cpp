@@ -424,7 +424,7 @@ Position getNextPosition(Direction direction, Position pos)
 	return pos;
 }
 
-Direction getDirectionTo(const Position& from, const Position& to)
+Direction getDirectionTo(const Position& from, const Position& to, bool extended /* = true*/)
 {
 	if (from == to) {
 		return DIRECTION_NONE;
@@ -444,7 +444,7 @@ Direction getDirectionTo(const Position& from, const Position& to)
 	if (y_offset >= 0) {
 		if (y_offset > x_offset) {
 			dir = DIRECTION_NORTH;
-		} else if (y_offset == x_offset) {
+		} else if (y_offset == x_offset && extended) {
 			if (dir == DIRECTION_EAST) {
 				dir = DIRECTION_NORTHEAST;
 			} else {
@@ -455,7 +455,7 @@ Direction getDirectionTo(const Position& from, const Position& to)
 		y_offset = std::abs(y_offset);
 		if (y_offset > x_offset) {
 			dir = DIRECTION_SOUTH;
-		} else if (y_offset == x_offset) {
+		} else if (y_offset == x_offset && extended) {
 			if (dir == DIRECTION_EAST) {
 				dir = DIRECTION_SOUTHEAST;
 			} else {

@@ -834,14 +834,9 @@ public:
 
 	void setUniqueId(uint16_t n);
 
-	void setDefaultDuration()
-	{
-		uint32_t duration = getDefaultDuration();
-		if (duration != 0) {
-			setDuration(duration);
-		}
-	}
+	void setDefaultDuration();
 	uint32_t getDefaultDuration() const { return items[id].decayTime * 1000; }
+	uint32_t getDefaultDurationMax() const { return items[id].decayTimeMax * 1000; }
 	bool canDecay() const;
 
 	virtual bool canRemove() const { return true; }

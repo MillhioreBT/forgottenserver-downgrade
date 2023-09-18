@@ -25,8 +25,6 @@
 #include "talkaction.h"
 #include "weapons.h"
 
-#include <fmt/format.h>
-
 extern ConfigManager g_config;
 extern Actions* g_actions;
 extern Chat* g_chat;
@@ -1054,9 +1052,10 @@ ReturnValue Game::internalMoveItem(Cylinder* fromCylinder, Cylinder* toCylinder,
 {
 	Player* actorPlayer = actor ? actor->getPlayer() : nullptr;
 	if (actorPlayer && fromPos && toPos) {
-		if (!g_events->eventPlayerOnMoveItem(actorPlayer, item, static_cast<uint16_t>(count), *fromPos, *toPos,
-		                                     fromCylinder, toCylinder)) {
-			return RETURNVALUE_NOTPOSSIBLE;
+		const ReturnValue ret = g_events->eventPlayerOnMoveItem(actorPlayer, item, static_cast<uint16_t>(count),
+		                                                        *fromPos, *toPos, fromCylinder, toCylinder);
+		if (ret != RETURNVALUE_NOERROR) {
+			return ret;
 		}
 	}
 
@@ -1086,10 +1085,12 @@ ReturnValue Game::internalMoveItem(Cylinder* fromCylinder, Cylinder* toCylinder,
 		// check if we can add it to source cylinder
 		ret = fromCylinder->queryAdd(fromCylinder->getThingIndex(item), *toItem, toItem->getItemCount(), 0);
 		if (ret == RETURNVALUE_NOERROR) {
-			if (actorPlayer && fromPos && toPos &&
-			    !g_events->eventPlayerOnMoveItem(actorPlayer, toItem, static_cast<uint16_t>(count), *toPos, *fromPos,
-			                                     toCylinder, fromCylinder)) {
-				return RETURNVALUE_NOTPOSSIBLE;
+			if (actorPlayer && fromPos && toPos) {
+				const ReturnValue eventRet = g_events->eventPlayerOnMoveItem(
+				    actorPlayer, toItem, toItem->getItemCount(), *toPos, *fromPos, toCylinder, fromCylinder);
+				if (eventRet != RETURNVALUE_NOERROR) {
+					return eventRet;
+				}
 			}
 
 			// check how much we can move
@@ -1965,8 +1966,50 @@ void Game::playerAutoWalk(uint32_t playerId, const std::vector<Direction>& listD
 	}
 
 	player->resetIdleTime();
+
+	if (player->getCondition(CONDITION_CLIPORT, CONDITIONID_DEFAULT)) {
+		const Position& playerPos = player->getPosition();
+		Position nextPos = Position(playerPos.x, playerPos.y, playerPos.z);
+		for (const auto dir : listDir) {
+			nextPos = getNextPosition(dir, nextPos);
+		}
+
+		nextPos = getClosestFreeTile(player, nextPos, true);
+		if (nextPos.x == 0 || nextPos.y == 0) {
+			return player->sendCancelWalk();
+		}
+
+		internalCreatureTurn(player, getDirectionTo(playerPos, nextPos, false));
+		internalTeleport(player, nextPos, true);
+		return;
+	}
+
 	player->setNextWalkTask(nullptr);
 	player->startAutoWalk(listDir);
+}
+
+Position Game::getClosestFreeTile(Creature* creature, const Position& nextPos, bool extended /* = false*/)
+{
+	std::vector<std::pair<int8_t, int8_t>> relList{{0, 0}, {-1, -1}, {-1, 0}, {-1, 1}, {0, -1},
+	                                               {0, 1}, {1, -1},  {1, 0},  {1, 1}};
+
+	if (extended) {
+		relList.push_back(std::pair<int8_t, int8_t>(-2, 0));
+		relList.push_back(std::pair<int8_t, int8_t>(0, -2));
+		relList.push_back(std::pair<int8_t, int8_t>(0, 2));
+		relList.push_back(std::pair<int8_t, int8_t>(2, 0));
+	}
+
+	for (const auto& [x, y] : relList) {
+		if (const Tile* tile = map.getTile(nextPos.x + x, nextPos.y + y, nextPos.z)) {
+			if (tile->getGround() &&
+			    tile->queryAdd(0, *creature, 1, FLAG_IGNOREBLOCKITEM, creature) == RETURNVALUE_NOERROR) {
+				return tile->getPosition();
+			}
+		}
+	}
+
+	return Position(0, 0, 0);
 }
 
 void Game::playerStopAutoWalk(uint32_t playerId)
@@ -4572,8 +4615,8 @@ void Game::updateWorldTime()
 {
 	g_scheduler.addEvent(createSchedulerTask(EVENT_WORLDTIMEINTERVAL, [this]() { updateWorldTime(); }));
 	time_t osTime = time(nullptr);
-	tm* timeInfo = localtime(&osTime);
-	worldTime = (timeInfo->tm_sec + (timeInfo->tm_min * 60)) / 2.5f;
+	struct tm timeInfo = fmt::localtime(osTime);
+	worldTime = (timeInfo.tm_sec + (timeInfo.tm_min * 60)) / 2.5f;
 }
 
 void Game::shutdown()

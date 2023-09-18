@@ -54,7 +54,7 @@ class Item;
 class Tile;
 
 static constexpr int32_t EVENT_CREATURECOUNT = 10;
-static constexpr int32_t EVENT_CREATURE_THINK_INTERVAL = 1000;
+static constexpr int32_t EVENT_CREATURE_THINK_INTERVAL = 250;
 static constexpr int32_t EVENT_CHECK_CREATURE_INTERVAL = (EVENT_CREATURE_THINK_INTERVAL / EVENT_CREATURECOUNT);
 
 class FrozenPathingConditionCall
@@ -339,6 +339,10 @@ public:
 		}
 	}
 
+	virtual void setStorageValue(uint32_t key, std::optional<int64_t> value, bool isSpawn = false);
+	virtual std::optional<int64_t> getStorageValue(uint32_t key) const;
+	decltype(auto) getStorageMap() const { return storageMap; }
+
 protected:
 	virtual bool useCacheMap() const { return false; }
 
@@ -435,6 +439,9 @@ protected:
 	friend class Game;
 	friend class Map;
 	friend class LuaScriptInterface;
+
+private:
+	std::map<uint32_t, int64_t> storageMap;
 };
 
 #endif

@@ -874,6 +874,9 @@ private:
 
 	static int luaCreatureGetZone(lua_State* L);
 
+	static int luaCreatureGetStorageValue(lua_State* L);
+	static int luaCreatureSetStorageValue(lua_State* L);
+
 	static int luaCreatureSendCreatureSquare(lua_State* L);
 
 	// Player
@@ -964,9 +967,6 @@ private:
 	static int luaPlayerGetBankBalance(lua_State* L);
 	static int luaPlayerSetBankBalance(lua_State* L);
 
-	static int luaPlayerGetStorageValue(lua_State* L);
-	static int luaPlayerSetStorageValue(lua_State* L);
-
 	static int luaPlayerAddItem(lua_State* L);
 	static int luaPlayerAddItemEx(lua_State* L);
 	static int luaPlayerRemoveItem(lua_State* L);
@@ -1036,9 +1036,12 @@ private:
 	static int luaPlayerGetFightMode(lua_State* L);
 
 	static int luaPlayerGetIdleTime(lua_State* L);
+	static int luaPlayerResetIdleTime(lua_State* L);
 
 	static int luaPlayerOpenContainer(lua_State* L);
 	static int luaPlayerCloseContainer(lua_State* L);
+
+	static int luaPlayerTestMethod(lua_State* L);
 
 	// OfflinePlayer
 	static int luaOfflinePlayerCreate(lua_State* L);
@@ -1053,6 +1056,7 @@ private:
 	static int luaMonsterGetType(lua_State* L);
 
 	static int luaMonsterRename(lua_State* L);
+	static int luaMonsterSetId(lua_State* L);
 
 	static int luaMonsterGetSpawnPosition(lua_State* L);
 	static int luaMonsterIsInSpawnRange(lua_State* L);
@@ -1256,6 +1260,7 @@ private:
 	static int luaItemTypeHasAllowDistRead(lua_State* L);
 	static int luaItemTypeGetWieldInfo(lua_State* L);
 	static int luaItemTypeGetDuration(lua_State* L);
+	static int luaItemTypeGetDurationMax(lua_State* L);
 	static int luaItemTypeGetLevelDoor(lua_State* L);
 	static int luaItemTypeGetRuneSpellName(lua_State* L);
 	static int luaItemTypeGetVocationString(lua_State* L);

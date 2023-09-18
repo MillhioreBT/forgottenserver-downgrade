@@ -28,6 +28,7 @@ class Events
 		int32_t creatureOnTargetCombat = -1;
 		int32_t creatureOnHear = -1;
 		int32_t creatureOnChangeZone = -1;
+		int32_t creatureOnUpdateStorage = -1;
 
 		// Party
 		int32_t partyOnJoin = -1;
@@ -56,7 +57,6 @@ class Events
 		int32_t playerOnLoseExperience = -1;
 		int32_t playerOnGainSkillTries = -1;
 		int32_t playerOnNetworkMessage = -1;
-		int32_t playerOnUpdateStorage = -1;
 		int32_t playerOnUpdateInventory = -1;
 		int32_t playerOnAccountManager = -1;
 
@@ -76,6 +76,8 @@ public:
 	ReturnValue eventCreatureOnTargetCombat(Creature* creature, Creature* target);
 	void eventCreatureOnHear(Creature* creature, Creature* speaker, std::string_view words, SpeakClasses type);
 	void eventCreatureOnChangeZone(Creature* creature, ZoneType_t fromZone, ZoneType_t toZone);
+	void eventCreatureOnUpdateStorage(Creature* creature, const uint32_t key, const std::optional<int32_t> value,
+	                                  const std::optional<int32_t> oldValue, bool isSpawn);
 
 	// Party
 	bool eventPartyOnJoin(Party* party, Player* player);
@@ -92,8 +94,8 @@ public:
 	void eventPlayerOnLookInBattleList(Player* player, Creature* creature, int32_t lookDistance);
 	void eventPlayerOnLookInTrade(Player* player, Player* partner, Item* item, int32_t lookDistance);
 	bool eventPlayerOnLookInShop(Player* player, const ItemType* itemType, uint8_t count);
-	bool eventPlayerOnMoveItem(Player* player, Item* item, uint16_t count, const Position& fromPosition,
-	                           const Position& toPosition, Cylinder* fromCylinder, Cylinder* toCylinder);
+	ReturnValue eventPlayerOnMoveItem(Player* player, Item* item, uint16_t count, const Position& fromPosition,
+	                                  const Position& toPosition, Cylinder* fromCylinder, Cylinder* toCylinder);
 	void eventPlayerOnItemMoved(Player* player, Item* item, uint16_t count, const Position& fromPosition,
 	                            const Position& toPosition, Cylinder* fromCylinder, Cylinder* toCylinder);
 	bool eventPlayerOnMoveCreature(Player* player, Creature* creature, const Position& fromPosition,
@@ -107,10 +109,8 @@ public:
 	void eventPlayerOnTradeCompleted(Player* player, Player* target, Item* item, Item* targetItem, bool isSuccess);
 	void eventPlayerOnGainExperience(Player* player, Creature* source, uint64_t& exp, uint64_t rawExp);
 	void eventPlayerOnLoseExperience(Player* player, uint64_t& exp);
-	void eventPlayerOnGainSkillTries(Player* player, skills_t skill, uint64_t& tries);
+	void eventPlayerOnGainSkillTries(Player* player, skills_t skill, uint64_t& tries, bool artificial);
 	void eventPlayerOnNetworkMessage(Player* player, uint8_t recvByte, NetworkMessage* msg);
-	void eventPlayerOnUpdateStorage(Player* player, const uint32_t key, const StorageValue value,
-	                                const StorageValue oldValue, bool isLogin);
 	void eventPlayerOnUpdateInventory(Player* player, Item* item, const slots_t slot, const bool equip);
 	void eventPlayerOnAccountManager(Player* player, std::string_view text);
 

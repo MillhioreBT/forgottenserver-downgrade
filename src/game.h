@@ -401,6 +401,8 @@ public:
 	                      int32_t rangey = Map::maxClientViewportY) const;
 	bool isSightClear(const Position& fromPos, const Position& toPos, bool sameFloor = false) const;
 
+	Position getClosestFreeTile(Creature* creature, const Position& nextPos, bool extended = false);
+
 	void changeSpeed(Creature* creature, int32_t varSpeedDelta);
 	void internalCreatureChangeOutfit(Creature* creature, const Outfit_t& outfit);
 	void internalCreatureChangeVisible(Creature* creature, bool visible);

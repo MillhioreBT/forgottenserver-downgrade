@@ -36,7 +36,7 @@ bool boolean_random(double probability = 0.5);
 
 Direction getDirection(const std::string& string);
 Position getNextPosition(Direction direction, Position pos);
-Direction getDirectionTo(const Position& from, const Position& to);
+Direction getDirectionTo(const Position& from, const Position& to, bool extended = true);
 
 std::string getFirstLine(std::string_view str);
 std::string getStringLine(std::string_view str, const int lineNumber);

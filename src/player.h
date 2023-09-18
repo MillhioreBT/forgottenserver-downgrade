@@ -73,7 +73,7 @@ struct Skill
 {
 	uint64_t tries = 0;
 	uint16_t level = MINIMUM_SKILL_LEVEL;
-	uint8_t percent = 0;
+	uint16_t percent = 0;
 };
 
 using MuteCountMap = std::map<uint32_t, uint32_t>;
@@ -222,8 +222,7 @@ public:
 
 	bool canOpenCorpse(uint32_t ownerId) const;
 
-	void setStorageValue(const uint32_t key, const StorageValue value, const bool isLogin = false);
-	StorageValue getStorageValue(const uint32_t key) const;
+	void setStorageValue(const uint32_t key, const std::optional<int64_t> value, const bool isSpawn = false) override;
 
 	void setGroup(Group* newGroup) { group = newGroup; }
 	Group* getGroup() const { return group; }
@@ -245,7 +244,7 @@ public:
 	uint8_t getLevelPercent() const { return levelPercent; }
 	uint32_t getMagicLevel() const { return std::max<int32_t>(0, magLevel + varStats[STAT_MAGICPOINTS]); }
 	uint32_t getBaseMagicLevel() const { return magLevel; }
-	uint8_t getMagicLevelPercent() const { return magLevelPercent; }
+	uint16_t getMagicLevelPercent() const { return magLevelPercent; }
 	uint8_t getSoul() const { return soul; }
 	bool isAccessPlayer() const { return group->access; }
 	bool isPremium() const;
@@ -411,7 +410,7 @@ public:
 		return static_cast<uint16_t>(std::max<int32_t>(0, skills[skill].level + varSkills[skill]));
 	}
 	uint16_t getBaseSkill(uint8_t skill) const { return skills[skill].level; }
-	uint8_t getSkillPercent(uint8_t skill) const { return skills[skill].percent; }
+	uint16_t getSkillPercent(uint8_t skill) const { return skills[skill].percent; }
 
 	bool getAddAttackSkill() const { return addAttackSkillPoint; }
 	BlockType_t getLastAttackBlockType() const { return lastAttackBlockType; }
@@ -424,9 +423,9 @@ public:
 
 	void drainHealth(Creature* attacker, int32_t damage) override;
 	void drainMana(Creature* attacker, int32_t manaLoss);
-	void addManaSpent(uint64_t amount);
+	void addManaSpent(uint64_t amount, bool artificial = false);
 	void removeManaSpent(uint64_t amount, bool notify = false);
-	void addSkillAdvance(skills_t skill, uint64_t count);
+	void addSkillAdvance(skills_t skill, uint64_t count, bool artificial = false);
 	void removeSkillTries(skills_t skill, uint64_t count, bool notify = false);
 
 	int32_t getArmor() const override;
@@ -960,7 +959,6 @@ private:
 	std::map<uint8_t, OpenContainer> openContainers;
 	std::map<uint32_t, DepotLocker_ptr> depotLockerMap;
 	std::map<uint32_t, DepotChest*> depotChests;
-	std::map<uint32_t, int64_t> storageMap;
 
 	std::unordered_map<uint16_t, uint8_t> outfits;
 	GuildWarVector guildWarVector;
@@ -1046,7 +1044,7 @@ private:
 	uint8_t soul = 0;
 	std::bitset<PLAYER_MAX_BLESSINGS + 1> blessings;
 	uint8_t levelPercent = 0;
-	uint8_t magLevelPercent = 0;
+	uint16_t magLevelPercent = 0;
 
 	PlayerSex_t sex = PLAYERSEX_FEMALE;
 	OperatingSystem_t operatingSystem = CLIENTOS_NONE;
@@ -1083,7 +1081,7 @@ private:
 
 	uint32_t getAttackSpeed() const;
 
-	static uint8_t getPercentLevel(uint64_t count, uint64_t nextLevelCount);
+	static uint16_t getBasisPointLevel(uint64_t count, uint64_t nextLevelCount);
 	double getLostPercent() const;
 	uint64_t getLostExperience() const override
 	{

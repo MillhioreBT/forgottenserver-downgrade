@@ -290,7 +290,7 @@ void ProtocolGame::logout(bool displayEffect, bool forced)
 
 	if (!player->isRemoved()) {
 		if (!forced) {
-			if (!player->isAccessPlayer()) {
+			if (player->getAccountType() < ACCOUNT_TYPE_GOD) {
 				if (player->getTile()->hasFlag(TILESTATE_NOLOGOUT)) {
 					player->sendCancelMessage(RETURNVALUE_YOUCANNOTLOGOUTHERE);
 					return;
@@ -2381,7 +2381,7 @@ void ProtocolGame::AddCreature(NetworkMessage& msg, const Creature* creature, bo
 
 	msg.add<uint16_t>(static_cast<uint16_t>(creature->getStepSpeed()));
 
-	msg.addByte(player->getSkullClient(otherPlayer));
+	msg.addByte(player->getSkullClient(creature));
 	msg.addByte(player->getPartyShield(otherPlayer));
 
 	if (!known) {
@@ -2413,7 +2413,7 @@ void ProtocolGame::AddPlayerStats(NetworkMessage& msg)
 	    static_cast<uint16_t>(std::min<uint32_t>(player->getMaxMana(), std::numeric_limits<uint16_t>::max())));
 
 	msg.addByte(static_cast<uint8_t>(std::min<uint32_t>(player->getMagicLevel(), std::numeric_limits<uint8_t>::max())));
-	msg.addByte(player->getMagicLevelPercent());
+	msg.addByte(player->getMagicLevelPercent() / 100);
 
 	msg.addByte(player->getSoul());
 
@@ -2438,7 +2438,7 @@ void ProtocolGame::AddPlayerSkills(NetworkMessage& msg)
 	for (uint8_t i = SKILL_FIRST; i <= SKILL_LAST; ++i) {
 		msg.addByte(
 		    static_cast<uint8_t>(std::min<int32_t>(player->getSkillLevel(i), std::numeric_limits<uint16_t>::max())));
-		msg.addByte(player->getSkillPercent(i));
+		msg.addByte(player->getSkillPercent(i) / 100);
 	}
 }
 

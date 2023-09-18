@@ -1163,7 +1163,7 @@ bool Monster::getNextStep(Direction& direction, uint32_t& flags)
 
 	bool result = false;
 	if (!walkingToSpawn && (!followCreature || !hasFollowPath) && (!isSummon() || !isMasterInRange)) {
-		if (getTimeSinceLastMove() >= 1000) {
+		if (getTimeSinceLastMove() >= EVENT_CREATURE_THINK_INTERVAL) {
 			randomStepping = true;
 			// choose a random direction
 			result = getRandomStep(getPosition(), direction);

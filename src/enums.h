@@ -361,7 +361,8 @@ enum ConditionType_t
 	CONDITION_CURSED = 1 << 22,
 	CONDITION_EXHAUST_COMBAT = 1 << 23, // unused
 	CONDITION_EXHAUST_HEAL = 1 << 24,   // unused
-	CONDITION_PACIFIED = 1 << 25
+	CONDITION_PACIFIED = 1 << 25,
+	CONDITION_CLIPORT = 1 << 26,
 };
 
 enum ConditionId_t : int8_t
@@ -627,7 +628,5 @@ enum MonstersEvent_t : uint8_t
 	MONSTERS_EVENT_MOVE = 4,
 	MONSTERS_EVENT_SAY = 5,
 };
-
-using StorageValue = std::optional<int64_t>;
 
 #endif

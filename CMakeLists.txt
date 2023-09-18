@@ -48,7 +48,7 @@ endif ()
 
 find_package(Threads REQUIRED)
 find_package(PugiXML CONFIG REQUIRED)
-find_package(Lua "5.4" REQUIRED)
+find_package(Lua54 REQUIRED)
 
 find_package(Boost 1.66.0 REQUIRED COMPONENTS system iostreams)
 
