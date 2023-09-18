@@ -32,6 +32,7 @@ find_library(LUA_LIBRARY
   /opt/local
   /opt/csw
   /opt
+  /usr/include/lua5.4
 )
 
 if(LUA_LIBRARY)
