@@ -37,8 +37,8 @@
 #include <memory>
 #include <mutex>
 #include <mysql/mysql.h>
-#include <pugixml.hpp>
 #include <optional>
+#include <pugixml.hpp>
 #include <random>
 #include <set>
 #include <sstream>

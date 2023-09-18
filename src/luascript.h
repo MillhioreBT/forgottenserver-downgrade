@@ -248,17 +248,17 @@ public:
 			if (number > 0) {
 				reportErrorFunc(
 				    L, fmt::format("Argument {} has out-of-range value for {}: {}", arg, typeid(T).name(), integer));
-				return static_cast<T>(std::numeric_limits<std::underlying_type<T>::type>::max());
+				return static_cast<T>(std::numeric_limits<typename std::underlying_type<T>::type>::max());
 			} else if (number < 0) {
 				reportErrorFunc(
 				    L, fmt::format("Argument {} has out-of-range value for {}: {}", arg, typeid(T).name(), integer));
-				return static_cast<T>(std::numeric_limits<std::underlying_type<T>::type>::lowest());
+				return static_cast<T>(std::numeric_limits<typename std::underlying_type<T>::type>::lowest());
 			}
 
 			return static_cast<T>(0);
 		}
 
-		return static_cast<T>(static_cast<std::underlying_type<T>::type>(integer));
+		return static_cast<T>(static_cast<typename std::underlying_type<T>::type>(integer));
 	}
 
 	template <typename T>
@@ -303,14 +303,14 @@ public:
 		} else if (num < std::numeric_limits<lua_Number>::lowest()) {
 			reportErrorFunc(L,
 			                fmt::format("Argument {} has out-of-range value for {}: {}", arg, typeid(T).name(), num));
-			return static_cast<T>(std::numeric_limits<std::underlying_type<T>::type>::lowest());
+			return static_cast<T>(std::numeric_limits<typename std::underlying_type<T>::type>::lowest());
 		} else if (num > std::numeric_limits<lua_Number>::max()) {
 			reportErrorFunc(L,
 			                fmt::format("Argument {} has out-of-range value for {}: {}", arg, typeid(T).name(), num));
-			return static_cast<T>(std::numeric_limits<std::underlying_type<T>::type>::max());
+			return static_cast<T>(std::numeric_limits<typename std::underlying_type<T>::type>::max());
 		}
 
-		return static_cast<T>(static_cast<std::underlying_type<T>::type>(num));
+		return static_cast<T>(static_cast<typename std::underlying_type<T>::type>(num));
 	}
 
 	template <typename T>
@@ -321,11 +321,11 @@ public:
 		lua_Number num = lua_tonumberx(L, arg, &isNum);
 		if (isNum == 0) {
 			return 0;
-		} else if (num < static_cast<lua_Number>(std::numeric_limits<T>::lowest())) {
+		} else if (num < static_cast<lua_Number>(typename std::numeric_limits<T>::lowest())) {
 			reportErrorFunc(L,
 			                fmt::format("Argument {} has out-of-range value for {}: {}", arg, typeid(T).name(), num));
 			return std::numeric_limits<T>::lowest();
-		} else if (num > static_cast<lua_Number>(std::numeric_limits<T>::max())) {
+		} else if (num > static_cast<lua_Number>(typename std::numeric_limits<T>::max())) {
 			reportErrorFunc(L,
 			                fmt::format("Argument {} has out-of-range value for {}: {}", arg, typeid(T).name(), num));
 			return std::numeric_limits<T>::max();
