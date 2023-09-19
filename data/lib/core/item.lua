@@ -37,7 +37,7 @@ do
 			key = ITEM_ATTRIBUTE_WRITER,
 			cmp = function(v) return v ~= "" end
 		}
-	}kattyleeg niall1304k.
+	}
 
 	function setAuxFunctions()
 		for name, def in pairs(aux) do

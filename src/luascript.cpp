@@ -2761,6 +2761,7 @@ void LuaScriptInterface::registerFunctions()
 	registerMethod("ItemType", "getRequiredLevel", LuaScriptInterface::luaItemTypeGetRequiredLevel);
 	registerMethod("ItemType", "getAmmoType", LuaScriptInterface::luaItemTypeGetAmmoType);
 	registerMethod("ItemType", "getCorpseType", LuaScriptInterface::luaItemTypeGetCorpseType);
+	registerMethod("ItemType", "getRotateTo", LuaScriptInterface::luaItemTypeGetRotateTo);
 
 	registerMethod("ItemType", "getAbilities", LuaScriptInterface::luaItemTypeGetAbilities);
 
@@ -12115,6 +12116,18 @@ int LuaScriptInterface::luaItemTypeGetCorpseType(lua_State* L)
 	const ItemType* itemType = getUserdata<const ItemType>(L, 1);
 	if (itemType) {
 		lua_pushinteger(L, itemType->corpseType);
+	} else {
+		lua_pushnil(L);
+	}
+	return 1;
+}
+
+int LuaScriptInterface::luaItemTypeGetRotateTo(lua_State* L)
+{
+	// itemType:getRotateTo()
+	const ItemType* itemType = getUserdata<const ItemType>(L, 1);
+	if (itemType) {
+		lua_pushinteger(L, itemType->rotateTo);
 	} else {
 		lua_pushnil(L);
 	}

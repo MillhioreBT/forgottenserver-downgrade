@@ -22,3 +22,9 @@ end
 function Creature:onChangeZone(fromZone, toZone)
 	if hasEvent.onChangeZone then Event.onChangeZone(self, fromZone, toZone) end
 end
+
+function Creature:onUpdateStorage(key, value, oldValue, isSpawn)
+	if hasEvent.onUpdateStorage then
+		Event.onUpdateStorage(self, key, value, oldValue, isSpawn)
+	end
+end

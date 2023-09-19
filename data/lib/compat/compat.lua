@@ -1728,32 +1728,30 @@ function doMoveCreature(cid, direction)
 	return c ~= nil and c:move(direction)
 end
 
-do
-	local exclude = {
-		[2] = {"is"},
-		[3] = {"get", "set", "add", "can"},
-		[4] = {"need"}
-	}
-
-	local function exists(name)
+function createFunctions(class)
+	local exclude = {[2] = {"is"}, [3] = {"get", "set", "add", "can"}, [4] = {"need"}}
+	local temp = {}
+	for name, func in pairs(class) do
+		local add = true
 		for strLen, strTable in pairs(exclude) do
-			if table.contains(strTable, name:sub(1, strLen)) then return true end
-		end
-	end
-
-	function createFunctions(class)
-		local temp = {}
-		for name, func in pairs(class) do
-			if not exists(name) then
-				local str = name:sub(1, 1):upper() .. name:sub(2)
-				local get = "get" .. str
-				local set = "set" .. str
-				if not class[get] and not class[set] then
-					class[get] = function(self) return func(self) end
-					class[set] = function(self, ...) return func(self, ...) end
-				end
+			if table.contains(strTable, name:sub(1, strLen)) then
+				add = false
 			end
 		end
+		if add then
+			local str = name:sub(1, 1):upper() .. name:sub(2)
+			local getFunc = function(self) return func(self) end
+			local setFunc = function(self, ...) return func(self, ...) end
+			local get = "get" .. str
+			local set = "set" .. str
+			if not (rawget(class, get) and rawget(class, set)) then
+				table.insert(temp, {set, setFunc, get, getFunc})
+			end
+		end
+	end
+	for _, func in ipairs(temp) do
+		rawset(class, func[1], func[2])
+		rawset(class, func[3], func[4])
 	end
 end
 

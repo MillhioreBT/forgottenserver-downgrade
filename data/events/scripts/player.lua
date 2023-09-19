@@ -126,7 +126,7 @@ function Player:onNetworkMessage(recvByte, msg)
 	local handler = PacketHandlers[recvByte]
 	if not handler then
 		print(string.format(
-			      "Player: %s sent an unknown packet header: 0x%02X with %d bytes!\n",
+			      "Player: %s sent an unknown packet header: 0x%02X with %d bytes!",
 			      self:getName(), recvByte, msg:len()))
 		return
 	end
@@ -148,4 +148,8 @@ end
 
 function Player:onAccountManager(text)
 	if hasEvent.onAccountManager then Event.onAccountManager(self, text) end
+end
+
+function Player:onRotateItem(item)
+	if hasEvent.onRotateItem then return Event.onRotateItem(self, item) end
 end

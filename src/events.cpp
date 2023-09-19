@@ -112,6 +112,8 @@ bool Events::load()
 				info.playerOnUpdateInventory = event;
 			} else if (methodName == "onAccountManager") {
 				info.playerOnAccountManager = event;
+			} else if (methodName == "onRotateItem") {
+				info.playerOnRotateItem = event;
 			} else {
 				std::cout << "[Warning - Events::load] Unknown player method: " << methodName << std::endl;
 			}
@@ -1179,6 +1181,33 @@ void Events::eventPlayerOnAccountManager(Player* player, std::string_view text)
 	LuaScriptInterface::setMetatable(L, -1, "Player");
 
 	LuaScriptInterface::pushString(L, text);
+
+	scriptInterface.callVoidFunction(2);
+}
+
+void Events::eventPlayerOnRotateItem(Player* player, Item* item)
+{
+	// Player:onRotateItem(item)
+	if (info.playerOnRotateItem == -1) {
+		return;
+	}
+
+	if (!scriptInterface.reserveScriptEnv()) {
+		std::cout << "[Error - Events::eventPlayerOnRotateItem] Call stack overflow" << std::endl;
+		return;
+	}
+
+	ScriptEnvironment* env = scriptInterface.getScriptEnv();
+	env->setScriptId(info.playerOnRotateItem, &scriptInterface);
+
+	lua_State* L = scriptInterface.getLuaState();
+	scriptInterface.pushFunction(info.playerOnRotateItem);
+
+	LuaScriptInterface::pushUserdata<Player>(L, player);
+	LuaScriptInterface::setMetatable(L, -1, "Player");
+
+	LuaScriptInterface::pushUserdata<Item>(L, item);
+	LuaScriptInterface::setItemMetatable(L, -1, item);
 
 	scriptInterface.callVoidFunction(2);
 }
