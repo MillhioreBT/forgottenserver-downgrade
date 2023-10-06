@@ -19,11 +19,12 @@ find_path(LUA_INCLUDE_DIR lua.h
   /opt/csw # Blastwave
   /opt
   /usr
-  /usr/lib/x86_64-linux-gnu/
+  /usr/include
+  /usr/include/lua5.4
 )
 
 find_library(LUA_LIBRARY
-  NAMES lua5.4
+  NAMES lua54
   HINTS
     ENV LUA_DIR
   PATH_SUFFIXES lib
