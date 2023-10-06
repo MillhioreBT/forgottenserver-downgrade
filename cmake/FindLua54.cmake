@@ -24,7 +24,7 @@ find_path(LUA_INCLUDE_DIR lua.h
 )
 
 find_library(LUA_LIBRARY
-  NAMES lua54
+  NAMES lua5.4
   HINTS
     ENV LUA_DIR
   PATH_SUFFIXES lib
