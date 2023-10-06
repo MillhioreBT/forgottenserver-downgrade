@@ -8,7 +8,7 @@
 
 ## How to compile
 
-[Wiki](https://github.com/otland/forgottenserver/wiki/Compiling)
+[Compiling on Ubuntu](https://github.com/MillhioreBT/forgottenserver-downgrade/wiki/Compiling-on-Ubuntu)
 
 ## Contributing
 
