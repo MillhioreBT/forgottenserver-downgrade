@@ -10,7 +10,11 @@
 #include "monster.h"
 #include "pugicast.h"
 
+#ifdef _WIN32
+#include <lua.hpp>
+#elif defined(__linux__)
 #include <lua5.4/lua.hpp>
+#endif
 
 #if LUA_VERSION_NUM >= 502
 #undef lua_strlen

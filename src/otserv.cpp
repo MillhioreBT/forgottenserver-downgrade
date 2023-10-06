@@ -156,7 +156,7 @@ void mainLoader(int, char*[], ServiceManager* services)
 		std::ifstream config_lua_dist("./config.lua.dist");
 		if (config_lua_dist.is_open()) {
 			std::cout << ">> copying config.lua.dist to " << configFile << std::endl;
-			std::ofstream config_lua(configFile);
+			std::ofstream config_lua(std::string{configFile});
 			config_lua << config_lua_dist.rdbuf();
 			config_lua.close();
 			config_lua_dist.close();
