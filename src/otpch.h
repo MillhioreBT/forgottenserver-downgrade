@@ -33,9 +33,9 @@
 #include <limits>
 #include <list>
 #ifdef _WIN32
-#include <lua.hpp>
+#include "lua.hpp"
 #elif defined(__linux__)
-#include <lua5.4/lua.hpp>
+#include "lua5.4/lua.hpp"
 #endif
 #include <map>
 #include <memory>
