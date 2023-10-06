@@ -113,23 +113,6 @@ function Player.sendExtendedOpcode(self, opcode, buffer)
 	return true
 end
 
-APPLY_SKILL_MULTIPLIER = true
-local addSkillTriesFunc = Player.addSkillTries
-function Player.addSkillTries(...)
-	APPLY_SKILL_MULTIPLIER = false
-	local ret = addSkillTriesFunc(...)
-	APPLY_SKILL_MULTIPLIER = true
-	return ret
-end
-
-local addManaSpentFunc = Player.addManaSpent
-function Player.addManaSpent(...)
-	APPLY_SKILL_MULTIPLIER = false
-	local ret = addManaSpentFunc(...)
-	APPLY_SKILL_MULTIPLIER = true
-	return ret
-end
-
 -- Always pass the number through the isValidMoney function first before using the transferMoneyTo
 function Player.transferMoneyTo(self, target, amount)
 	if not target then return false end

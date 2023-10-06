@@ -56,7 +56,7 @@ function doNpcSellItem(cid, itemid, amount, subType, ignoreCap, inBackpacks,
 end
 
 local func = function(cid, text, type, e, pcid)
-	if Player(pcid):isPlayer() then
+	if Player(pcid) then
 		local creature = Creature(cid)
 		creature:say(text, type, false, pcid, creature:getPosition())
 		e.done = true
@@ -64,7 +64,7 @@ local func = function(cid, text, type, e, pcid)
 end
 
 function doCreatureSayWithDelay(cid, text, type, delay, e, pcid)
-	if Player(pcid):isPlayer() then
+	if Player(pcid) then
 		e.done = false
 		e.event =
 			addEvent(func, delay < 1 and 1000 or delay, cid, text, type, e, pcid)
@@ -73,7 +73,7 @@ end
 
 function doPlayerSellItem(cid, itemid, count, cost)
 	local player = Player(cid)
-	if player:removeItem(itemid, count) then
+	if player and player:removeItem(itemid, count) then
 		if not player:addMoney(cost) then
 			error('Could not add money to ' .. player:getName() .. '(' .. cost .. 'gp)')
 		end
@@ -84,6 +84,8 @@ end
 
 function doPlayerBuyItemContainer(cid, containerid, itemid, count, cost, charges)
 	local player = Player(cid)
+	if not player then return false end
+
 	if not player:removeTotalMoney(cost) then return false end
 
 	for i = 1, count do

@@ -1,10 +1,28 @@
 function Tile.isCreature(self) return false end
 
+function Tile.isPlayer(self) return false end
+
 function Tile.isItem(self) return false end
+
+function Tile.isMonster(self) return false end
+
+function Tile.isNpc(self) return false end
+
+function Tile.isTeleport(self) return false end
 
 function Tile.isTile(self) return true end
 
 function Tile.isContainer(self) return false end
+
+function Tile.isHouse(self) return self:getHouse() ~= nil end
+
+function Tile.getCreature(self) return nil end
+
+function Tile.getPlayer(self) return nil end
+
+function Tile.getItem(self) return nil end
+
+function Tile.getContainer(self) return nil end
 
 function Tile.relocateTo(self, toPosition)
 	if self:getPosition() == toPosition or not Tile(toPosition) then return false end
@@ -12,14 +30,16 @@ function Tile.relocateTo(self, toPosition)
 	for i = self:getThingCount() - 1, 0, -1 do
 		local thing = self:getThing(i)
 		if thing then
-			if thing:isItem() then
-				if thing:getFluidType() ~= 0 then
-					thing:remove()
-				elseif ItemType(thing:getId()):isMovable() then
-					thing:moveTo(toPosition)
+			local item = thing:getItem()
+			if item then
+				if item:getFluidType() ~= 0 then
+					item:remove()
+				elseif ItemType(item:getId()):isMovable() then
+					item:moveTo(toPosition)
 				end
-			elseif thing:isCreature() then
-				thing:teleportTo(toPosition)
+			else
+				local creature = thing:getCreature()
+				if creature then creature:teleportTo(toPosition) end
 			end
 		end
 	end
@@ -35,8 +55,14 @@ function Tile.isWalkable(self)
 	for i = 1, self:getItemCount() do
 		local item = items[i]
 		local itemType = item:getType()
-		if itemType:getType() ~= ITEM_TYPE_MAGICFIELD and not itemType:isMovable() and
-			item:hasProperty(CONST_PROP_BLOCKSOLID) then return false end
+		if itemType:getType() ~= ITEM_TYPE_MAGICFIELD and not itemType:isMovable() and item:hasProperty(CONST_PROP_BLOCKSOLID) then
+			return false
+		end
 	end
 	return true
+end
+
+function Tile.getTopPlayer(self)
+	local creature = self:getTopCreature()
+	return creature and creature:getPlayer()
 end

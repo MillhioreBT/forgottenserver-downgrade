@@ -49,7 +49,7 @@ end
 
 if not globalStorageTable then globalStorageTable = {} end
 
-function Game.getStorageValue(key) return globalStorageTable[key] end
+function Game.getStorageValue(key) return globalStorageTable[key] or -1 end
 
 function Game.setStorageValue(key, value) globalStorageTable[key] = value end
 

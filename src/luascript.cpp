@@ -3871,6 +3871,7 @@ int LuaScriptInterface::luaStopEvent(lua_State* L)
 
 int LuaScriptInterface::luaSaveServer(lua_State* L)
 {
+	// saveServer()
 	g_game.saveGameState();
 	pushBoolean(L, true);
 	return 1;
@@ -3878,6 +3879,7 @@ int LuaScriptInterface::luaSaveServer(lua_State* L)
 
 int LuaScriptInterface::luaCleanMap(lua_State* L)
 {
+	// cleanMap()
 	lua_pushinteger(L, g_game.map.clean());
 	return 1;
 }

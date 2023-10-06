@@ -24,15 +24,16 @@ function Container.createLootItem(self, item)
 		local tmpItem = Game.createItem(item.itemId, subType)
 		if not tmpItem then return false end
 
-		if tmpItem:isContainer() then
+		local tmpContainer = tmpItem:getContainer()
+		if tmpContainer then
 			for i = 1, #item.childLoot do
-				if not tmpItem:createLootItem(item.childLoot[i]) then
-					tmpItem:remove()
+				if not tmpContainer:createLootItem(item.childLoot[i]) then
+					tmpContainer:remove()
 					return false
 				end
 			end
 
-			if #item.childLoot > 0 and tmpItem:getSize() == 0 then
+			if #item.childLoot > 0 and tmpContainer:getSize() == 0 then
 				tmpItem:remove()
 				return true
 			end
