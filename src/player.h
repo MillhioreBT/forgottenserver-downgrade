@@ -534,11 +534,12 @@ public:
 			client->sendChannelMessage(author, text, type, channel);
 		}
 	}
-	void sendCreatureAppear(const Creature* creature, const Position& pos, bool isLogin)
+	void sendCreatureAppear(const Creature* creature, const Position& pos,
+	                        MagicEffectClasses magicEffect = CONST_ME_NONE)
 	{
 		if (client) {
 			client->sendAddCreature(creature, pos, creature->getTile()->getClientIndexOfCreature(this, creature),
-			                        isLogin);
+			                        magicEffect);
 		}
 	}
 	void sendCreatureMove(const Creature* creature, const Position& newPos, int32_t newStackPos, const Position& oldPos,
@@ -604,7 +605,7 @@ public:
 			}
 
 			if (visible) {
-				client->sendAddCreature(creature, creature->getPosition(), stackpos, false);
+				client->sendAddCreature(creature, creature->getPosition(), stackpos);
 			} else {
 				client->sendRemoveTileThing(creature->getPosition(), stackpos);
 			}

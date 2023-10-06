@@ -587,7 +587,7 @@ private:
 	static int luaGameGetMonsterTypes(lua_State* L);
 	static int luaGameGetCurrencyItems(lua_State* L);
 	static int luaGameGetItemTypeByClientId(lua_State* L);
-	static int luaGameGetTalkactions(lua_State* L);
+	static int luaGameGetTalkActions(lua_State* L);
 
 	static int luaGameGetTowns(lua_State* L);
 	static int luaGameGetHouses(lua_State* L);
@@ -1251,7 +1251,7 @@ private:
 	static int luaItemTypeHasShowDuration(lua_State* L);
 	static int luaItemTypeHasAllowDistRead(lua_State* L);
 	static int luaItemTypeGetWieldInfo(lua_State* L);
-	static int luaItemTypeGetDuration(lua_State* L);
+	static int luaItemTypeGetDurationMin(lua_State* L);
 	static int luaItemTypeGetDurationMax(lua_State* L);
 	static int luaItemTypeGetLevelDoor(lua_State* L);
 	static int luaItemTypeGetRuneSpellName(lua_State* L);
@@ -1300,6 +1300,8 @@ private:
 	static int luaConditionSetOutfit(lua_State* L);
 
 	static int luaConditionAddDamage(lua_State* L);
+	static int luaConditionSetInitDamage(lua_State* L);
+	static int luaConditionGetTotalDamage(lua_State* L);
 
 	// Outfit
 	static int luaOutfitCreate(lua_State* L);

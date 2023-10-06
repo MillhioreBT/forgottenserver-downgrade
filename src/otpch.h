@@ -32,7 +32,7 @@
 #include <iostream>
 #include <limits>
 #include <list>
-#include <lua.hpp>
+#include <lua5.4/lua.hpp>
 #include <map>
 #include <memory>
 #include <mutex>

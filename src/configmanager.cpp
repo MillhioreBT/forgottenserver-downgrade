@@ -10,7 +10,7 @@
 #include "monster.h"
 #include "pugicast.h"
 
-#include <lua.hpp>
+#include <lua5.4/lua.hpp>
 
 #if LUA_VERSION_NUM >= 502
 #undef lua_strlen

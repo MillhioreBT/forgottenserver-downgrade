@@ -242,9 +242,10 @@ bool Creature::getNextStep(Direction& dir, uint32_t&)
 
 void Creature::startAutoWalk()
 {
-	Player* player = getPlayer();
-	if (player && player->isMovementBlocked()) {
-		player->sendCancelWalk();
+	if (isMovementBlocked()) {
+		if (auto player = getPlayer()) {
+			player->sendCancelWalk();
+		}
 		return;
 	}
 
@@ -253,9 +254,10 @@ void Creature::startAutoWalk()
 
 void Creature::startAutoWalk(Direction direction)
 {
-	Player* player = getPlayer();
-	if (player && player->isMovementBlocked()) {
-		player->sendCancelWalk();
+	if (isMovementBlocked()) {
+		if (auto player = getPlayer()) {
+			player->sendCancelWalk();
+		}
 		return;
 	}
 
@@ -266,9 +268,10 @@ void Creature::startAutoWalk(Direction direction)
 
 void Creature::startAutoWalk(const std::vector<Direction>& listDir)
 {
-	Player* player = getPlayer();
-	if (player && player->isMovementBlocked()) {
-		player->sendCancelWalk();
+	if (isMovementBlocked()) {
+		if (auto player = getPlayer()) {
+			player->sendCancelWalk();
+		}
 		return;
 	}
 
@@ -921,6 +924,10 @@ void Creature::getPathSearchParams(const Creature*, FindPathParams& fpp) const
 
 void Creature::goToFollowCreature()
 {
+	if (isMovementBlocked()) {
+		return;
+	}
+
 	if (followCreature) {
 		FindPathParams fpp;
 		getPathSearchParams(followCreature, fpp);

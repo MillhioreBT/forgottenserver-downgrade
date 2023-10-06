@@ -200,7 +200,8 @@ private:
 	void sendUpdateTileCreature(const Position& pos, uint32_t stackpos, const Creature* creature);
 	void sendUpdateTile(const Tile* tile, const Position& pos);
 
-	void sendAddCreature(const Creature* creature, const Position& pos, int32_t stackpos, bool isLogin);
+	void sendAddCreature(const Creature* creature, const Position& pos, int32_t stackpos,
+	                     MagicEffectClasses magicEffect = CONST_ME_NONE);
 	void sendMoveCreature(const Creature* creature, const Position& newPos, int32_t newStackPos, const Position& oldPos,
 	                      int32_t oldStackPos, bool teleport);
 

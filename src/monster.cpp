@@ -986,7 +986,6 @@ void Monster::onThinkDefense(uint32_t interval)
 					summon->setSkillLoss(false);
 					summon->setMaster(this);
 					g_game.addMagicEffect(getPosition(), CONST_ME_MAGIC_BLUE);
-					g_game.addMagicEffect(summon->getPosition(), CONST_ME_TELEPORT);
 				} else {
 					delete summon;
 				}
@@ -1155,8 +1154,9 @@ void Monster::pushCreatures(Tile* tile)
 
 bool Monster::getNextStep(Direction& direction, uint32_t& flags)
 {
-	if (!walkingToSpawn && (isIdle || isDead())) {
+	if (isMovementBlocked() || (!walkingToSpawn && (isIdle || isDead()))) {
 		// we don't have anyone watching, might as well stop walking
+		// or the creature movement is blocked
 		eventWalk = 0;
 		return false;
 	}
