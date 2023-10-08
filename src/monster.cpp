@@ -1833,7 +1833,7 @@ void Monster::death(Creature*)
 
 	for (Creature* summon : summons) {
 		summon->changeHealth(-summon->getHealth());
-		summon->removeMaster();
+		//summon->removeMaster();
 	}
 	summons.clear();
 

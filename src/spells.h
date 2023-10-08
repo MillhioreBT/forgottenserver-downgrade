@@ -36,7 +36,7 @@ public:
 	InstantSpell* getInstantSpell(std::string_view words);
 	InstantSpell* getInstantSpellByName(std::string_view name);
 
-	TalkActionResult_t playerSaySpell(Player* player, std::string& words);
+	TalkActionResult playerSaySpell(Player* player, std::string& words);
 
 	static Position getCasterPosition(Creature* creature, Direction dir);
 	std::string_view getScriptBaseName() const override;

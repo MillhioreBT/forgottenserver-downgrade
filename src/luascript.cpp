@@ -1977,6 +1977,11 @@ void LuaScriptInterface::registerFunctions()
 	registerEnum(DECAYING_TRUE);
 	registerEnum(DECAYING_PENDING);
 
+	registerEnum(VARIANT_NUMBER);
+	registerEnum(VARIANT_POSITION);
+	registerEnum(VARIANT_TARGETPOSITION);
+	registerEnum(VARIANT_STRING);
+
 	// _G
 	registerGlobalVariable("INDEX_WHEREEVER", INDEX_WHEREEVER);
 	registerGlobalBoolean("VIRTUAL_PARENT", true);

@@ -11,11 +11,11 @@
 class TalkAction;
 using TalkAction_ptr = std::unique_ptr<TalkAction>;
 
-enum TalkActionResult_t
+enum class TalkActionResult
 {
-	TALKACTION_CONTINUE,
-	TALKACTION_BREAK,
-	TALKACTION_FAILED,
+	CONTINUE,
+	BREAK,
+	FAILED,
 };
 
 class TalkAction : public Event
@@ -71,7 +71,7 @@ public:
 	TalkActions(const TalkActions&) = delete;
 	TalkActions& operator=(const TalkActions&) = delete;
 
-	TalkActionResult_t playerSaySpell(Player* player, SpeakClasses type, std::string_view words) const;
+	TalkActionResult playerSaySpell(Player* player, SpeakClasses type, std::string_view words) const;
 
 	bool registerLuaEvent(TalkAction* event);
 	void clear(bool fromLua) override final;

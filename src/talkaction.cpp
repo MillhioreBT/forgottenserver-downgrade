@@ -64,7 +64,7 @@ bool TalkActions::registerLuaEvent(TalkAction* event)
 	return true;
 }
 
-TalkActionResult_t TalkActions::playerSaySpell(Player* player, SpeakClasses type, std::string_view words) const
+TalkActionResult TalkActions::playerSaySpell(Player* player, SpeakClasses type, std::string_view words) const
 {
 	size_t wordsLength = words.length();
 	for (auto it = talkActions.begin(); it != talkActions.end();) {
@@ -97,23 +97,20 @@ TalkActionResult_t TalkActions::playerSaySpell(Player* player, SpeakClasses type
 		}
 
 		if (it->second.getNeedAccess() && !player->isAccessPlayer()) {
-			std::cout << player->getGroup()->access << std::endl;
-			return TALKACTION_CONTINUE;
+			return TalkActionResult::CONTINUE;
 		}
 
 		if (player->getAccountType() < it->second.getRequiredAccountType()) {
-			std::cout << static_cast<uint16_t>(player->getAccountType()) << " - "
-			          << static_cast<uint16_t>(it->second.getRequiredAccountType()) << std::endl;
-			return TALKACTION_CONTINUE;
+			return TalkActionResult::CONTINUE;
 		}
 
 		if (it->second.executeSay(player, words, param, type)) {
-			return TALKACTION_CONTINUE;
+			return TalkActionResult::CONTINUE;
 		} else {
-			return TALKACTION_BREAK;
+			return TalkActionResult::BREAK;
 		}
 	}
-	return TALKACTION_CONTINUE;
+	return TalkActionResult::CONTINUE;
 }
 
 bool TalkAction::configureEvent(const pugi::xml_node& node)

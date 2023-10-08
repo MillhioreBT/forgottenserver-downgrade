@@ -22,7 +22,7 @@ Spells::Spells() { scriptInterface.initState(); }
 
 Spells::~Spells() { clear(false); }
 
-TalkActionResult_t Spells::playerSaySpell(Player* player, std::string& words)
+TalkActionResult Spells::playerSaySpell(Player* player, std::string& words)
 {
 	std::string str_words = words;
 
@@ -31,7 +31,7 @@ TalkActionResult_t Spells::playerSaySpell(Player* player, std::string& words)
 
 	InstantSpell* instantSpell = getInstantSpell(str_words);
 	if (!instantSpell) {
-		return TALKACTION_CONTINUE;
+		return TalkActionResult::CONTINUE;
 	}
 
 	std::string param;
@@ -47,7 +47,7 @@ TalkActionResult_t Spells::playerSaySpell(Player* player, std::string& words)
 				if (loc2 == std::string::npos) {
 					loc2 = paramText.length();
 				} else if (paramText.find_last_not_of(' ') != loc2) {
-					return TALKACTION_CONTINUE;
+					return TalkActionResult::CONTINUE;
 				}
 
 				param = paramText.substr(loc1 + 1, loc2 - loc1 - 1);
@@ -57,7 +57,7 @@ TalkActionResult_t Spells::playerSaySpell(Player* player, std::string& words)
 				if (loc1 == std::string::npos) {
 					param = paramText;
 				} else {
-					return TALKACTION_CONTINUE;
+					return TalkActionResult::CONTINUE;
 				}
 			}
 		}
@@ -70,10 +70,10 @@ TalkActionResult_t Spells::playerSaySpell(Player* player, std::string& words)
 			words += " \"" + param + "\"";
 		}
 
-		return TALKACTION_BREAK;
+		return TalkActionResult::BREAK;
 	}
 
-	return TALKACTION_FAILED;
+	return TalkActionResult::FAILED;
 }
 
 void Spells::clearMaps(bool fromLua)

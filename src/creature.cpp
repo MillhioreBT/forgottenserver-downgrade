@@ -719,6 +719,10 @@ void Creature::onDeath()
 
 	if (master) {
 		setMaster(nullptr);
+
+		if (getMonster()) {
+			decrementReferenceCounter();
+		}
 	}
 
 	if (droppedCorpse) {
@@ -808,7 +812,7 @@ void Creature::changeHealth(int32_t healthChange, bool sendHealthChange /* = tru
 		g_game.addCreatureHealth(this);
 	}
 
-	if (health <= 0) {
+	if (isDead()) {
 		g_dispatcher.addTask([id = getID()]() { g_game.executeDeath(id); });
 	}
 }

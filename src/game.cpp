@@ -374,7 +374,7 @@ Creature* Game::getCreatureByName(const std::string& s)
 	}
 
 	auto equalCreatureName = [&](const std::pair<uint32_t, Creature*>& it) {
-		auto name = it.second->getName();
+		auto& name = it.second->getName();
 		return lowerCaseName.size() == name.size() &&
 		       std::equal(lowerCaseName.begin(), lowerCaseName.end(), name.begin(),
 		                  [](char a, char b) { return a == std::tolower(b); });
@@ -1530,7 +1530,7 @@ bool Game::removeMoney(Cylinder* cylinder, uint64_t money, uint32_t flags /*= 0*
 			const uint32_t worth = moneyEntry.first / item->getItemCount();
 			const uint32_t removeCount = std::ceil(money / static_cast<double>(worth));
 
-			addMoney(cylinder, (worth * removeCount) - money, flags);
+			addMoney(cylinder, static_cast<uint64_t>(worth * removeCount) - money, flags);
 			internalRemoveItem(item, removeCount);
 			break;
 		} else {
@@ -3399,22 +3399,22 @@ void Game::playerSay(uint32_t playerId, uint16_t channelId, SpeakClasses type, s
 
 bool Game::playerSaySpell(Player* player, SpeakClasses type, std::string_view text)
 {
-	TalkActionResult_t result = g_talkActions->playerSaySpell(player, type, text);
-	if (result == TALKACTION_BREAK) {
+	TalkActionResult result = g_talkActions->playerSaySpell(player, type, text);
+	if (result == TalkActionResult::BREAK) {
 		return true;
 	}
 
 	std::string words{text};
 
 	result = g_spells->playerSaySpell(player, words);
-	if (result == TALKACTION_BREAK) {
+	if (result == TalkActionResult::BREAK) {
 		if (!g_config[ConfigKeysBoolean::EMOTE_SPELLS]) {
 			return internalCreatureSay(player, TALKTYPE_SAY, words, false);
 		} else {
 			return internalCreatureSay(player, TALKTYPE_MONSTER_SAY, words, false);
 		}
 
-	} else if (result == TALKACTION_FAILED) {
+	} else if (result == TalkActionResult::FAILED) {
 		return true;
 	}
 
@@ -4569,7 +4569,8 @@ void Game::checkDecay()
 			ReleaseItem(item);
 		} else if (duration < EVENT_DECAYINTERVAL * EVENT_DECAY_BUCKETS) {
 			it = decayItems[bucket].erase(it);
-			size_t newBucket = (bucket + ((duration + EVENT_DECAYINTERVAL / 2) / 1000)) % EVENT_DECAY_BUCKETS;
+			size_t newBucket =
+			    (bucket + static_cast<size_t>((duration + EVENT_DECAYINTERVAL / 2) / 1000)) % EVENT_DECAY_BUCKETS;
 			if (newBucket == bucket) {
 				internalDecayItem(item);
 				ReleaseItem(item);
