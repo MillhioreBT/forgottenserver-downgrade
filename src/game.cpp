@@ -715,15 +715,15 @@ void Game::playerMoveCreature(Player* player, Creature* movingCreature, const Po
 		}
 	}
 
-	if (player != movingCreature) {
-		if (!canThrowFar && toTile->hasFlag(TILESTATE_BLOCKPATH)) {
+	if (!canThrowFar && player != movingCreature) {
+		if (toTile->hasFlag(TILESTATE_BLOCKPATH)) {
 			player->sendCancelMessage(RETURNVALUE_NOTENOUGHROOM);
 			return;
 		} else if ((movingCreature->getZone() == ZONE_PROTECTION && !toTile->hasFlag(TILESTATE_PROTECTIONZONE)) ||
 		           (movingCreature->getZone() == ZONE_NOPVP && !toTile->hasFlag(TILESTATE_NOPVPZONE))) {
 			player->sendCancelMessage(RETURNVALUE_NOTPOSSIBLE);
 			return;
-		} else if (!canThrowFar) {
+		} else {
 			if (CreatureVector* tileCreatures = toTile->getCreatures()) {
 				for (Creature* tileCreature : *tileCreatures) {
 					if (!tileCreature->isInGhostMode()) {

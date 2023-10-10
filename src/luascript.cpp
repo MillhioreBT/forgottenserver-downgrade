@@ -7992,7 +7992,7 @@ int LuaScriptInterface::luaCreatureGetZone(lua_State* L)
 
 int LuaScriptInterface::luaCreatureGetStorageValue(lua_State* L)
 {
-	// creature:getStorageValue(key)
+	// creature:getStorageValue(key[, defaultValue = 0])
 	const Creature* creature = getUserdata<const Creature>(L, 1);
 	if (!creature) {
 		lua_pushnil(L);
