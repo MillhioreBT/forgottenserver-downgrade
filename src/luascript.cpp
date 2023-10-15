@@ -1458,6 +1458,7 @@ void LuaScriptInterface::registerFunctions()
 	registerEnum(CONST_ANI_SMALLEARTH);
 	registerEnum(CONST_ANI_EARTHARROW);
 	registerEnum(CONST_ANI_EXPLOSION);
+	registerEnum(CONST_ANI_CAKE);
 	registerEnum(CONST_ANI_WEAPONTYPE);
 
 	registerEnum(CONST_PROP_BLOCKSOLID);

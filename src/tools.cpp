@@ -551,6 +551,7 @@ ShootTypeNames shootTypeNames = {
     {"smallearth", CONST_ANI_SMALLEARTH},
     {"eartharrow", CONST_ANI_EARTHARROW},
     {"explosion", CONST_ANI_EXPLOSION},
+	{"cake", CONST_ANI_CAKE},
 };
 
 CombatTypeNames combatTypeNames = {
