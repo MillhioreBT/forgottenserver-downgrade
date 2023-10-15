@@ -127,6 +127,7 @@ enum ShootType_t : uint8_t
 	CONST_ANI_SMALLEARTH = 39,
 	CONST_ANI_EARTHARROW = 40,
 	CONST_ANI_EXPLOSION = 41,
+	CONST_ANI_CAKE = 42,
 
 	// for internal use, don't send to client
 	CONST_ANI_WEAPONTYPE = 0xFE, // 254
