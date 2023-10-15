@@ -342,6 +342,14 @@ CREATE TABLE IF NOT EXISTS `player_storage` (
   FOREIGN KEY (`player_id`) REFERENCES `players`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARACTER SET=utf8;
 
+CREATE TABLE IF NOT EXISTS `player_outfits` (
+  `player_id` int NOT NULL DEFAULT '0',
+  `outfit_id` smallint unsigned NOT NULL DEFAULT '0',
+  `addons` tinyint unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`player_id`,`outfit_id`),
+  FOREIGN KEY (`player_id`) REFERENCES `players`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARACTER SET=utf8;
+
 CREATE TABLE IF NOT EXISTS `server_config` (
   `config` varchar(50) NOT NULL,
   `value` varchar(256) NOT NULL DEFAULT '',
