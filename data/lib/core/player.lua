@@ -288,11 +288,12 @@ function Player.getWeaponType(self)
 	return WEAPON_NONE
 end
 
-function Player.addTibiaCoins(self, coins)
-	return self:setTibiaCoins(self:getTibiaCoins() + coins)
+function Player.addTibiaCoins(self, tibiaCoins)
+	return self:setTibiaCoins(self:getTibiaCoins() + tibiaCoins)
 end
 
-function Player.removeTibiaCoins(self, coins)
-	if self:getTibiaCoins() < coins then return false end
-	return self:setTibiaCoins(self:getTibiaCoins() - coins)
+function Player.removeTibiaCoins(self, removeCoins)
+	local tibiaCoins = self:getTibiaCoins()
+	if tibiaCoins < removeCoins then return false end
+	return self:setTibiaCoins(tibiaCoins - removeCoins)
 end
