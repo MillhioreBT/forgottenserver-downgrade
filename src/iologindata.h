@@ -47,6 +47,9 @@ public:
 
 	static void updatePremiumTime(uint32_t accountId, time_t endTime);
 
+	static uint64_t getTibiaCoins(uint32_t accountId);
+	static void updateTibiaCoins(uint32_t accountId, uint64_t tibiaCoins);
+
 private:
 	using ItemMap = std::map<uint32_t, std::pair<Item*, uint32_t>>;
 

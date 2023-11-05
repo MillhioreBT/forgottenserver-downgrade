@@ -55,7 +55,7 @@ public:
 	Raid* getRunning() { return running; }
 	void setRunning(Raid* newRunning) { running = newRunning; }
 
-	Raid* getRaidByName(const std::string& name);
+	Raid* getRaidByName(std::string_view name);
 
 	uint64_t getLastRaidEnd() const { return lastRaidEnd; }
 	void setLastRaidEnd(uint64_t newLastRaidEnd) { lastRaidEnd = newLastRaidEnd; }

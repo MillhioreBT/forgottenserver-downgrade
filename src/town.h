@@ -15,7 +15,7 @@ public:
 	const std::string& getName() const { return name; }
 
 	void setTemplePos(Position pos) { templePosition = pos; }
-	void setName(std::string name) { this->name = std::move(name); }
+	void setName(std::string_view name) { this->name = name; }
 	uint32_t getID() const { return id; }
 
 private:
@@ -43,10 +43,10 @@ public:
 
 	bool addTown(uint32_t townId, Town* town) { return townMap.emplace(townId, town).second; }
 
-	Town* getTown(const std::string& townName) const
+	Town* getTown(std::string_view townName) const
 	{
 		for (const auto& it : townMap) {
-			if (caseInsensitiveEqual(townName, it.second->getName()) == 0) {
+			if (caseInsensitiveEqual(townName, it.second->getName())) {
 				return it.second;
 			}
 		}

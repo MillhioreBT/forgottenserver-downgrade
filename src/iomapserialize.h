@@ -16,7 +16,7 @@ public:
 	static bool loadHouseInfo();
 	static bool saveHouseInfo();
 
-	static bool saveHouse(House* house);
+	static bool saveHouse(const House* house);
 
 private:
 	static void saveItem(PropWriteStream& stream, const Item* item);

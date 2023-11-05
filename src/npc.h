@@ -23,7 +23,7 @@ class NpcScriptInterface final : public LuaScriptInterface
 public:
 	NpcScriptInterface();
 
-	bool loadNpcLib(const std::string& file);
+	bool loadNpcLib(std::string_view file);
 
 private:
 	void registerFunctions();

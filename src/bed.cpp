@@ -244,11 +244,9 @@ void BedItem::updateAppearance(const Player* player)
 
 void BedItem::internalSetSleeper(const Player* player)
 {
-	std::string desc_str = player->getName() + " is sleeping there.";
-
 	sleeperGUID = player->getGUID();
 	sleepStart = time(nullptr);
-	setSpecialDescription(desc_str);
+	setSpecialDescription(fmt::format("{} is sleeping there.", player->getName()));
 }
 
 void BedItem::internalRemoveSleeper()

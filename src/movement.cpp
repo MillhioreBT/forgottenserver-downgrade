@@ -618,9 +618,8 @@ bool MoveEvent::configureEvent(const pugi::xml_node& node)
 				continue;
 			}
 
-			int32_t vocationId = g_vocations.getVocationId(vocationNameAttribute.as_string());
-			if (vocationId != -1) {
-				vocationEquipSet.insert(static_cast<uint16_t>(vocationId));
+			if (auto vocationId = g_vocations.getVocationId(vocationNameAttribute.as_string())) {
+				vocationEquipSet.insert(vocationId.value());
 				if (vocationNode.attribute("showInDescription").as_bool(true)) {
 					vocStringList.push_back(
 					    boost::algorithm::to_lower_copy<std::string>(vocationNameAttribute.as_string()));

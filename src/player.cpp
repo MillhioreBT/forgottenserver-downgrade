@@ -858,9 +858,8 @@ void Player::sendHouseWindow(House* house, uint32_t listId) const
 		return;
 	}
 
-	std::string text;
-	if (house->getAccessList(listId, text)) {
-		client->sendHouseWindow(windowTextId, text);
+	if (auto text = house->getAccessList(listId)) {
+		client->sendHouseWindow(windowTextId, text.value());
 	}
 }
 

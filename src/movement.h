@@ -118,11 +118,10 @@ public:
 	void setVocationString(std::string_view str) { vocationString = str; }
 	uint32_t getWieldInfo() const { return wieldInfo; }
 	const auto& getVocationEquipSet() const { return vocationEquipSet; }
-	void addVocationEquipSet(const std::string& vocationName)
+	void addVocationEquipSet(std::string_view vocationName)
 	{
-		int32_t vocationId = g_vocations.getVocationId(vocationName);
-		if (vocationId != -1) {
-			vocationEquipSet.insert(static_cast<uint16_t>(vocationId));
+		if (auto vocationId = g_vocations.getVocationId(vocationName)) {
+			vocationEquipSet.insert(vocationId.value());
 		}
 	}
 	bool hasVocationEquipSet(uint16_t vocationId) const

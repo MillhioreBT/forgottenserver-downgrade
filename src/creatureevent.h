@@ -37,7 +37,7 @@ public:
 	CreatureEventType_t getEventType() const { return type; }
 	void setEventType(CreatureEventType_t eventType) { type = eventType; }
 	const std::string& getName() const { return eventName; }
-	void setName(const std::string& name) { eventName = name; }
+	void setName(std::string_view name) { eventName = name; }
 	bool isLoaded() const { return loaded; }
 	void setLoaded(bool b) { loaded = b; }
 

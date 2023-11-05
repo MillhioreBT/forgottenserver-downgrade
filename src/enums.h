@@ -525,8 +525,8 @@ struct ShopInfo
 
 	ShopInfo() = default;
 	ShopInfo(uint16_t itemId, int32_t subType = 0, uint32_t buyPrice = 0, uint32_t sellPrice = 0,
-	         std::string realName = "") :
-	    itemId(itemId), subType(subType), buyPrice(buyPrice), sellPrice(sellPrice), realName(std::move(realName))
+	         std::string_view realName = "") :
+	    itemId{itemId}, subType{subType}, buyPrice{buyPrice}, sellPrice{sellPrice}, realName{realName}
 	{}
 };
 
@@ -591,8 +591,7 @@ struct ModalWindow
 	uint8_t defaultEnterButton = 0xFF, defaultEscapeButton = 0xFF;
 	bool priority = false;
 
-	ModalWindow(uint32_t id, std::string title, std::string message) :
-	    title(std::move(title)), message(std::move(message)), id(id)
+	ModalWindow(uint32_t id, std::string_view title, std::string_view message) : title{title}, message{message}, id(id)
 	{}
 };
 

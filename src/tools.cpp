@@ -237,12 +237,13 @@ bool caseInsensitiveStartsWith(std::string_view str, std::string_view prefix)
 	                                                 [](char a, char b) { return tolower(a) == tolower(b); });
 }
 
-StringVector explodeString(const std::string& inString, const std::string& separator, int32_t limit /* = -1*/)
+std::vector<std::string_view> explodeString(std::string_view inString, const std::string& separator,
+                                            int32_t limit /* = -1*/)
 {
-	StringVector returnVector;
-	std::string::size_type start = 0, end = 0;
+	std::vector<std::string_view> returnVector;
+	std::string_view::size_type start = 0, end = 0;
 
-	while (--limit != -1 && (end = inString.find(separator, start)) != std::string::npos) {
+	while (--limit != -1 && (end = inString.find(separator, start)) != std::string_view::npos) {
 		returnVector.push_back(inString.substr(start, end - start));
 		start = end + separator.size();
 	}
@@ -251,11 +252,11 @@ StringVector explodeString(const std::string& inString, const std::string& separ
 	return returnVector;
 }
 
-IntegerVector vectorAtoi(const StringVector& stringVector)
+IntegerVector vectorAtoi(const std::vector<std::string_view>& stringVector)
 {
 	IntegerVector returnVector;
 	for (const auto& string : stringVector) {
-		returnVector.push_back(std::stoi(string));
+		returnVector.push_back(std::stoi(string.data()));
 	}
 	return returnVector;
 }
@@ -287,9 +288,8 @@ int32_t normal_random(int32_t minNumber, int32_t maxNumber)
 		v = normalRand(getRandomGenerator());
 	} while (v < 0.0 || v > 1.0);
 
-	std::tie(minNumber, maxNumber) = std::minmax(minNumber, maxNumber);
-	const int32_t diff = maxNumber - minNumber;
-	return minNumber + std::lround(v * diff);
+	auto&& [a, b] = std::minmax(minNumber, maxNumber);
+	return a + std::lround(v * (b - a));
 }
 
 bool boolean_random(double probability /* = 0.5*/)
@@ -825,7 +825,7 @@ uint8_t clientFluidToServer(uint8_t clientFluid)
 	return clientToServerFluidMap[clientFluid];
 }
 
-itemAttrTypes stringToItemAttribute(const std::string& str)
+itemAttrTypes stringToItemAttribute(std::string_view str)
 {
 	if (str == "aid") {
 		return ITEM_ATTRIBUTE_ACTIONID;

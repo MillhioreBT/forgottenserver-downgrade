@@ -455,12 +455,11 @@ bool Spell::configureSpell(const pugi::xml_node& node)
 	for (auto& vocationNode : node.children()) {
 		if (!(attr = vocationNode.attribute("name"))) {
 			continue;
-		}
+		};
 
-		int32_t vocationId = g_vocations.getVocationId(attr.as_string());
-		if (vocationId != -1) {
+		if (auto vocationId = g_vocations.getVocationId(attr.as_string())) {
 			attr = vocationNode.attribute("showInDescription");
-			vocationSpellMap[static_cast<uint16_t>(vocationId)] = !attr || attr.as_bool();
+			vocationSpellMap[vocationId.value()] = !attr || attr.as_bool();
 		} else {
 			std::cout << "[Warning - Spell::configureSpell] Wrong vocation name: " << attr.as_string() << std::endl;
 		}

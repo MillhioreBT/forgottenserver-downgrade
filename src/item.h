@@ -172,7 +172,7 @@ public:
 
 			void operator()(const boost::blank&) const { lua_pushnil(L); }
 
-			void operator()(const std::string& v) const { LuaScriptInterface::pushString(L, v); }
+			void operator()(std::string_view v) const { LuaScriptInterface::pushString(L, v); }
 
 			void operator()(bool v) const { LuaScriptInterface::pushBoolean(L, v); }
 
@@ -193,7 +193,7 @@ public:
 
 			void operator()(const boost::blank&) const {}
 
-			void operator()(const std::string& v) const { propWriteStream.writeString(v); }
+			void operator()(std::string_view v) const { propWriteStream.writeString(v); }
 
 			template <typename T>
 			void operator()(const T& v) const
@@ -218,11 +218,11 @@ public:
 
 			switch (pos) {
 				case 1: { // std::string
-					std::string tmp;
-					if (!propStream.readString(tmp)) {
+					auto [str, ok] = propStream.readString();
+					if (!ok) {
 						return false;
 					}
-					value = tmp;
+					value = std::string{str};
 					break;
 				}
 
@@ -378,26 +378,26 @@ private:
 	}
 
 	template <typename R>
-	void setCustomAttribute(std::string& key, R value)
+	void setCustomAttribute(std::string_view key, R value)
 	{
-		boost::algorithm::to_lower(key);
 		if (hasAttribute(ITEM_ATTRIBUTE_CUSTOM)) {
 			removeCustomAttribute(key);
 		} else {
 			getAttr(ITEM_ATTRIBUTE_CUSTOM).value.custom = new CustomAttributeMap();
 		}
-		getAttr(ITEM_ATTRIBUTE_CUSTOM).value.custom->emplace(key, value);
+		auto lowercaseKey = boost::algorithm::to_lower_copy(std::string{key});
+		getAttr(ITEM_ATTRIBUTE_CUSTOM).value.custom->emplace(lowercaseKey, value);
 	}
 
-	void setCustomAttribute(std::string& key, CustomAttribute& value)
+	void setCustomAttribute(std::string_view key, const CustomAttribute& value)
 	{
-		boost::algorithm::to_lower(key);
 		if (hasAttribute(ITEM_ATTRIBUTE_CUSTOM)) {
 			removeCustomAttribute(key);
 		} else {
 			getAttr(ITEM_ATTRIBUTE_CUSTOM).value.custom = new CustomAttributeMap();
 		}
-		getAttr(ITEM_ATTRIBUTE_CUSTOM).value.custom->insert(std::make_pair(std::move(key), std::move(value)));
+		auto lowercaseKey = boost::algorithm::to_lower_copy(std::string{key});
+		getAttr(ITEM_ATTRIBUTE_CUSTOM).value.custom->emplace(lowercaseKey, value);
 	}
 
 	const CustomAttribute* getCustomAttribute(int64_t key)
@@ -423,11 +423,11 @@ private:
 		return removeCustomAttribute(tmp);
 	}
 
-	bool removeCustomAttribute(const std::string& key)
+	bool removeCustomAttribute(std::string_view key)
 	{
 		if (CustomAttributeMap* customAttrMap = getCustomAttributeMap()) {
-			auto it = customAttrMap->find(boost::algorithm::to_lower_copy<std::string>(key));
-			if (it != customAttrMap->end()) {
+			auto lowercaseKey = boost::algorithm::to_lower_copy(std::string{key});
+			if (auto it = customAttrMap->find(lowercaseKey); it != customAttrMap->end()) {
 				customAttrMap->erase(it);
 				return true;
 			}
@@ -526,12 +526,12 @@ public:
 	}
 
 	template <typename R>
-	void setCustomAttribute(std::string& key, R value)
+	void setCustomAttribute(std::string_view key, R value)
 	{
 		getAttributes()->setCustomAttribute(key, value);
 	}
 
-	void setCustomAttribute(std::string& key, ItemAttributes::CustomAttribute& value)
+	void setCustomAttribute(std::string_view key, ItemAttributes::CustomAttribute& value)
 	{
 		getAttributes()->setCustomAttribute(key, value);
 	}
@@ -560,7 +560,7 @@ public:
 		return getAttributes()->removeCustomAttribute(key);
 	}
 
-	bool removeCustomAttribute(const std::string& key)
+	bool removeCustomAttribute(std::string_view key)
 	{
 		if (!attributes) {
 			return false;

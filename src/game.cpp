@@ -159,7 +159,7 @@ void Game::saveGameState()
 	}
 }
 
-bool Game::loadMainMap(const std::string& filename)
+bool Game::loadMainMap(std::string_view filename)
 {
 	return map.loadMap(fmt::format("data/world/{}.otbm", filename), true);
 }

@@ -87,7 +87,7 @@ public:
 	void forceAddCondition(uint32_t creatureId, Condition* condition);
 	void forceRemoveCondition(uint32_t creatureId, ConditionType_t type);
 
-	bool loadMainMap(const std::string& filename);
+	bool loadMainMap(std::string_view filename);
 	void loadMap(const std::string& path);
 
 	/**

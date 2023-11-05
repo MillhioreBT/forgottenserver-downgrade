@@ -145,7 +145,7 @@ registerMonsterType.loot = function(mtype, mask)
 	if type(mask.loot) == "table" then
 		local lootError = false
 		for _, loot in pairs(mask.loot) do
-			local parent = Loot()
+			local parent <close> = Loot()
 			if not parent:setId(loot.id) then lootError = true end
 			if loot.chance then parent:setChance(loot.chance) end
 			if loot.maxCount then parent:setMaxCount(loot.maxCount) end
@@ -160,7 +160,7 @@ registerMonsterType.loot = function(mtype, mask)
 			end
 			if loot.child then
 				for _, children in pairs(loot.child) do
-					local child = Loot()
+					local child <close> = Loot()
 					if not child:setId(children.id) then lootError = true end
 					if children.chance then child:setChance(children.chance) end
 					if children.maxCount then child:setMaxCount(children.maxCount) end
@@ -285,7 +285,7 @@ end
 registerMonsterType.attacks = function(mtype, mask)
 	if type(mask.attacks) == "table" then
 		for _, attack in pairs(mask.attacks) do
-			local spell = AbilityTableToSpell(attack)
+			local spell <close> = AbilityTableToSpell(attack)
 			mtype:addAttack(spell)
 		end
 	end
@@ -296,7 +296,7 @@ registerMonsterType.defenses = function(mtype, mask)
 		if mask.defenses.armor then mtype:armor(mask.defenses.armor) end
 		for _, defense in pairs(mask.defenses) do
 			if type(defense) == "table" then
-				local spell = AbilityTableToSpell(defense)
+				local spell <close> = AbilityTableToSpell(defense)
 				mtype:addDefense(spell)
 			end
 		end

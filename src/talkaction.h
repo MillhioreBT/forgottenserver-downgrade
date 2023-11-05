@@ -32,10 +32,10 @@ public:
 		std::swap(wordsMap, ret);
 		return ret;
 	}
-	void setWords(const std::string& word)
+	void setWords(std::string_view word)
 	{
 		words = word;
-		wordsMap.push_back(word);
+		wordsMap.emplace_back(word);
 	}
 	std::string_view getSeparator() const { return separator; }
 	void setSeparator(std::string_view sep) { separator = sep; }
@@ -52,7 +52,7 @@ public:
 	void setNeedAccess(bool b) { needAccess = b; }
 
 private:
-	std::string_view getScriptEventName() const override;
+	std::string_view getScriptEventName() const override { return "onSay"; }
 
 	std::string words;
 	std::vector<std::string> wordsMap;
@@ -80,7 +80,7 @@ public:
 
 private:
 	LuaScriptInterface& getScriptInterface() override;
-	std::string_view getScriptBaseName() const override;
+	std::string_view getScriptBaseName() const override { return "talkactions"; }
 	Event_ptr getEvent(std::string_view nodeName) override;
 	bool registerEvent(Event_ptr event, const pugi::xml_node& node) override;
 

@@ -52,10 +52,10 @@ public:
 	void removeList() override;
 
 	const std::string& getName() const override;
-	void setName(const std::string& name);
+	void setName(std::string_view name);
 
 	const std::string& getNameDescription() const override;
-	void setNameDescription(const std::string& nameDescription) { this->nameDescription = nameDescription; };
+	void setNameDescription(std::string_view nameDescription) { this->nameDescription = nameDescription; };
 
 	std::string getDescription(int32_t) const override { return nameDescription + '.'; }
 

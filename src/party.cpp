@@ -286,7 +286,7 @@ void Party::updateAllPartyIcons()
 	leader->sendCreatureShield(leader);
 }
 
-void Party::broadcastPartyMessage(MessageClasses msgClass, const std::string& msg, bool sendToInvitations /*= false*/)
+void Party::broadcastPartyMessage(MessageClasses msgClass, std::string_view msg, bool sendToInvitations /*= false*/)
 {
 	for (Player* member : memberList) {
 		member->sendTextMessage(msgClass, msg);

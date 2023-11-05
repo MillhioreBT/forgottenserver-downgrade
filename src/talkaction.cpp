@@ -27,8 +27,6 @@ void TalkActions::clear(bool fromLua)
 
 LuaScriptInterface& TalkActions::getScriptInterface() { return scriptInterface; }
 
-std::string_view TalkActions::getScriptBaseName() const { return "talkactions"; }
-
 Event_ptr TalkActions::getEvent(std::string_view nodeName)
 {
 	if (!caseInsensitiveEqual(nodeName, "talkaction")) {
@@ -123,7 +121,7 @@ bool TalkAction::configureEvent(const pugi::xml_node& node)
 
 	pugi::xml_attribute separatorAttribute = node.attribute("separator");
 	if (separatorAttribute) {
-		separator = pugi::cast<char>(separatorAttribute.value());
+		separator = separatorAttribute.as_string();
 	}
 
 	pugi::xml_attribute accessAttribute = node.attribute("access");
@@ -136,13 +134,11 @@ bool TalkAction::configureEvent(const pugi::xml_node& node)
 		requiredAccountType = static_cast<AccountType_t>(pugi::cast<int32_t>(accountTypeAttribute.value()));
 	}
 
-	for (const auto& word : explodeString(wordsAttribute.as_string(), ";")) {
+	for (std::string_view word : explodeString(wordsAttribute.as_string(), ";")) {
 		setWords(word);
 	}
 	return true;
 }
-
-std::string_view TalkAction::getScriptEventName() const { return "onSay"; }
 
 bool TalkAction::executeSay(Player* player, std::string_view words, std::string_view param, SpeakClasses type) const
 {

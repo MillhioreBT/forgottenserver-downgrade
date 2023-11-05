@@ -182,15 +182,14 @@ bool Weapon::configureEvent(const pugi::xml_node& node)
 	}
 
 	std::list<std::string> vocStringList;
-	for (auto& vocationNode : node.children()) {
+	for (const auto& vocationNode : node.children()) {
 		if (!(attr = vocationNode.attribute("name"))) {
 			continue;
 		}
 
-		int32_t vocationId = g_vocations.getVocationId(attr.as_string());
-		if (vocationId != -1) {
-			vocationWeaponSet.insert(static_cast<uint16_t>(vocationId));
-			uint16_t promotedVocation = g_vocations.getPromotedVocation(static_cast<uint16_t>(vocationId));
+		if (auto vocationId = g_vocations.getVocationId(attr.as_string())) {
+			vocationWeaponSet.insert(vocationId.value());
+			uint16_t promotedVocation = g_vocations.getPromotedVocation(vocationId.value());
 			if (promotedVocation != VOCATION_NONE) {
 				vocationWeaponSet.insert(promotedVocation);
 			}
@@ -202,7 +201,7 @@ bool Weapon::configureEvent(const pugi::xml_node& node)
 	}
 
 	std::string vocationString;
-	for (const std::string& str : vocStringList) {
+	for (std::string_view str : vocStringList) {
 		if (!vocationString.empty()) {
 			if (str != vocStringList.back()) {
 				vocationString.push_back(',');

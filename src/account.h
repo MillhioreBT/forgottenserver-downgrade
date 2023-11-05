@@ -14,6 +14,7 @@ struct Account
 	uint32_t id = 0;
 	time_t premiumEndsAt = 0;
 	AccountType_t accountType = ACCOUNT_TYPE_NORMAL;
+	uint64_t tibiaCoins = 0;
 
 	Account() = default;
 };

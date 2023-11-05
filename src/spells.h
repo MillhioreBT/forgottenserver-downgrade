@@ -133,11 +133,10 @@ public:
 	void setLearnable(bool l) { learnable = l; }
 
 	const auto& getVocationSpellMap() const { return vocationSpellMap; }
-	void addVocationSpellMap(const std::string& vocationName, bool showInDescription)
+	void addVocationSpellMap(std::string_view vocationName, bool showInDescription)
 	{
-		int32_t vocationId = g_vocations.getVocationId(vocationName);
-		if (vocationId != -1) {
-			vocationSpellMap[static_cast<uint16_t>(vocationId)] = showInDescription;
+		if (auto vocationId = g_vocations.getVocationId(vocationName)) {
+			vocationSpellMap[vocationId.value()] = showInDescription;
 		}
 	}
 	bool hasVocationSpellMap(uint16_t vocationId) const

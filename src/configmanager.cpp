@@ -25,6 +25,15 @@ extern Game g_game;
 
 namespace {
 
+template <typename T>
+auto getEnv(const char* envVar, T&& defaultValue)
+{
+	if (auto value = std::getenv(envVar)) {
+		return pugi::cast<std::decay_t<T>>(value);
+	}
+	return defaultValue;
+}
+
 std::string getGlobalString(lua_State* L, const char* identifier, const char* defaultValue)
 {
 	lua_getglobal(L, identifier);
@@ -113,7 +122,7 @@ ExperienceStages loadXMLStages()
 	}
 
 	ExperienceStages stages;
-	for (auto stageNode : doc.child("stages").children()) {
+	for (const auto& stageNode : doc.child("stages").children()) {
 		if (caseInsensitiveEqual(stageNode.name(), "config")) {
 			if (!stageNode.attribute("enabled").as_bool()) {
 				return {};
@@ -170,13 +179,16 @@ bool ConfigManager::load()
 		strings[ConfigKeysString::MAP_NAME] = getGlobalString(L, "mapName", "forgotten");
 		strings[ConfigKeysString::MAP_AUTHOR] = getGlobalString(L, "mapAuthor", "Unknown");
 		strings[ConfigKeysString::HOUSE_RENT_PERIOD] = getGlobalString(L, "houseRentPeriod", "never");
-		strings[ConfigKeysString::MYSQL_HOST] = getGlobalString(L, "mysqlHost", "127.0.0.1");
-		strings[ConfigKeysString::MYSQL_USER] = getGlobalString(L, "mysqlUser", "forgottenserver");
-		strings[ConfigKeysString::MYSQL_PASS] = getGlobalString(L, "mysqlPass", "");
-		strings[ConfigKeysString::MYSQL_DB] = getGlobalString(L, "mysqlDatabase", "forgottenserver");
-		strings[ConfigKeysString::MYSQL_SOCK] = getGlobalString(L, "mysqlSock", "");
 
-		integers[ConfigKeysInteger::SQL_PORT] = getGlobalInteger(L, "mysqlPort", 3306);
+		strings[ConfigKeysString::MYSQL_HOST] = getGlobalString(L, "mysqlHost", getEnv("MYSQL_HOST", "127.0.0.1"));
+		strings[ConfigKeysString::MYSQL_USER] =
+		    getGlobalString(L, "mysqlUser", getEnv("MYSQL_USER", "forgottenserver"));
+		strings[ConfigKeysString::MYSQL_PASS] = getGlobalString(L, "mysqlPass", getEnv("MYSQL_PASSWORD", ""));
+		strings[ConfigKeysString::MYSQL_DB] =
+		    getGlobalString(L, "mysqlDatabase", getEnv("MYSQL_DATABASE", "forgottenserver"));
+		strings[ConfigKeysString::MYSQL_SOCK] = getGlobalString(L, "mysqlSock", getEnv("MYSQL_SOCK", ""));
+
+		integers[ConfigKeysInteger::SQL_PORT] = getGlobalInteger(L, "mysqlPort", getEnv<uint16_t>("MYSQL_PORT", 3306));
 
 		if (integers[ConfigKeysInteger::GAME_PORT] == 0) {
 			integers[ConfigKeysInteger::GAME_PORT] = getGlobalInteger(L, "gameProtocolPort", 7172);

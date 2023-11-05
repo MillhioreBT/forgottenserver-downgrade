@@ -108,11 +108,10 @@ public:
 	void setWieldInfo(uint32_t info) { wieldInfo |= info; }
 
 	const auto& getVocationWeaponSet() const { return vocationWeaponSet; }
-	void addVocationWeaponSet(const std::string& vocationName)
+	void addVocationWeaponSet(std::string_view vocationName)
 	{
-		int32_t vocationId = g_vocations.getVocationId(vocationName);
-		if (vocationId != -1) {
-			vocationWeaponSet.insert(static_cast<uint16_t>(vocationId));
+		if (auto vocationId = g_vocations.getVocationId(vocationName)) {
+			vocationWeaponSet.insert(vocationId.value());
 		}
 	}
 	bool hasVocationWeaponSet(uint16_t vocationId) const

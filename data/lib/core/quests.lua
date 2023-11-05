@@ -145,7 +145,7 @@ function Player:getQuests()
 end
 
 function Player:sendQuestLog()
-	local msg = NetworkMessage()
+	local msg <close> = NetworkMessage()
 	msg:addByte(0xF0)
 	local quests = self:getQuests()
 	msg:addU16(#quests)
@@ -157,12 +157,11 @@ function Player:sendQuestLog()
 	end
 
 	msg:sendToPlayer(self)
-	msg:delete()
 	return true
 end
 
 function Player:sendQuestLine(quest)
-	local msg = NetworkMessage()
+	local msg <close> = NetworkMessage()
 	msg:addByte(0xF1)
 	msg:addU16(quest.id)
 	local missions = quest:getMissions(self)
@@ -174,6 +173,5 @@ function Player:sendQuestLine(quest)
 	end
 
 	msg:sendToPlayer(self)
-	msg:delete()
 	return true
 end

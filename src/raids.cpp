@@ -160,7 +160,7 @@ bool Raids::reload()
 	return loadFromXml();
 }
 
-Raid* Raids::getRaidByName(const std::string& name)
+Raid* Raids::getRaidByName(std::string_view name)
 {
 	for (Raid* raid : raidList) {
 		if (caseInsensitiveEqual(raid->getName(), name)) {
@@ -190,7 +190,7 @@ bool Raid::loadFromXml(const std::string& filename)
 		return false;
 	}
 
-	for (auto eventNode : doc.child("raid").children()) {
+	for (const auto& eventNode : doc.child("raid").children()) {
 		RaidEvent* event;
 		if (caseInsensitiveEqual(eventNode.name(), "announce")) {
 			event = new AnnounceEvent();

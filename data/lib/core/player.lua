@@ -104,12 +104,11 @@ end
 function Player.sendExtendedOpcode(self, opcode, buffer)
 	if not self:isUsingOtClient() then return false end
 
-	local networkMessage = NetworkMessage()
+	local networkMessage <close> = NetworkMessage()
 	networkMessage:addByte(0x32)
 	networkMessage:addByte(opcode)
 	networkMessage:addString(buffer)
 	networkMessage:sendToPlayer(self)
-	networkMessage:delete()
 	return true
 end
 
@@ -287,4 +286,13 @@ function Player.getWeaponType(self)
 	local weapon = self:getSlotItem(CONST_SLOT_LEFT)
 	if weapon then return weapon:getType():getWeaponType() end
 	return WEAPON_NONE
+end
+
+function Player.addTibiaCoins(self, coins)
+	return self:setTibiaCoins(self:getTibiaCoins() + coins)
+end
+
+function Player.removeTibiaCoins(self, coins)
+	if self:getTibiaCoins() < coins then return false end
+	return self:setTibiaCoins(self:getTibiaCoins() - coins)
 end

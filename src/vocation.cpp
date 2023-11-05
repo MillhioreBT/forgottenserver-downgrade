@@ -120,14 +120,18 @@ Vocation* Vocations::getVocation(uint16_t id)
 	return &it->second;
 }
 
-int32_t Vocations::getVocationId(std::string_view name) const
+std::optional<uint16_t> Vocations::getVocationId(std::string_view name) const
 {
 	auto it = std::find_if(vocationsMap.begin(), vocationsMap.end(), [&name](auto it) {
 		return name.size() == it.second.name.size() &&
 		       std::equal(name.begin(), name.end(), it.second.name.begin(),
 		                  [](char a, char b) { return std::tolower(a) == std::tolower(b); });
 	});
-	return it != vocationsMap.end() ? it->first : -1;
+
+	if (it != vocationsMap.end()) {
+		return std::make_optional(it->first);
+	}
+	return std::nullopt;
 }
 
 uint16_t Vocations::getPromotedVocation(uint16_t id) const

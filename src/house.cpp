@@ -102,7 +102,7 @@ void House::setOwner(uint32_t guid, bool updateDatabase /* = true*/, Player* pla
 	}
 }
 
-AccessHouseLevel_t House::getHouseAccessLevel(const Player* player)
+AccessHouseLevel_t House::getHouseAccessLevel(const Player* player) const
 {
 	if (!player) {
 		return HOUSE_OWNER;
@@ -133,7 +133,7 @@ AccessHouseLevel_t House::getHouseAccessLevel(const Player* player)
 	return HOUSE_NOT_INVITED;
 }
 
-bool House::kickPlayer(Player* player, Player* target)
+bool House::kickPlayer(Player* player, Player* target) const
 {
 	if (!target) {
 		return false;
@@ -238,22 +238,20 @@ bool House::transferToDepot(Player* player) const
 	return true;
 }
 
-bool House::getAccessList(uint32_t listId, std::string& list) const
+std::optional<std::string_view> House::getAccessList(uint32_t listId) const
 {
 	if (listId == GUEST_LIST) {
-		guestList.getList(list);
-		return true;
+		return std::make_optional(guestList.getList());
 	} else if (listId == SUBOWNER_LIST) {
-		subOwnerList.getList(list);
-		return true;
+		return std::make_optional(subOwnerList.getList());
 	}
 
 	Door* door = getDoorByNumber(listId);
 	if (!door) {
-		return false;
+		return std::nullopt;
 	}
 
-	return door->getAccessList(list);
+	return door->getAccessList();
 }
 
 bool House::isInvited(const Player* player) { return getHouseAccessLevel(player) != HOUSE_NOT_INVITED; }
@@ -290,7 +288,7 @@ Door* House::getDoorByNumber(uint32_t doorId) const
 	return nullptr;
 }
 
-Door* House::getDoorByPosition(const Position& pos)
+Door* House::getDoorByPosition(const Position& pos) const
 {
 	for (Door* door : doorSet) {
 		if (door->getPosition() == pos) {
@@ -300,7 +298,7 @@ Door* House::getDoorByPosition(const Position& pos)
 	return nullptr;
 }
 
-bool House::canEditAccessList(uint32_t listId, const Player* player)
+bool House::canEditAccessList(uint32_t listId, const Player* player) const
 {
 	switch (getHouseAccessLevel(player)) {
 		case HOUSE_OWNER:
@@ -472,7 +470,7 @@ void AccessList::addGuildRank(std::string_view name, std::string_view rankName)
 	}
 }
 
-bool AccessList::isInList(const Player* player)
+bool AccessList::isInList(const Player* player) const
 {
 	if (allowEveryone) {
 		return true;
@@ -486,8 +484,6 @@ bool AccessList::isInList(const Player* player)
 	GuildRank_ptr rank = player->getGuildRank();
 	return rank && guildRankList.find(rank->id) != guildRankList.end();
 }
-
-void AccessList::getList(std::string& list) const { list = this->list; }
 
 Door::Door(uint16_t type) : Item(type) {}
 
@@ -540,14 +536,13 @@ void Door::setAccessList(std::string_view textlist)
 	accessList->parseList(textlist);
 }
 
-bool Door::getAccessList(std::string& list) const
+std::optional<std::string_view> Door::getAccessList() const
 {
 	if (!house) {
-		return false;
+		return std::nullopt;
 	}
 
-	accessList->getList(list);
-	return true;
+	return std::make_optional(accessList->getList());
 }
 
 void Door::onRemoved()

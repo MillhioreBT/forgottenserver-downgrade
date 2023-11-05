@@ -18,7 +18,8 @@ Account IOLoginData::loadAccount(uint32_t accno)
 	Account account;
 
 	DBResult_ptr result = Database::getInstance().storeQuery(fmt::format(
-	    "SELECT `id`, `name`, `password`, `type`, `premium_ends_at` FROM `accounts` WHERE `id` = {:d}", accno));
+	    "SELECT `id`, `name`, `password`, `type`, `premium_ends_at`, `tibia_coins` FROM `accounts` WHERE `id` = {:d}",
+	    accno));
 	if (!result) {
 		return account;
 	}
@@ -27,6 +28,7 @@ Account IOLoginData::loadAccount(uint32_t accno)
 	account.name = result->getString("name");
 	account.accountType = static_cast<AccountType_t>(result->getNumber<int32_t>("type"));
 	account.premiumEndsAt = result->getNumber<time_t>("premium_ends_at");
+	account.tibiaCoins = result->getNumber<uint64_t>("tibia_coins");
 	return account;
 }
 
@@ -64,7 +66,7 @@ bool IOLoginData::loginserverAuthentication(std::string_view name, std::string_v
 	Database& db = Database::getInstance();
 
 	DBResult_ptr result = db.storeQuery(fmt::format(
-	    "SELECT `id`, `name`, `password`, `secret`, `type`, `premium_ends_at` FROM `accounts` WHERE `name` = {:s}",
+	    "SELECT `id`, `name`, `password`, `secret`, `type`, `premium_ends_at`, `tibia_coins` FROM `accounts` WHERE `name` = {:s}",
 	    db.escapeString(name)));
 	if (!result) {
 		return false;
@@ -79,6 +81,7 @@ bool IOLoginData::loginserverAuthentication(std::string_view name, std::string_v
 	account.key = decodeSecret(result->getString("secret"));
 	account.accountType = static_cast<AccountType_t>(result->getNumber<int32_t>("type"));
 	account.premiumEndsAt = result->getNumber<time_t>("premium_ends_at");
+	account.tibiaCoins = result->getNumber<uint64_t>("tibia_coins");
 
 	if (g_config[ConfigKeysBoolean::ACCOUNT_MANAGER] && account.id != ACCOUNT_MANAGER_ACCOUNT_ID) {
 		account.characters.push_back(ACCOUNT_MANAGER_PLAYER_NAME);
@@ -316,10 +319,9 @@ bool IOLoginData::loadPlayer(Player* player, DBResult_ptr result)
 	player->capacity = result->getNumber<uint32_t>("cap") * 100;
 	player->blessings = result->getNumber<uint16_t>("blessings");
 
-	unsigned long conditionsSize;
-	const char* conditions = result->getStream("conditions", conditionsSize);
+	auto conditions = result->getString("conditions");
 	PropStream propStream;
-	propStream.init(conditions, conditionsSize);
+	propStream.init(conditions.data(), conditions.size());
 
 	Condition* condition = Condition::createCondition(propStream);
 	while (condition) {
@@ -612,12 +614,9 @@ bool IOLoginData::saveItems(const Player* player, const ItemBlockList& itemList,
 		propWriteStream.clear();
 		item->serializeAttr(propWriteStream);
 
-		size_t attributesSize;
-		const char* attributes = propWriteStream.getStream(attributesSize);
-
 		if (!query_insert.addRow(fmt::format("{:d}, {:d}, {:d}, {:d}, {:d}, {:s}", player->getGUID(), pid, runningId,
 		                                     item->getID(), item->getSubType(),
-		                                     db.escapeBlob(attributes, attributesSize)))) {
+		                                     db.escapeString(propWriteStream.getStream())))) {
 			return false;
 		}
 
@@ -642,12 +641,9 @@ bool IOLoginData::saveItems(const Player* player, const ItemBlockList& itemList,
 			propWriteStream.clear();
 			item->serializeAttr(propWriteStream);
 
-			size_t attributesSize;
-			const char* attributes = propWriteStream.getStream(attributesSize);
-
 			if (!query_insert.addRow(fmt::format("{:d}, {:d}, {:d}, {:d}, {:d}, {:s}", player->getGUID(), parentId,
 			                                     runningId, item->getID(), item->getSubType(),
-			                                     db.escapeBlob(attributes, attributesSize)))) {
+			                                     db.escapeString(propWriteStream.getStream())))) {
 				return false;
 			}
 		}
@@ -683,9 +679,6 @@ bool IOLoginData::savePlayer(Player* player)
 			propWriteStream.write<uint8_t>(CONDITIONATTR_END);
 		}
 	}
-
-	size_t conditionsSize;
-	const char* conditions = propWriteStream.getStream(conditionsSize);
 
 	// First, an UPDATE query to write the player itself
 	std::ostringstream query;
@@ -725,7 +718,7 @@ bool IOLoginData::savePlayer(Player* player)
 		query << "`lastip` = " << player->lastIP << ",";
 	}
 
-	query << "`conditions` = " << db.escapeBlob(conditions, conditionsSize) << ',';
+	query << "`conditions` = " << db.escapeString(propWriteStream.getStream()) << ',';
 
 	if (g_game.getWorldType() != WORLD_TYPE_PVP_ENFORCED) {
 		int64_t skullTime = 0;
@@ -976,11 +969,9 @@ void IOLoginData::loadItems(ItemMap& itemMap, DBResult_ptr result)
 		uint16_t type = result->getNumber<uint16_t>("itemtype");
 		uint16_t count = result->getNumber<uint16_t>("count");
 
-		unsigned long attrSize;
-		const char* attr = result->getStream("attributes", attrSize);
-
+		auto attr = result->getString("attributes");
 		PropStream propStream;
-		propStream.init(attr, attrSize);
+		propStream.init(attr.data(), attr.size());
 
 		Item* item = Item::CreateItem(type, count);
 		if (item) {
@@ -1039,4 +1030,20 @@ void IOLoginData::updatePremiumTime(uint32_t accountId, time_t endTime)
 {
 	Database::getInstance().executeQuery(
 	    fmt::format("UPDATE `accounts` SET `premium_ends_at` = {:d} WHERE `id` = {:d}", endTime, accountId));
+}
+
+uint64_t IOLoginData::getTibiaCoins(uint32_t accountId)
+{
+	DBResult_ptr result = Database::getInstance().storeQuery(
+	    fmt::format("SELECT `tibia_coins` FROM `accounts` WHERE `id` = {:d}", accountId));
+	if (!result) {
+		return 0;
+	}
+	return result->getNumber<uint64_t>("tibia_coins");
+}
+
+void IOLoginData::updateTibiaCoins(uint32_t accountId, uint64_t tibiaCoins)
+{
+	Database::getInstance().executeQuery(
+	    fmt::format("UPDATE `accounts` SET `tibia_coins` = {:d} WHERE `id` = {:d}", tibiaCoins, accountId));
 }

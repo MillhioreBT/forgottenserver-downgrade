@@ -555,7 +555,7 @@ bool NpcScriptInterface::closeState()
 	return true;
 }
 
-bool NpcScriptInterface::loadNpcLib(const std::string& file)
+bool NpcScriptInterface::loadNpcLib(std::string_view file)
 {
 	if (libLoaded) {
 		return true;

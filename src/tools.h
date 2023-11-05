@@ -25,8 +25,9 @@ bool caseInsensitiveStartsWith(std::string_view str, std::string_view prefix);
 using StringVector = std::vector<std::string>;
 using IntegerVector = std::vector<int32_t>;
 
-StringVector explodeString(const std::string& inString, const std::string& separator, int32_t limit = -1);
-IntegerVector vectorAtoi(const StringVector& stringVector);
+std::vector<std::string_view> explodeString(std::string_view inString, const std::string& separator,
+                                            int32_t limit = -1);
+IntegerVector vectorAtoi(const std::vector<std::string_view>& stringVector);
 constexpr bool hasBitSet(uint32_t flag, uint32_t flags) { return (flags & flag) != 0; }
 
 std::mt19937& getRandomGenerator();
@@ -67,7 +68,7 @@ CombatType_t indexToCombatType(size_t v);
 uint8_t serverFluidToClient(uint8_t serverFluid);
 uint8_t clientFluidToServer(uint8_t clientFluid);
 
-itemAttrTypes stringToItemAttribute(const std::string& str);
+itemAttrTypes stringToItemAttribute(std::string_view str);
 
 std::string_view getReturnMessage(ReturnValue value);
 

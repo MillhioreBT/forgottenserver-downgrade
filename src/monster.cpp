@@ -41,7 +41,7 @@ Monster::Monster(MonsterType* mType) : Creature(), nameDescription(mType->nameDe
 	hiddenHealth = mType->info.hiddenHealth;
 
 	// register creature events
-	for (const std::string& scriptName : mType->info.scripts) {
+	for (std::string_view scriptName : mType->info.scripts) {
 		if (!registerCreatureEvent(scriptName)) {
 			std::cout << "[Warning - Monster::Monster] Unknown event name: " << scriptName << std::endl;
 		}
@@ -66,7 +66,7 @@ const std::string& Monster::getName() const
 	return name;
 }
 
-void Monster::setName(const std::string& name)
+void Monster::setName(std::string_view name)
 {
 	if (getName() == name) {
 		return;
@@ -1833,7 +1833,6 @@ void Monster::death(Creature*)
 
 	for (Creature* summon : summons) {
 		summon->changeHealth(-summon->getHealth());
-		//summon->removeMaster();
 	}
 	summons.clear();
 

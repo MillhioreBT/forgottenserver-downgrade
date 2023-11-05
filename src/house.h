@@ -23,9 +23,9 @@ public:
 	void addGuild(std::string_view name);
 	void addGuildRank(std::string_view name, std::string_view rankName);
 
-	bool isInList(const Player* player);
+	bool isInList(const Player* player) const;
 
-	void getList(std::string& list) const;
+	std::string_view getList() const { return list; }
 
 private:
 	std::string list;
@@ -58,7 +58,7 @@ public:
 	bool canUse(const Player* player);
 
 	void setAccessList(std::string_view textlist);
-	bool getAccessList(std::string& list) const;
+	std::optional<std::string_view> getAccessList() const;
 
 	void onRemoved() override;
 
@@ -108,17 +108,17 @@ public:
 
 	void addTile(HouseTile* tile);
 
-	bool canEditAccessList(uint32_t listId, const Player* player);
+	bool canEditAccessList(uint32_t listId, const Player* player) const;
 	// listId special values:
 	// GUEST_LIST	 guest list
 	// SUBOWNER_LIST subowner list
 	void setAccessList(uint32_t listId, std::string_view textlist);
-	bool getAccessList(uint32_t listId, std::string& list) const;
+	std::optional<std::string_view> getAccessList(uint32_t listId) const;
 
 	bool isInvited(const Player* player);
 
-	AccessHouseLevel_t getHouseAccessLevel(const Player* player);
-	bool kickPlayer(Player* player, Player* target);
+	AccessHouseLevel_t getHouseAccessLevel(const Player* player) const;
+	bool kickPlayer(Player* player, Player* target) const;
 
 	void setEntryPos(Position pos) { posEntry = pos; }
 	const Position& getEntryPosition() const { return posEntry; }
@@ -147,7 +147,7 @@ public:
 	void addDoor(Door* door);
 	void removeDoor(Door* door);
 	Door* getDoorByNumber(uint32_t doorId) const;
-	Door* getDoorByPosition(const Position& pos);
+	Door* getDoorByPosition(const Position& pos) const;
 
 	HouseTransferItem* getTransferItem();
 	void resetTransferItem();
@@ -159,7 +159,7 @@ public:
 
 	void addBed(BedItem* bed);
 	const HouseBedItemList& getBeds() const { return bedsList; }
-	uint32_t getBedCount()
+	uint32_t getBedCount() const
 	{
 		return static_cast<uint32_t>(
 		    std::ceil(bedsList.size() / 2.)); // each bed takes 2 sqms of space, ceil is just for bad maps

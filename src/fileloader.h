@@ -4,10 +4,6 @@
 #ifndef FS_FILELOADER_H
 #define FS_FILELOADER_H
 
-#include <boost/iostreams/device/mapped_file.hpp>
-#include <limits>
-#include <vector>
-
 class PropStream;
 
 namespace OTB {
@@ -73,29 +69,25 @@ public:
 			return false;
 		}
 
-		std::memcpy(&ret, p, sizeof(T));
+		memcpy(&ret, p, sizeof(T));
 		p += sizeof(T);
 		return true;
 	}
 
-	bool readString(std::string& ret)
+	std::pair<std::string_view, bool> readString()
 	{
 		uint16_t strLen;
 		if (!read<uint16_t>(strLen)) {
-			return false;
+			return {"", false};
 		}
 
 		if (size() < strLen) {
-			return false;
+			return {"", false};
 		}
 
-		char* str = new char[strLen + 1];
-		std::memcpy(str, p, strLen);
-		str[strLen] = 0;
-		ret.assign(str, strLen);
-		delete[] str;
+		std::string_view ret{p, strLen};
 		p += strLen;
-		return true;
+		return {ret, true};
 	}
 
 	bool skip(size_t n)
@@ -122,11 +114,7 @@ public:
 	PropWriteStream(const PropWriteStream&) = delete;
 	PropWriteStream& operator=(const PropWriteStream&) = delete;
 
-	const char* getStream(size_t& size) const
-	{
-		size = buffer.size();
-		return buffer.data();
-	}
+	std::string_view getStream() const { return {buffer.data(), buffer.size()}; }
 
 	void clear() { buffer.clear(); }
 
@@ -153,4 +141,4 @@ private:
 	std::vector<char> buffer;
 };
 
-#endif
+#endif // FS_FILELOADER_H

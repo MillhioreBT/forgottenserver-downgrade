@@ -150,7 +150,7 @@ enum SpeakClasses : uint8_t
 	TALKTYPE_CHANNEL_R1 = 13,  // red - #c text
 	TALKTYPE_PRIVATE_RED = 14, //@name@text
 	TALKTYPE_CHANNEL_O = 15,   //@name@text
-	TALKTYPE_CHANNEL_R2 = 17,  //#d
+	TALKTYPE_CHANNEL_R2 = 17,  // #d
 	TALKTYPE_MONSTER_SAY = 19,
 	TALKTYPE_MONSTER_YELL = 20,
 };

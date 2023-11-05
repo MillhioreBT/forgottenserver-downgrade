@@ -572,7 +572,6 @@ private:
 
 	// table
 	static int luaTableCreate(lua_State* L);
-	static int luaTablePack(lua_State* L);
 
 	// Game
 	static int luaGameGetSpectators(lua_State* L);
@@ -885,6 +884,9 @@ private:
 	static int luaPlayerGetAccountType(lua_State* L);
 	static int luaPlayerSetAccountType(lua_State* L);
 
+	static int luaPlayerGetTibiaCoins(lua_State* L);
+	static int luaPlayerSetTibiaCoins(lua_State* L);
+
 	static int luaPlayerGetCapacity(lua_State* L);
 	static int luaPlayerSetCapacity(lua_State* L);
 
@@ -1032,8 +1034,6 @@ private:
 	static int luaPlayerOpenContainer(lua_State* L);
 	static int luaPlayerCloseContainer(lua_State* L);
 
-	static int luaPlayerTestMethod(lua_State* L);
-
 	// OfflinePlayer
 	static int luaOfflinePlayerCreate(lua_State* L);
 
@@ -1044,10 +1044,10 @@ private:
 
 	static int luaMonsterIsMonster(lua_State* L);
 
+	static int luaMonsterGetId(lua_State* L);
 	static int luaMonsterGetType(lua_State* L);
 
 	static int luaMonsterRename(lua_State* L);
-	static int luaMonsterSetId(lua_State* L);
 
 	static int luaMonsterGetSpawnPosition(lua_State* L);
 	static int luaMonsterIsInSpawnRange(lua_State* L);
@@ -1280,7 +1280,6 @@ private:
 
 	// Condition
 	static int luaConditionCreate(lua_State* L);
-	static int luaConditionDelete(lua_State* L);
 
 	static int luaConditionGetId(lua_State* L);
 	static int luaConditionGetSubId(lua_State* L);

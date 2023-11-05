@@ -147,7 +147,7 @@ public:
 	}
 
 	std::string_view getString(const std::string& s) const;
-	const char* getStream(const std::string& s, unsigned long& size) const;
+	std::string_view getStream(const std::string& s, unsigned long& size) const;
 
 	bool hasNext() const;
 	bool next();

@@ -351,16 +351,16 @@ bool argumentsHandler(const StringVector& args)
 			return false;
 		}
 
-		StringVector tmp = explodeString(arg, "=");
+		auto tmp = explodeString(arg, "=");
 
 		if (tmp[0] == "--config")
 			g_config.setString(ConfigKeysString::CONFIG_FILE, tmp[1]);
 		else if (tmp[0] == "--ip")
 			g_config.setString(ConfigKeysString::IP, tmp[1]);
 		else if (tmp[0] == "--login-port")
-			g_config.setInteger(ConfigKeysInteger::LOGIN_PORT, std::stoi(tmp[1]));
+			g_config.setInteger(ConfigKeysInteger::LOGIN_PORT, std::stoi(tmp[1].data()));
 		else if (tmp[0] == "--game-port")
-			g_config.setInteger(ConfigKeysInteger::GAME_PORT, std::stoi(tmp[1]));
+			g_config.setInteger(ConfigKeysInteger::GAME_PORT, std::stoi(tmp[1].data()));
 	}
 
 	return true;
