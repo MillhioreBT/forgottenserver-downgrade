@@ -2552,8 +2552,6 @@ void LuaScriptInterface::registerFunctions()
 	registerMethod("Player", "openContainer", LuaScriptInterface::luaPlayerOpenContainer);
 	registerMethod("Player", "closeContainer", LuaScriptInterface::luaPlayerCloseContainer);
 
-	registerMethod("Player", "testMethod", LuaScriptInterface::luaPlayerTestMethod);
-
 	// OfflinePlayer
 	registerClass("OfflinePlayer", "Player", LuaScriptInterface::luaOfflinePlayerCreate);
 	registerMetaMethod("OfflinePlayer", "__gc", LuaScriptInterface::luaOfflinePlayerRemove);
@@ -10095,18 +10093,6 @@ int LuaScriptInterface::luaPlayerCloseContainer(lua_State* L)
 	}
 
 	pushBoolean(L, false);
-	return 1;
-}
-
-int LuaScriptInterface::luaPlayerTestMethod(lua_State* L)
-{
-	Player* player = getUserdata<Player>(L, 1);
-	if (!player) {
-		lua_pushnil(L);
-		return 1;
-	}
-
-	lua_pushinteger(L, player->getArmor());
 	return 1;
 }
 
