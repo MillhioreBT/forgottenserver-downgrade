@@ -128,6 +128,22 @@ public:
 
 	static uint32_t monsterAutoID;
 
+	// for lua module
+	auto getMonsterType() const { return mType; }
+
+	bool isInSpawnRange(const Position& pos) const;
+
+	bool getIdleStatus() const { return isIdle; }
+	void setIdle(bool idle);
+
+	bool isFriend(const Creature* creature) const;
+	bool isOpponent(const Creature* creature) const;
+
+	void addFriend(Creature* creature);
+	void removeFriend(Creature* creature);
+	void addTarget(Creature* creature, bool pushFront = false);
+	void removeTarget(Creature* creature);
+
 private:
 	CreatureHashSet friendList;
 	CreatureList targetList;
@@ -164,11 +180,6 @@ private:
 
 	void updateLookDirection();
 
-	void addFriend(Creature* creature);
-	void removeFriend(Creature* creature);
-	void addTarget(Creature* creature, bool pushFront = false);
-	void removeTarget(Creature* creature);
-
 	void updateTargetList();
 	void clearTargetList();
 	void clearFriendList();
@@ -176,9 +187,7 @@ private:
 	void death(Creature* lastHitCreature) override;
 	Item* getCorpse(Creature* lastHitCreature, Creature* mostDamageCreature) override;
 
-	void setIdle(bool idle);
 	void updateIdleStatus();
-	bool getIdleStatus() const { return isIdle; }
 
 	void onAddCondition(ConditionType_t type) override;
 	void onEndCondition(ConditionType_t type) override;
@@ -189,7 +198,6 @@ private:
 	bool getRandomStep(const Position& creaturePos, Direction& direction) const;
 	bool getDanceStep(const Position& creaturePos, Direction& direction, bool keepAttack = true,
 	                  bool keepDistance = true);
-	bool isInSpawnRange(const Position& pos) const;
 	bool canWalkTo(Position pos, Direction direction) const;
 
 	static bool pushItem(Item* item);
@@ -200,9 +208,6 @@ private:
 	void onThinkTarget(uint32_t interval);
 	void onThinkYell(uint32_t interval);
 	void onThinkDefense(uint32_t interval);
-
-	bool isFriend(const Creature* creature) const;
-	bool isOpponent(const Creature* creature) const;
 
 	uint64_t getLostExperience() const override { return skillLoss ? mType->info.experience : 0; }
 	uint16_t getLookCorpse() const override { return mType->info.lookcorpse; }

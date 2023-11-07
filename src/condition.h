@@ -92,7 +92,7 @@ public:
 	static Condition* createCondition(PropStream& propStream);
 
 	virtual bool setParam(ConditionParam_t param, int32_t value);
-	virtual int32_t getParam(ConditionParam_t param);
+	virtual int32_t getParam(ConditionParam_t param) const;
 
 	// serialization
 	bool unserialize(PropStream& propStream);
@@ -146,7 +146,7 @@ public:
 	void addCondition(Creature* creature, const Condition* condition) override;
 
 	bool setParam(ConditionParam_t param, int32_t value) override;
-	int32_t getParam(ConditionParam_t param) override;
+	int32_t getParam(ConditionParam_t param) const override;
 
 	ConditionAttributes* clone() const override { return new ConditionAttributes(*this); }
 
@@ -184,7 +184,7 @@ public:
 	bool executeCondition(Creature* creature, int32_t interval) override;
 
 	bool setParam(ConditionParam_t param, int32_t value) override;
-	int32_t getParam(ConditionParam_t param) override;
+	int32_t getParam(ConditionParam_t param) const override;
 
 	ConditionRegeneration* clone() const override { return new ConditionRegeneration(*this); }
 
@@ -214,7 +214,7 @@ public:
 	bool executeCondition(Creature* creature, int32_t interval) override;
 
 	bool setParam(ConditionParam_t param, int32_t value) override;
-	int32_t getParam(ConditionParam_t param) override;
+	int32_t getParam(ConditionParam_t param) const override;
 
 	ConditionSoul* clone() const override { return new ConditionSoul(*this); }
 
@@ -262,7 +262,7 @@ public:
 	ConditionDamage* clone() const override { return new ConditionDamage(*this); }
 
 	bool setParam(ConditionParam_t param, int32_t value) override;
-	int32_t getParam(ConditionParam_t param) override;
+	int32_t getParam(ConditionParam_t param) const override;
 
 	bool addDamage(int32_t rounds, int32_t time, int32_t value);
 	bool doForceUpdate() const { return forceUpdate; }
@@ -315,7 +315,7 @@ public:
 	ConditionSpeed* clone() const override { return new ConditionSpeed(*this); }
 
 	bool setParam(ConditionParam_t param, int32_t value) override;
-	int32_t getParam(ConditionParam_t param) override;
+	int32_t getParam(ConditionParam_t param) const override;
 
 	void setFormulaVars(float mina, float minb, float maxa, float maxb);
 
@@ -374,7 +374,7 @@ public:
 	ConditionLight* clone() const override { return new ConditionLight(*this); }
 
 	bool setParam(ConditionParam_t param, int32_t value) override;
-	int32_t getParam(ConditionParam_t param) override;
+	int32_t getParam(ConditionParam_t param) const override;
 
 	// serialization
 	void serialize(PropWriteStream& propWriteStream) override;

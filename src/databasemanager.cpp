@@ -105,7 +105,7 @@ void DatabaseManager::updateDatabase()
 			break;
 		}
 
-		if (!LuaScriptInterface::getBoolean(L, -1, false)) {
+		if (!Lua::getBoolean(L, -1, false)) {
 			LuaScriptInterface::resetScriptEnv();
 			break;
 		}

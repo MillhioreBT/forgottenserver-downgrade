@@ -411,6 +411,7 @@ public:
 	}
 	uint16_t getBaseSkill(uint8_t skill) const { return skills[skill].level; }
 	uint16_t getSkillPercent(uint8_t skill) const { return skills[skill].percent; }
+	uint64_t getSkillTries(uint8_t skill) const { return skills[skill].tries; }
 
 	bool getAddAttackSkill() const { return addAttackSkillPoint; }
 	BlockType_t getLastAttackBlockType() const { return lastAttackBlockType; }
@@ -906,6 +907,43 @@ public:
 
 	const auto& getOpenContainers() const { return openContainers; }
 
+	// for lua module
+	void setAccountType(AccountType_t newType) { accountType = newType; }
+
+	void setCapacity(uint32_t newCapacity) { capacity = newCapacity; }
+
+	double getLostPercent() const;
+
+	void addExperience(Creature* source, uint64_t exp, bool sendText = false);
+	void removeExperience(uint64_t exp, bool sendText = false);
+
+	void setMana(uint32_t newMana) { mana = std::min<uint32_t>(newMana, manaMax); }
+	void setMaxMana(uint32_t newMaxMana) { manaMax = newMaxMana; }
+
+	int32_t getBaseMaxHealth() const { return healthMax; }
+	int32_t getBaseMaxMana() const { return manaMax; }
+
+	uint32_t getItemTypeCount(uint16_t itemId, int32_t subType = -1) const override;
+
+	void setStaminaMinutes(uint16_t newStamina) { staminaMinutes = std::min<uint16_t>(2520, newStamina); }
+
+	void incrementWindowTextId() { windowTextId++; }
+	void setRawWriteItem(Item* item) { writeItem = item; }
+	void setMaxWriteLen(uint16_t len) { maxWriteLen = len; }
+	uint32_t getWindowTextId() const { return windowTextId; }
+
+	Thing* getThing(size_t index) const override;
+
+	auto getPremiumEndsAt() const { return premiumEndsAt; }
+
+	void setLoginPosition(const Position& loginPos) { loginPosition = loginPos; }
+
+	bool getChaseMode() const { return chaseMode; }
+	bool getSecureMode() const { return secureMode; }
+	auto getFightMode() const { return fightMode; }
+
+	static uint32_t playerAutoID;
+
 private:
 	std::forward_list<Condition*> getMuteConditions() const;
 
@@ -913,8 +951,6 @@ private:
 	bool hasCapacity(const Item* item, uint32_t count) const;
 
 	void gainExperience(uint64_t gainExp, Creature* source);
-	void addExperience(Creature* source, uint64_t exp, bool sendText = false);
-	void removeExperience(uint64_t exp, bool sendText = false);
 
 	void updateInventoryWeight();
 
@@ -947,9 +983,7 @@ private:
 	int32_t getThingIndex(const Thing* thing) const override;
 	size_t getFirstIndex() const override;
 	size_t getLastIndex() const override;
-	uint32_t getItemTypeCount(uint16_t itemId, int32_t subType = -1) const override;
 	std::map<uint32_t, uint32_t>& getAllItemTypeCount(std::map<uint32_t, uint32_t>& countMap) const override;
-	Thing* getThing(size_t index) const override;
 
 	void internalAddThing(Thing* thing) override;
 	void internalAddThing(uint32_t index, Thing* thing) override;
@@ -1062,8 +1096,6 @@ private:
 	bool addAttackSkillPoint = false;
 	bool inventoryAbilities[CONST_SLOT_LAST + 1] = {};
 
-	static uint32_t playerAutoID;
-
 	void updateItemsLight(bool internal = false);
 	int32_t getStepSpeed() const override
 	{
@@ -1083,7 +1115,6 @@ private:
 	uint32_t getAttackSpeed() const;
 
 	static uint16_t getBasisPointLevel(uint64_t count, uint64_t nextLevelCount);
-	double getLostPercent() const;
 	uint64_t getLostExperience() const override
 	{
 		return skillLoss ? static_cast<uint64_t>(experience * getLostPercent()) : 0;

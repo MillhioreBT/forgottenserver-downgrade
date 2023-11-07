@@ -148,7 +148,7 @@
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
       <EnableParallelCodeGeneration>true</EnableParallelCodeGeneration>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions</EnableEnhancedInstructionSet>
-      <AdditionalIncludeDirectories>$(VcpkgRoot)include\luajit;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
@@ -190,7 +190,40 @@
     <ClCompile Include="..\src\iomapserialize.cpp" />
     <ClCompile Include="..\src\item.cpp" />
     <ClCompile Include="..\src\items.cpp" />
+    <ClCompile Include="..\src\luaactions.cpp" />
+    <ClCompile Include="..\src\luacombat.cpp" />
+    <ClCompile Include="..\src\luacondition.cpp" />
+    <ClCompile Include="..\src\luacontainer.cpp" />
+    <ClCompile Include="..\src\luacreature.cpp" />
+    <ClCompile Include="..\src\luacreatureevent.cpp" />
+    <ClCompile Include="..\src\luagame.cpp" />
+    <ClCompile Include="..\src\luaglobalevent.cpp" />
+    <ClCompile Include="..\src\luagroup.cpp" />
+    <ClCompile Include="..\src\luaguild.cpp" />
+    <ClCompile Include="..\src\luahouse.cpp" />
+    <ClCompile Include="..\src\luaitem.cpp" />
+    <ClCompile Include="..\src\luaitemtype.cpp" />
+    <ClCompile Include="..\src\lualoot.cpp" />
+    <ClCompile Include="..\src\luamonster.cpp" />
+    <ClCompile Include="..\src\luamonsterspell.cpp" />
+    <ClCompile Include="..\src\luamonstertype.cpp" />
+    <ClCompile Include="..\src\luamoveevent.cpp" />
+    <ClCompile Include="..\src\luanetworkmessage.cpp" />
+    <ClCompile Include="..\src\luanpc.cpp" />
+    <ClCompile Include="..\src\luaoutfit.cpp" />
+    <ClCompile Include="..\src\luaparty.cpp" />
+    <ClCompile Include="..\src\luaplayer.cpp" />
+    <ClCompile Include="..\src\luaposition.cpp" />
     <ClCompile Include="..\src\luascript.cpp" />
+    <ClCompile Include="..\src\luaspells.cpp" />
+    <ClCompile Include="..\src\luatalkaction.cpp" />
+    <ClCompile Include="..\src\luateleport.cpp" />
+    <ClCompile Include="..\src\luatile.cpp" />
+    <ClCompile Include="..\src\luatown.cpp" />
+    <ClCompile Include="..\src\luavariant.cpp" />
+    <ClCompile Include="..\src\luavocation.cpp" />
+    <ClCompile Include="..\src\luaweapons.cpp" />
+    <ClCompile Include="..\src\luaxml.cpp" />
     <ClCompile Include="..\src\mailbox.cpp" />
     <ClCompile Include="..\src\map.cpp" />
     <ClCompile Include="..\src\matrixarea.cpp" />

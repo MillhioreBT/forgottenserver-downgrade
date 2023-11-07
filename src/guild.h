@@ -32,7 +32,7 @@ public:
 	void setMemberCount(uint32_t count) { memberCount = count; }
 
 	const std::vector<GuildRank_ptr>& getRanks() const { return ranks; }
-	GuildRank_ptr getRankById(uint32_t rankId);
+	GuildRank_ptr getRankById(uint32_t rankId) const;
 	GuildRank_ptr getRankByName(std::string_view name) const;
 	GuildRank_ptr getRankByLevel(uint8_t level) const;
 	void addRank(uint32_t rankId, std::string_view rankName, uint8_t level);

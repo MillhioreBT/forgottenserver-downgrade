@@ -40,7 +40,7 @@ bool Condition::setParam(ConditionParam_t param, int32_t value)
 	}
 }
 
-int32_t Condition::getParam(ConditionParam_t param)
+int32_t Condition::getParam(ConditionParam_t param) const
 {
 	switch (param) {
 		case CONDITION_PARAM_TICKS:
@@ -731,7 +731,7 @@ bool ConditionAttributes::setParam(ConditionParam_t param, int32_t value)
 	}
 }
 
-int32_t ConditionAttributes::getParam(ConditionParam_t param)
+int32_t ConditionAttributes::getParam(ConditionParam_t param) const
 {
 	switch (param) {
 		case CONDITION_PARAM_SKILL_FIST:
@@ -970,7 +970,7 @@ bool ConditionRegeneration::setParam(ConditionParam_t param, int32_t value)
 	}
 }
 
-int32_t ConditionRegeneration::getParam(ConditionParam_t param)
+int32_t ConditionRegeneration::getParam(ConditionParam_t param) const
 {
 	switch (param) {
 		case CONDITION_PARAM_HEALTHGAIN:
@@ -1056,7 +1056,7 @@ bool ConditionSoul::setParam(ConditionParam_t param, int32_t value)
 	}
 }
 
-int32_t ConditionSoul::getParam(ConditionParam_t param)
+int32_t ConditionSoul::getParam(ConditionParam_t param) const
 {
 	switch (param) {
 		case CONDITION_PARAM_SOULGAIN:
@@ -1118,7 +1118,7 @@ bool ConditionDamage::setParam(ConditionParam_t param, int32_t value)
 	return ret;
 }
 
-int32_t ConditionDamage::getParam(ConditionParam_t param)
+int32_t ConditionDamage::getParam(ConditionParam_t param) const
 {
 	switch (param) {
 		case CONDITION_PARAM_OWNER:
@@ -1526,7 +1526,7 @@ bool ConditionSpeed::setParam(ConditionParam_t param, int32_t value)
 	return true;
 }
 
-int32_t ConditionSpeed::getParam(ConditionParam_t param)
+int32_t ConditionSpeed::getParam(ConditionParam_t param) const
 {
 	switch (param) {
 		case CONDITION_PARAM_SPEED:
@@ -1789,7 +1789,7 @@ bool ConditionLight::setParam(ConditionParam_t param, int32_t value)
 	}
 }
 
-int32_t ConditionLight::getParam(ConditionParam_t param)
+int32_t ConditionLight::getParam(ConditionParam_t param) const
 {
 	switch (param) {
 		case CONDITION_PARAM_LIGHT_LEVEL:

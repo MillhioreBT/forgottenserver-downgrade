@@ -140,8 +140,7 @@ bool CreatureEvents::playerAdvance(Player* player, skills_t skill, uint32_t oldL
 
 /////////////////////////////////////
 
-CreatureEvent::CreatureEvent(LuaScriptInterface* interface) : Event(interface), type(CREATURE_EVENT_NONE), loaded(false)
-{}
+CreatureEvent::CreatureEvent(LuaScriptInterface* interface) : Event(interface), type(CREATURE_EVENT_NONE), loaded(false) {}
 
 bool CreatureEvent::configureEvent(const pugi::xml_node& node)
 {
@@ -268,8 +267,8 @@ bool CreatureEvent::executeOnLogin(Player* player) const
 	lua_State* L = scriptInterface->getLuaState();
 
 	scriptInterface->pushFunction(scriptId);
-	LuaScriptInterface::pushUserdata(L, player);
-	LuaScriptInterface::setMetatable(L, -1, "Player");
+	Lua::pushUserdata(L, player);
+	Lua::setMetatable(L, -1, "Player");
 	return scriptInterface->callFunction(1);
 }
 
@@ -287,8 +286,8 @@ bool CreatureEvent::executeOnLogout(Player* player) const
 	lua_State* L = scriptInterface->getLuaState();
 
 	scriptInterface->pushFunction(scriptId);
-	LuaScriptInterface::pushUserdata(L, player);
-	LuaScriptInterface::setMetatable(L, -1, "Player");
+	Lua::pushUserdata(L, player);
+	Lua::setMetatable(L, -1, "Player");
 	return scriptInterface->callFunction(1);
 }
 
@@ -306,8 +305,8 @@ bool CreatureEvent::executeOnThink(Creature* creature, uint32_t interval)
 	lua_State* L = scriptInterface->getLuaState();
 
 	scriptInterface->pushFunction(scriptId);
-	LuaScriptInterface::pushUserdata<Creature>(L, creature);
-	LuaScriptInterface::setCreatureMetatable(L, -1, creature);
+	Lua::pushUserdata<Creature>(L, creature);
+	Lua::setCreatureMetatable(L, -1, creature);
 	lua_pushinteger(L, interval);
 
 	return scriptInterface->callFunction(2);
@@ -328,12 +327,12 @@ bool CreatureEvent::executeOnPrepareDeath(Creature* creature, Creature* killer)
 
 	scriptInterface->pushFunction(scriptId);
 
-	LuaScriptInterface::pushUserdata<Creature>(L, creature);
-	LuaScriptInterface::setCreatureMetatable(L, -1, creature);
+	Lua::pushUserdata<Creature>(L, creature);
+	Lua::setCreatureMetatable(L, -1, creature);
 
 	if (killer) {
-		LuaScriptInterface::pushUserdata<Creature>(L, killer);
-		LuaScriptInterface::setCreatureMetatable(L, -1, killer);
+		Lua::pushUserdata<Creature>(L, killer);
+		Lua::setCreatureMetatable(L, -1, killer);
 	} else {
 		lua_pushnil(L);
 	}
@@ -356,27 +355,27 @@ bool CreatureEvent::executeOnDeath(Creature* creature, Item* corpse, Creature* k
 	lua_State* L = scriptInterface->getLuaState();
 
 	scriptInterface->pushFunction(scriptId);
-	LuaScriptInterface::pushUserdata<Creature>(L, creature);
-	LuaScriptInterface::setCreatureMetatable(L, -1, creature);
+	Lua::pushUserdata<Creature>(L, creature);
+	Lua::setCreatureMetatable(L, -1, creature);
 
-	LuaScriptInterface::pushThing(L, corpse);
+	Lua::pushThing(L, corpse);
 
 	if (killer) {
-		LuaScriptInterface::pushUserdata<Creature>(L, killer);
-		LuaScriptInterface::setCreatureMetatable(L, -1, killer);
+		Lua::pushUserdata<Creature>(L, killer);
+		Lua::setCreatureMetatable(L, -1, killer);
 	} else {
 		lua_pushnil(L);
 	}
 
 	if (mostDamageKiller) {
-		LuaScriptInterface::pushUserdata<Creature>(L, mostDamageKiller);
-		LuaScriptInterface::setCreatureMetatable(L, -1, mostDamageKiller);
+		Lua::pushUserdata<Creature>(L, mostDamageKiller);
+		Lua::setCreatureMetatable(L, -1, mostDamageKiller);
 	} else {
 		lua_pushnil(L);
 	}
 
-	LuaScriptInterface::pushBoolean(L, lastHitUnjustified);
-	LuaScriptInterface::pushBoolean(L, mostDamageUnjustified);
+	Lua::pushBoolean(L, lastHitUnjustified);
+	Lua::pushBoolean(L, mostDamageUnjustified);
 
 	return scriptInterface->callFunction(6);
 }
@@ -395,8 +394,8 @@ bool CreatureEvent::executeAdvance(Player* player, skills_t skill, uint32_t oldL
 	lua_State* L = scriptInterface->getLuaState();
 
 	scriptInterface->pushFunction(scriptId);
-	LuaScriptInterface::pushUserdata(L, player);
-	LuaScriptInterface::setMetatable(L, -1, "Player");
+	Lua::pushUserdata(L, player);
+	Lua::setMetatable(L, -1, "Player");
 	lua_pushinteger(L, static_cast<uint32_t>(skill));
 	lua_pushinteger(L, oldLevel);
 	lua_pushinteger(L, newLevel);
@@ -418,10 +417,10 @@ void CreatureEvent::executeOnKill(Creature* creature, Creature* target)
 	lua_State* L = scriptInterface->getLuaState();
 
 	scriptInterface->pushFunction(scriptId);
-	LuaScriptInterface::pushUserdata<Creature>(L, creature);
-	LuaScriptInterface::setCreatureMetatable(L, -1, creature);
-	LuaScriptInterface::pushUserdata<Creature>(L, target);
-	LuaScriptInterface::setCreatureMetatable(L, -1, target);
+	Lua::pushUserdata<Creature>(L, creature);
+	Lua::setCreatureMetatable(L, -1, creature);
+	Lua::pushUserdata<Creature>(L, target);
+	Lua::setCreatureMetatable(L, -1, target);
 	scriptInterface->callVoidFunction(2);
 }
 
@@ -439,11 +438,11 @@ bool CreatureEvent::executeTextEdit(Player* player, Item* item, std::string_view
 	lua_State* L = scriptInterface->getLuaState();
 	scriptInterface->pushFunction(scriptId);
 
-	LuaScriptInterface::pushUserdata(L, player);
-	LuaScriptInterface::setMetatable(L, -1, "Player");
+	Lua::pushUserdata(L, player);
+	Lua::setMetatable(L, -1, "Player");
 
-	LuaScriptInterface::pushThing(L, item);
-	LuaScriptInterface::pushString(L, text);
+	Lua::pushThing(L, item);
+	Lua::pushString(L, text);
 
 	lua_pushinteger(L, windowTextId);
 
@@ -464,24 +463,24 @@ void CreatureEvent::executeHealthChange(Creature* creature, Creature* attacker, 
 	lua_State* L = scriptInterface->getLuaState();
 	scriptInterface->pushFunction(scriptId);
 
-	LuaScriptInterface::pushUserdata(L, creature);
-	LuaScriptInterface::setCreatureMetatable(L, -1, creature);
+	Lua::pushUserdata(L, creature);
+	Lua::setCreatureMetatable(L, -1, creature);
 	if (attacker) {
-		LuaScriptInterface::pushUserdata(L, attacker);
-		LuaScriptInterface::setCreatureMetatable(L, -1, attacker);
+		Lua::pushUserdata(L, attacker);
+		Lua::setCreatureMetatable(L, -1, attacker);
 	} else {
 		lua_pushnil(L);
 	}
 
-	LuaScriptInterface::pushCombatDamage(L, damage);
+	Lua::pushCombatDamage(L, damage);
 
 	if (scriptInterface->protectedCall(L, 7, 4) != 0) {
-		LuaScriptInterface::reportError(nullptr, LuaScriptInterface::popString(L));
+		LuaScriptInterface::reportError(nullptr, Lua::popString(L));
 	} else {
-		damage.primary.value = std::abs(LuaScriptInterface::getInteger<int32_t>(L, -4));
-		damage.primary.type = LuaScriptInterface::getInteger<CombatType_t>(L, -3);
-		damage.secondary.value = std::abs(LuaScriptInterface::getInteger<int32_t>(L, -2));
-		damage.secondary.type = LuaScriptInterface::getInteger<CombatType_t>(L, -1);
+		damage.primary.value = std::abs(Lua::getInteger<int32_t>(L, -4));
+		damage.primary.type = Lua::getInteger<CombatType_t>(L, -3);
+		damage.secondary.value = std::abs(Lua::getInteger<int32_t>(L, -2));
+		damage.secondary.type = Lua::getInteger<CombatType_t>(L, -1);
 
 		lua_pop(L, 4);
 		if (damage.primary.type != COMBAT_HEALING) {
@@ -507,24 +506,24 @@ void CreatureEvent::executeManaChange(Creature* creature, Creature* attacker, Co
 	lua_State* L = scriptInterface->getLuaState();
 	scriptInterface->pushFunction(scriptId);
 
-	LuaScriptInterface::pushUserdata(L, creature);
-	LuaScriptInterface::setCreatureMetatable(L, -1, creature);
+	Lua::pushUserdata(L, creature);
+	Lua::setCreatureMetatable(L, -1, creature);
 	if (attacker) {
-		LuaScriptInterface::pushUserdata(L, attacker);
-		LuaScriptInterface::setCreatureMetatable(L, -1, attacker);
+		Lua::pushUserdata(L, attacker);
+		Lua::setCreatureMetatable(L, -1, attacker);
 	} else {
 		lua_pushnil(L);
 	}
 
-	LuaScriptInterface::pushCombatDamage(L, damage);
+	Lua::pushCombatDamage(L, damage);
 
 	if (scriptInterface->protectedCall(L, 7, 4) != 0) {
-		LuaScriptInterface::reportError(nullptr, LuaScriptInterface::popString(L));
+		LuaScriptInterface::reportError(nullptr, Lua::popString(L));
 	} else {
-		damage.primary.value = LuaScriptInterface::getInteger<int32_t>(L, -4);
-		damage.primary.type = LuaScriptInterface::getInteger<CombatType_t>(L, -3);
-		damage.secondary.value = LuaScriptInterface::getInteger<int32_t>(L, -2);
-		damage.secondary.type = LuaScriptInterface::getInteger<CombatType_t>(L, -1);
+		damage.primary.value = Lua::getInteger<int32_t>(L, -4);
+		damage.primary.type = Lua::getInteger<CombatType_t>(L, -3);
+		damage.secondary.value = Lua::getInteger<int32_t>(L, -2);
+		damage.secondary.type = Lua::getInteger<CombatType_t>(L, -1);
 		lua_pop(L, 4);
 	}
 
@@ -546,11 +545,11 @@ void CreatureEvent::executeExtendedOpcode(Player* player, uint8_t opcode, std::s
 
 	scriptInterface->pushFunction(scriptId);
 
-	LuaScriptInterface::pushUserdata<Player>(L, player);
-	LuaScriptInterface::setMetatable(L, -1, "Player");
+	Lua::pushUserdata<Player>(L, player);
+	Lua::setMetatable(L, -1, "Player");
 
 	lua_pushinteger(L, opcode);
-	LuaScriptInterface::pushString(L, buffer);
+	Lua::pushString(L, buffer);
 
 	scriptInterface->callVoidFunction(3);
 }

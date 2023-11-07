@@ -187,7 +187,7 @@ public:
 	virtual void onFollowCreatureComplete(const Creature*) {}
 
 	// combat functions
-	Creature* getAttackedCreature() { return attackedCreature; }
+	Creature* getAttackedCreature() const { return attackedCreature; }
 	virtual bool setAttackedCreature(Creature* creature);
 	virtual BlockType_t blockHit(Creature* attacker, CombatType_t combatType, int32_t& damage,
 	                             bool checkDefense = false, bool checkArmor = false, bool field = false,
@@ -343,6 +343,16 @@ public:
 	virtual std::optional<int64_t> getStorageValue(uint32_t key) const;
 	decltype(auto) getStorageMap() const { return storageMap; }
 
+	// for lua module
+	CreatureEventList getCreatureEvents(CreatureEventType_t type) const;
+
+	void setHealth(int32_t newHealth) { health = std::min<int32_t>(newHealth, healthMax); }
+	void setMaxHealth(int32_t newMaxHealth) { healthMax = newMaxHealth; }
+
+	void setDefaultOutfit(Outfit_t outfit) { defaultOutfit = outfit; }
+
+	const auto& getDamageMap() const { return damageMap; }
+
 protected:
 	virtual bool useCacheMap() const { return false; }
 
@@ -418,7 +428,6 @@ protected:
 	{
 		return (0 != (scriptEventsBitField & (static_cast<uint32_t>(1) << event)));
 	}
-	CreatureEventList getCreatureEvents(CreatureEventType_t type);
 
 	void updateMapCache();
 	void updateTileCache(const Tile* tile, int32_t dx, int32_t dy);

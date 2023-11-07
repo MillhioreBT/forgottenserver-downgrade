@@ -155,11 +155,11 @@ bool TalkAction::executeSay(Player* player, std::string_view words, std::string_
 
 	scriptInterface->pushFunction(scriptId);
 
-	LuaScriptInterface::pushUserdata<Player>(L, player);
-	LuaScriptInterface::setMetatable(L, -1, "Player");
+	Lua::pushUserdata<Player>(L, player);
+	Lua::setMetatable(L, -1, "Player");
 
-	LuaScriptInterface::pushString(L, words);
-	LuaScriptInterface::pushString(L, param);
+	Lua::pushString(L, words);
+	Lua::pushString(L, param);
 	lua_pushinteger(L, type);
 
 	return scriptInterface->callFunction(4);

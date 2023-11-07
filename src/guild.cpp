@@ -21,9 +21,9 @@ void Guild::removeMember(Player* player)
 	}
 }
 
-GuildRank_ptr Guild::getRankById(uint32_t rankId)
+GuildRank_ptr Guild::getRankById(uint32_t rankId) const
 {
-	for (auto rank : ranks) {
+	for (auto& rank : ranks) {
 		if (rank->id == rankId) {
 			return rank;
 		}
@@ -33,7 +33,7 @@ GuildRank_ptr Guild::getRankById(uint32_t rankId)
 
 GuildRank_ptr Guild::getRankByName(std::string_view name) const
 {
-	for (auto rank : ranks) {
+	for (auto& rank : ranks) {
 		if (rank->name == name) {
 			return rank;
 		}
@@ -43,7 +43,7 @@ GuildRank_ptr Guild::getRankByName(std::string_view name) const
 
 GuildRank_ptr Guild::getRankByLevel(uint8_t level) const
 {
-	for (auto rank : ranks) {
+	for (auto& rank : ranks) {
 		if (rank->level == level) {
 			return rank;
 		}

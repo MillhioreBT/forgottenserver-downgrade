@@ -1507,7 +1507,7 @@ bool Creature::unregisterCreatureEvent(std::string_view name)
 	return true;
 }
 
-CreatureEventList Creature::getCreatureEvents(CreatureEventType_t type)
+CreatureEventList Creature::getCreatureEvents(CreatureEventType_t type) const
 {
 	CreatureEventList tmpEventList;
 

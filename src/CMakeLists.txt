@@ -1,3 +1,5 @@
+add_subdirectory(luamodules)
+
 set(tfs_SRC
 	${CMAKE_CURRENT_LIST_DIR}/otpch.cpp
 	${CMAKE_CURRENT_LIST_DIR}/actions.cpp
@@ -31,7 +33,40 @@ set(tfs_SRC
 	${CMAKE_CURRENT_LIST_DIR}/iomapserialize.cpp
 	${CMAKE_CURRENT_LIST_DIR}/item.cpp
 	${CMAKE_CURRENT_LIST_DIR}/items.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/luaactions.cpp" />
+    ${CMAKE_CURRENT_LIST_DIR}/luacombat.cpp" />
+    ${CMAKE_CURRENT_LIST_DIR}/luacondition.cpp" />
+    ${CMAKE_CURRENT_LIST_DIR}/luacontainer.cpp" />
+    ${CMAKE_CURRENT_LIST_DIR}/luacreature.cpp" />
+    ${CMAKE_CURRENT_LIST_DIR}/luacreatureevent.cpp" />
+    ${CMAKE_CURRENT_LIST_DIR}/luagame.cpp" />
+    ${CMAKE_CURRENT_LIST_DIR}/luaglobalevent.cpp" />
+    ${CMAKE_CURRENT_LIST_DIR}/luagroup.cpp" />
+    ${CMAKE_CURRENT_LIST_DIR}/luaguild.cpp" />
+    ${CMAKE_CURRENT_LIST_DIR}/luahouse.cpp" />
+    ${CMAKE_CURRENT_LIST_DIR}/luaitem.cpp" />
+    ${CMAKE_CURRENT_LIST_DIR}/luaitemtype.cpp" />
+    ${CMAKE_CURRENT_LIST_DIR}/lualoot.cpp" />
+    ${CMAKE_CURRENT_LIST_DIR}/luamonster.cpp" />
+    ${CMAKE_CURRENT_LIST_DIR}/luamonsterspell.cpp" />
+    ${CMAKE_CURRENT_LIST_DIR}/luamonstertype.cpp" />
+    ${CMAKE_CURRENT_LIST_DIR}/luamoveevent.cpp" />
+    ${CMAKE_CURRENT_LIST_DIR}/luanetworkmessage.cpp" />
+    ${CMAKE_CURRENT_LIST_DIR}/luanpc.cpp" />
+    ${CMAKE_CURRENT_LIST_DIR}/luaoutfit.cpp" />
+    ${CMAKE_CURRENT_LIST_DIR}/luaparty.cpp" />
+    ${CMAKE_CURRENT_LIST_DIR}/luaplayer.cpp" />
+    ${CMAKE_CURRENT_LIST_DIR}/luaposition.cpp" />
 	${CMAKE_CURRENT_LIST_DIR}/luascript.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/luaspells.cpp" />
+    ${CMAKE_CURRENT_LIST_DIR}/luatalkaction.cpp" />
+    ${CMAKE_CURRENT_LIST_DIR}/luateleport.cpp" />
+    ${CMAKE_CURRENT_LIST_DIR}/luatile.cpp" />
+    ${CMAKE_CURRENT_LIST_DIR}/luatown.cpp" />
+    ${CMAKE_CURRENT_LIST_DIR}/luavariant.cpp" />
+    ${CMAKE_CURRENT_LIST_DIR}/luavocation.cpp" />
+    ${CMAKE_CURRENT_LIST_DIR}/luaweapons.cpp" />
+    ${CMAKE_CURRENT_LIST_DIR}/luaxml.cpp" />
 	${CMAKE_CURRENT_LIST_DIR}/mailbox.cpp
 	${CMAKE_CURRENT_LIST_DIR}/map.cpp
 	${CMAKE_CURRENT_LIST_DIR}/matrixarea.cpp
@@ -70,7 +105,7 @@ set(tfs_SRC
 	${CMAKE_CURRENT_LIST_DIR}/weapons.cpp
 	${CMAKE_CURRENT_LIST_DIR}/wildcardtree.cpp
 	${CMAKE_CURRENT_LIST_DIR}/xtea.cpp
-	)
+	${tfs_luamodules_SRC})
 
 set(tfs_HDR
 	${CMAKE_CURRENT_LIST_DIR}/otpch.h
@@ -155,7 +190,7 @@ set(tfs_HDR
 	${CMAKE_CURRENT_LIST_DIR}/weapons.h
 	${CMAKE_CURRENT_LIST_DIR}/wildcardtree.h
 	${CMAKE_CURRENT_LIST_DIR}/xtea.h
-	)
+	${tfs_luamodules_HDR})
 
 set(tfs_MAIN ${CMAKE_CURRENT_LIST_DIR}/otserv.cpp PARENT_SCOPE)
 
