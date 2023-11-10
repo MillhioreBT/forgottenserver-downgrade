@@ -9,6 +9,8 @@
 #include "itemloader.h"
 #include "position.h"
 
+#include <sol/sol.hpp>
+
 enum SlotPositionBits : uint32_t
 {
 	SLOTP_WHEREEVER = 0xFFFFFFFF,
@@ -372,8 +374,8 @@ public:
 	uint32_t minorVersion = 0;
 	uint32_t buildNumber = 0;
 
-	bool loadFromXml();
-	void parseItemNode(const pugi::xml_node& itemNode, uint16_t id);
+	void loadFromLua(lua_State* L);
+	void parseLuaItem(const sol::table& itemTable, uint16_t id);
 
 	void buildInventoryList();
 	const InventoryVector& getInventory() const { return inventory; }

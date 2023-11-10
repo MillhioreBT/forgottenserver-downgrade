@@ -231,11 +231,6 @@ void mainLoader(int, char*[], ServiceManager* services)
 	                         Item::items.buildNumber)
 	          << std::endl;
 
-	if (!Item::items.loadFromXml()) {
-		startupErrorMessage("Unable to load items (XML)!");
-		return;
-	}
-
 	std::cout << ">> Loading script systems" << std::endl;
 	if (!ScriptingManager::getInstance().loadScriptSystems()) {
 		startupErrorMessage("Failed to load script systems");
