@@ -16,8 +16,8 @@ enum RaidState_t
 
 struct MonsterSpawn
 {
-	MonsterSpawn(std::string name, uint32_t minAmount, uint32_t maxAmount) :
-	    name(std::move(name)), minAmount(minAmount), maxAmount(maxAmount)
+	MonsterSpawn(std::string_view name, uint32_t minAmount, uint32_t maxAmount) :
+	    name{name}, minAmount{minAmount}, maxAmount{maxAmount}
 	{}
 
 	std::string name;
@@ -26,9 +26,9 @@ struct MonsterSpawn
 };
 
 // How many times it will try to find a tile to add the monster to before giving up
-static constexpr int32_t MAXIMUM_TRIES_PER_MONSTER = 10;
-static constexpr int32_t CHECK_RAIDS_INTERVAL = 60;
-static constexpr int32_t RAID_MINTICKS = 1000;
+inline constexpr int32_t MAXIMUM_TRIES_PER_MONSTER = 10;
+inline constexpr int32_t CHECK_RAIDS_INTERVAL = 60;
+inline constexpr int32_t RAID_MINTICKS = 1000;
 
 class Raid;
 class RaidEvent;
@@ -78,8 +78,8 @@ private:
 class Raid
 {
 public:
-	Raid(std::string name, uint32_t interval, uint32_t marginTime, bool repeat) :
-	    name(std::move(name)), interval(interval), margin(marginTime), repeat(repeat)
+	Raid(std::string_view name, uint32_t interval, uint32_t marginTime, bool repeat) :
+	    name{name}, interval{interval}, margin{marginTime}, repeat{repeat}
 	{}
 	~Raid();
 

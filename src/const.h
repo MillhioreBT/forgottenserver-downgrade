@@ -4,7 +4,7 @@
 #ifndef FS_CONST_H
 #define FS_CONST_H
 
-static constexpr int32_t NETWORKMESSAGE_MAXSIZE = 24590;
+inline constexpr int32_t NETWORKMESSAGE_MAXSIZE = 24590;
 
 enum MagicEffectClasses : uint8_t
 {
@@ -483,8 +483,8 @@ enum ReloadTypes_t : uint8_t
 	RELOAD_TYPE_WEAPONS,
 };
 
-static constexpr int32_t CHANNEL_GUILD = 0x00;
-static constexpr int32_t CHANNEL_PARTY = 0x01;
-static constexpr int32_t CHANNEL_PRIVATE = 0xFFFF;
+inline constexpr int32_t CHANNEL_GUILD = 0x00;
+inline constexpr int32_t CHANNEL_PARTY = 0x01;
+inline constexpr int32_t CHANNEL_PRIVATE = 0xFFFF;
 
 #endif

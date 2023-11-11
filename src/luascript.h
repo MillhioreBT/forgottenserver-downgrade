@@ -36,11 +36,8 @@ struct Outfit;
 
 using Combat_ptr = std::shared_ptr<Combat>;
 
-enum
-{
-	EVENT_ID_LOADING = 1,
-	EVENT_ID_USER = 1000,
-};
+inline constexpr int32_t EVENT_ID_LOADING = 1;
+inline constexpr int32_t EVENT_ID_USER = 1000;
 
 enum LuaDataType
 {

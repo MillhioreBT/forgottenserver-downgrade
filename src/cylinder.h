@@ -10,7 +10,7 @@
 class Item;
 class Creature;
 
-static constexpr int32_t INDEX_WHEREEVER = -1;
+inline constexpr int32_t INDEX_WHEREEVER = -1;
 
 enum cylinderflags_t
 {

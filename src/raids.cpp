@@ -92,7 +92,7 @@ bool Raids::loadFromXml()
 	return true;
 }
 
-static constexpr int32_t MAX_RAND_RANGE = 10000000;
+inline constexpr int32_t MAX_RAND_RANGE = 10000000;
 
 bool Raids::startup()
 {

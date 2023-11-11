@@ -67,7 +67,7 @@ struct OpenContainer
 	uint16_t index;
 };
 
-static constexpr int16_t MINIMUM_SKILL_LEVEL = 10;
+inline constexpr int16_t MINIMUM_SKILL_LEVEL = 10;
 
 struct Skill
 {
@@ -78,15 +78,15 @@ struct Skill
 
 using MuteCountMap = std::map<uint32_t, uint32_t>;
 
-static constexpr int32_t PLAYER_MAX_SPEED = 1500;
-static constexpr int32_t PLAYER_MIN_SPEED = 10;
-static constexpr int32_t PLAYER_MAX_BLESSINGS = 5;
+inline constexpr int32_t PLAYER_MAX_SPEED = 1500;
+inline constexpr int32_t PLAYER_MIN_SPEED = 10;
+inline constexpr int32_t PLAYER_MAX_BLESSINGS = 5;
 
-static constexpr auto ACCOUNT_MANAGER_PLAYER_NAME = "Account Manager";
-static constexpr auto ACCOUNT_MANAGER_PLAYER_ID = 1;
-static constexpr auto ACCOUNT_MANAGER_ACCOUNT_ID = 1;
-static constexpr auto ACCOUNT_MANAGER_ACCOUNT_NAME = "1";
-static constexpr auto ACCOUNT_MANAGER_ACCOUNT_PASSWORD = "1";
+inline constexpr auto ACCOUNT_MANAGER_PLAYER_NAME = "Account Manager";
+inline constexpr auto ACCOUNT_MANAGER_PLAYER_ID = 1;
+inline constexpr auto ACCOUNT_MANAGER_ACCOUNT_ID = 1;
+inline constexpr auto ACCOUNT_MANAGER_ACCOUNT_NAME = "1";
+inline constexpr auto ACCOUNT_MANAGER_ACCOUNT_PASSWORD = "1";
 
 class Player final : public Creature, public Cylinder
 {

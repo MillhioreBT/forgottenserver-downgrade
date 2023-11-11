@@ -4,17 +4,17 @@
 #ifndef FS_DEFINITIONS_H
 #define FS_DEFINITIONS_H
 
-static constexpr auto STATUS_SERVER_NAME = "TFS Nekiro Downgrade";
-static constexpr auto STATUS_SERVER_VERSION = "1.5+";
-static constexpr auto STATUS_SERVER_DEVELOPERS = "Mark Samman";
-static constexpr auto STATUS_SERVER_REPOSITORY = "https://github.com/MillhioreBT/forgottenserver-downgrade";
+inline constexpr auto STATUS_SERVER_NAME = "TFS Nekiro Downgrade";
+inline constexpr auto STATUS_SERVER_VERSION = "1.5+";
+inline constexpr auto STATUS_SERVER_DEVELOPERS = "Mark Samman";
+inline constexpr auto STATUS_SERVER_REPOSITORY = "https://github.com/MillhioreBT/forgottenserver-downgrade";
 
-static constexpr auto CLIENT_VERSION_MIN = 860;
-static constexpr auto CLIENT_VERSION_MAX = 860;
-static constexpr auto CLIENT_VERSION_STR = "8.60";
+inline constexpr auto CLIENT_VERSION_MIN = 860;
+inline constexpr auto CLIENT_VERSION_MAX = 860;
+inline constexpr auto CLIENT_VERSION_STR = "8.60";
 
-static constexpr auto AUTHENTICATOR_DIGITS = 6U;
-static constexpr auto AUTHENTICATOR_PERIOD = 30U;
+inline constexpr unsigned int AUTHENTICATOR_DIGITS = 6;
+inline constexpr unsigned int AUTHENTICATOR_PERIOD = 30;
 
 #ifndef __FUNCTION__
 #define __FUNCTION__ __func__

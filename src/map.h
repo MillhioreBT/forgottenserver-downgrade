@@ -23,10 +23,10 @@ struct AStarNode
 	uint16_t x, y;
 };
 
-static constexpr int32_t MAX_NODES = 512;
+inline constexpr int32_t MAX_NODES = 512;
 
-static constexpr int32_t MAP_NORMALWALKCOST = 10;
-static constexpr int32_t MAP_DIAGONALWALKCOST = 25;
+inline constexpr int32_t MAP_NORMALWALKCOST = 10;
+inline constexpr int32_t MAP_DIAGONALWALKCOST = 25;
 
 class AStarNodes
 {
@@ -53,9 +53,9 @@ private:
 
 using SpectatorCache = std::map<Position, SpectatorVec>;
 
-static constexpr int32_t FLOOR_BITS = 3;
-static constexpr int32_t FLOOR_SIZE = (1 << FLOOR_BITS);
-static constexpr int32_t FLOOR_MASK = (FLOOR_SIZE - 1);
+inline constexpr int32_t FLOOR_BITS = 3;
+inline constexpr int32_t FLOOR_SIZE = (1 << FLOOR_BITS);
+inline constexpr int32_t FLOOR_MASK = (FLOOR_SIZE - 1);
 
 struct Floor
 {

@@ -53,9 +53,9 @@ class Npc;
 class Item;
 class Tile;
 
-static constexpr int32_t EVENT_CREATURECOUNT = 10;
-static constexpr int32_t EVENT_CREATURE_THINK_INTERVAL = 250;
-static constexpr int32_t EVENT_CHECK_CREATURE_INTERVAL = (EVENT_CREATURE_THINK_INTERVAL / EVENT_CREATURECOUNT);
+inline constexpr int32_t EVENT_CREATURECOUNT = 10;
+inline constexpr int32_t EVENT_CREATURE_THINK_INTERVAL = 250;
+inline constexpr int32_t EVENT_CHECK_CREATURE_INTERVAL = (EVENT_CREATURE_THINK_INTERVAL / EVENT_CREATURECOUNT);
 
 class FrozenPathingConditionCall
 {
