@@ -938,64 +938,6 @@ std::optional<uint8_t> Lua::getBlessingId(lua_State* L, int32_t arg)
 	return std::make_optional(blessing);
 }
 
-template <>
-void Lua::getSpectators<Creature>(lua_State* L, int32_t arg, SpectatorVec& spectators)
-{
-	if (isUserdata(L, arg)) {
-		if (auto creature = getUserdata<Creature>(L, arg)) {
-			spectators.emplace_back(creature);
-		}
-		return;
-	} else if (!isTable(L, arg)) {
-		return;
-	}
-
-	lua_pushnil(L);
-	while (lua_next(L, arg) != 0) {
-		if (isUserdata(L, -1)) {
-			if (auto creature = getUserdata<Creature>(L, -1)) {
-				spectators.emplace_back(creature);
-			}
-		} else if (isInteger(L, -1)) {
-			if (auto creature = g_game.getCreatureByID(getInteger<uint32_t>(L, -1))) {
-				spectators.emplace_back(creature);
-			}
-		}
-		lua_pop(L, 1);
-	}
-
-	lua_pop(L, 1);
-}
-
-template <>
-void Lua::getSpectators<Player>(lua_State* L, int32_t arg, SpectatorVec& spectators)
-{
-	if (isUserdata(L, arg)) {
-		if (auto player = getUserdata<Player>(L, arg)) {
-			spectators.emplace_back(player);
-		}
-		return;
-	} else if (!isTable(L, arg)) {
-		return;
-	}
-
-	lua_pushnil(L);
-	while (lua_next(L, arg) != 0) {
-		if (isUserdata(L, -1)) {
-			if (auto player = getUserdata<Player>(L, -1)) {
-				spectators.emplace_back(player);
-			}
-		} else if (isInteger(L, -1)) {
-			if (auto player = g_game.getPlayerByID(getInteger<uint32_t>(L, -1))) {
-				spectators.emplace_back(player);
-			}
-		}
-		lua_pop(L, 1);
-	}
-
-	lua_pop(L, 1);
-}
-
 // Push
 void Lua::pushBoolean(lua_State* L, bool value) { lua_pushboolean(L, value ? 1 : 0); }
 

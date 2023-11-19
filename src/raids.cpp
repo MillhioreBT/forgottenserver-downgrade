@@ -560,8 +560,6 @@ bool ScriptEvent::configureRaidEvent(const pugi::xml_node& eventNode)
 	return true;
 }
 
-std::string_view ScriptEvent::getScriptEventName() const { return "onRaid"; }
-
 bool ScriptEvent::executeEvent()
 {
 	// onRaid()

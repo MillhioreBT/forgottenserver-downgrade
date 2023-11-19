@@ -411,7 +411,7 @@ bool IOLoginData::loadPlayer(Player* player, DBResult_ptr result)
 	for (uint8_t i = 0; i < size; ++i) {
 		uint16_t skillLevel = result->getNumber<uint16_t>(skillNames[i]);
 		uint64_t skillTries = result->getNumber<uint64_t>(skillNameTries[i]);
-		uint64_t nextSkillTries = player->vocation->getReqSkillTries(i, skillLevel + 1);
+		uint64_t nextSkillTries = player->vocation->getReqSkillTries(static_cast<skills_t>(i), skillLevel + 1);
 		if (skillTries > nextSkillTries) {
 			skillTries = 0;
 		}

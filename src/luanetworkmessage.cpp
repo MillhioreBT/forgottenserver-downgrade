@@ -3,9 +3,8 @@
 
 #include "otpch.h"
 
-#include "networkmessage.h"
-
 #include "luascript.h"
+#include "networkmessage.h"
 #include "player.h"
 
 namespace {
@@ -104,11 +103,11 @@ int luaNetworkMessageGetPosition(lua_State* L)
 
 int luaNetworkMessageAddByte(lua_State* L)
 {
-	// networkMessage:addByte(number)
-	uint8_t number = getInteger<uint8_t>(L, 2);
+	// networkMessage:addByte(integer)
 	NetworkMessage* message = getUserdata<NetworkMessage>(L, 1);
 	if (message) {
-		message->addByte(number);
+		uint8_t integer = getInteger<uint8_t>(L, 2);
+		message->addByte(integer);
 		pushBoolean(L, true);
 	} else {
 		lua_pushnil(L);
@@ -118,11 +117,11 @@ int luaNetworkMessageAddByte(lua_State* L)
 
 int luaNetworkMessageAddU16(lua_State* L)
 {
-	// networkMessage:addU16(number)
-	uint16_t number = getInteger<uint16_t>(L, 2);
+	// networkMessage:addU16(integer)
 	NetworkMessage* message = getUserdata<NetworkMessage>(L, 1);
 	if (message) {
-		message->add<uint16_t>(number);
+		uint16_t integer = getInteger<uint16_t>(L, 2);
+		message->add<uint16_t>(integer);
 		pushBoolean(L, true);
 	} else {
 		lua_pushnil(L);
@@ -132,11 +131,11 @@ int luaNetworkMessageAddU16(lua_State* L)
 
 int luaNetworkMessageAddU32(lua_State* L)
 {
-	// networkMessage:addU32(number)
-	uint32_t number = getInteger<uint32_t>(L, 2);
+	// networkMessage:addU32(integer)
 	NetworkMessage* message = getUserdata<NetworkMessage>(L, 1);
 	if (message) {
-		message->add<uint32_t>(number);
+		uint32_t integer = getInteger<uint32_t>(L, 2);
+		message->add<uint32_t>(integer);
 		pushBoolean(L, true);
 	} else {
 		lua_pushnil(L);
@@ -146,11 +145,11 @@ int luaNetworkMessageAddU32(lua_State* L)
 
 int luaNetworkMessageAddU64(lua_State* L)
 {
-	// networkMessage:addU64(number)
-	uint64_t number = getInteger<uint64_t>(L, 2);
+	// networkMessage:addU64(integer)
 	NetworkMessage* message = getUserdata<NetworkMessage>(L, 1);
 	if (message) {
-		message->add<uint64_t>(number);
+		uint64_t integer = getInteger<uint64_t>(L, 2);
+		message->add<uint64_t>(integer);
 		pushBoolean(L, true);
 	} else {
 		lua_pushnil(L);
@@ -161,9 +160,9 @@ int luaNetworkMessageAddU64(lua_State* L)
 int luaNetworkMessageAddString(lua_State* L)
 {
 	// networkMessage:addString(string)
-	const std::string& string = getString(L, 2);
 	NetworkMessage* message = getUserdata<NetworkMessage>(L, 1);
 	if (message) {
+		const std::string& string = getString(L, 2);
 		message->addString(string);
 		pushBoolean(L, true);
 	} else {
@@ -175,9 +174,9 @@ int luaNetworkMessageAddString(lua_State* L)
 int luaNetworkMessageAddPosition(lua_State* L)
 {
 	// networkMessage:addPosition(position)
-	const Position& position = getPosition(L, 2);
 	NetworkMessage* message = getUserdata<NetworkMessage>(L, 1);
 	if (message) {
+		const Position& position = getPosition(L, 2);
 		message->addPosition(position);
 		pushBoolean(L, true);
 	} else {
@@ -189,9 +188,9 @@ int luaNetworkMessageAddPosition(lua_State* L)
 int luaNetworkMessageAddDouble(lua_State* L)
 {
 	// networkMessage:addDouble(number)
-	double number = getNumber<double>(L, 2);
 	NetworkMessage* message = getUserdata<NetworkMessage>(L, 1);
 	if (message) {
+		double number = getNumber<double>(L, 2);
 		message->addDouble(number);
 		pushBoolean(L, true);
 	} else {
@@ -275,7 +274,7 @@ int luaNetworkMessageTell(lua_State* L)
 	// networkMessage:tell()
 	NetworkMessage* message = getUserdata<NetworkMessage>(L, 1);
 	if (message) {
-		lua_pushinteger(L, message->getBufferPosition() - message->INITIAL_BUFFER_POSITION);
+		lua_pushinteger(L, static_cast<int64_t>(message->getBufferPosition()) - message->INITIAL_BUFFER_POSITION);
 	} else {
 		lua_pushnil(L);
 	}
@@ -296,11 +295,11 @@ int luaNetworkMessageLength(lua_State* L)
 
 int luaNetworkMessageSkipBytes(lua_State* L)
 {
-	// networkMessage:skipBytes(number)
-	int16_t number = getInteger<int16_t>(L, 2);
+	// networkMessage:skipBytes(integer)
 	NetworkMessage* message = getUserdata<NetworkMessage>(L, 1);
 	if (message) {
-		message->skipBytes(number);
+		int16_t integer = getInteger<int16_t>(L, 2);
+		message->skipBytes(integer);
 		pushBoolean(L, true);
 	} else {
 		lua_pushnil(L);

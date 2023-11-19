@@ -151,8 +151,8 @@ protected:
 		bool overrun = false;
 	};
 
-	NetworkMessageInfo info;
-	std::array<uint8_t, NETWORKMESSAGE_MAXSIZE> buffer;
+	NetworkMessageInfo info = {};
+	std::array<uint8_t, NETWORKMESSAGE_MAXSIZE> buffer = {};
 
 private:
 	bool canAdd(size_t size) const { return (size + info.position) < MAX_BODY_LENGTH; }
@@ -167,4 +167,4 @@ private:
 	}
 };
 
-#endif // #ifndef __NETWORK_MESSAGE_H__
+#endif // FS_NETWORKMESSAGE_H

@@ -480,7 +480,9 @@ void Items::parseLuaItem(const sol::table& item, uint16_t id)
 	}
 
 	if (auto fluidContainer = item["fluidContainer"]; fluidContainer.valid()) {
-		it.group = ITEM_GROUP_FLUID;
+		if (fluidContainer.get<bool>()) {
+			it.group = ITEM_GROUP_FLUID;
+		}
 	}
 
 	if (auto canReadText = item["readable"]; canReadText.valid()) {

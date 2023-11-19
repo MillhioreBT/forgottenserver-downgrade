@@ -14,7 +14,7 @@ public:
 
 	std::string_view getVocName() const { return name; }
 	std::string_view getVocDescription() const { return description; }
-	uint64_t getReqSkillTries(uint8_t skill, uint16_t level) const;
+	uint64_t getReqSkillTries(skills_t skill, uint16_t level) const;
 	uint64_t getReqMana(uint32_t magLevel) const;
 
 	uint16_t getId() const { return id; }

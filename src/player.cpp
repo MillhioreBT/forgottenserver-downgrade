@@ -1879,7 +1879,7 @@ void Player::death(Creature* lastHitCreature)
 			uint64_t sumSkillTries = 0;
 			for (uint16_t c = MINIMUM_SKILL_LEVEL + 1; c <= skills[i].level;
 			     ++c) { // sum up all required tries for all skill levels
-				sumSkillTries += vocation->getReqSkillTries(i, c);
+				sumSkillTries += vocation->getReqSkillTries(static_cast<skills_t>(i), c);
 			}
 
 			sumSkillTries += skills[i].tries;

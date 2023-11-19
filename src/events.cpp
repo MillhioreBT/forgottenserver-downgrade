@@ -602,8 +602,7 @@ void Events::eventPlayerOnLook(Player* player, const Position& position, Thing* 
 
 void Events::eventPlayerOnLookInBattleList(Player* player, Creature* creature, int32_t lookDistance)
 {
-	// Player:onLookInBattleList(creature, position, distance) or Player.onLookInBattleList(self, creature, position,
-	// distance)
+	// Player:onLookInBattleList(creature, distance) or Player.onLookInBattleList(self, creature, distance)
 	if (info.playerOnLookInBattleList == -1) {
 		return;
 	}

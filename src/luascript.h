@@ -7,6 +7,7 @@
 #include "database.h"
 #include "enums.h"
 #include "position.h"
+#include "spectators.h"
 
 #if LUA_VERSION_NUM >= 502
 #ifndef LUA_COMPAT_ALL
@@ -652,7 +653,29 @@ inline void pushSharedPtr(lua_State* L, T value, int nuvalue = 1)
 
 // Extra
 template <class T>
-void getSpectators(lua_State* L, int32_t arg, SpectatorVec& spectators);
+inline void getSpectators(lua_State* L, int32_t arg, SpectatorVec& spectators)
+{
+	if (isUserdata(L, arg)) {
+		if (T* creature = getUserdata<T>(L, arg)) {
+			spectators.emplace_back(creature);
+		}
+		return;
+	} else if (!isTable(L, arg)) {
+		return;
+	}
+
+	lua_pushnil(L);
+	while (lua_next(L, arg) != 0) {
+		if (isUserdata(L, -1)) {
+			if (T* creature = getUserdata<T>(L, -1)) {
+				spectators.emplace_back(creature);
+			}
+		}
+		lua_pop(L, 1);
+	}
+
+	lua_pop(L, 1);
+}
 } // namespace Lua
 
 #endif
