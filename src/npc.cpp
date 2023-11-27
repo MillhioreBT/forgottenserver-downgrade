@@ -431,34 +431,16 @@ bool Npc::canWalkTo(const Position& fromPos, Direction dir) const
 	return true;
 }
 
-bool Npc::getRandomStep(Direction& dir) const
+bool Npc::getRandomStep(Direction& direction) const
 {
-	std::vector<Direction> dirList;
-	dirList.reserve(4);
-
 	const Position& creaturePos = getPosition();
-	if (canWalkTo(creaturePos, DIRECTION_NORTH)) {
-		dirList.push_back(DIRECTION_NORTH);
+	for (Direction dir : getShuffleDirections()) {
+		if (canWalkTo(creaturePos, dir)) {
+			direction = dir;
+			return true;
+		}
 	}
-
-	if (canWalkTo(creaturePos, DIRECTION_SOUTH)) {
-		dirList.push_back(DIRECTION_SOUTH);
-	}
-
-	if (canWalkTo(creaturePos, DIRECTION_EAST)) {
-		dirList.push_back(DIRECTION_EAST);
-	}
-
-	if (canWalkTo(creaturePos, DIRECTION_WEST)) {
-		dirList.push_back(DIRECTION_WEST);
-	}
-
-	if (dirList.empty()) {
-		return false;
-	}
-
-	dir = dirList[uniform_random(0, dirList.size() - 1)];
-	return true;
+	return false;
 }
 
 bool Npc::doMoveTo(const Position& pos, int32_t minTargetDist /* = 1*/, int32_t maxTargetDist /* = 1*/,
@@ -646,9 +628,10 @@ int NpcScriptInterface::luaActionMoveTo(lua_State* L)
 		argsStart = 4;
 	}
 
-	Lua::pushBoolean(L, npc->doMoveTo(position, Lua::getInteger<int32_t>(L, argsStart, 1),
-	                             Lua::getInteger<int32_t>(L, argsStart + 1, 1), Lua::getBoolean(L, argsStart + 2, true),
-	                             Lua::getBoolean(L, argsStart + 3, true), Lua::getInteger<int32_t>(L, argsStart + 4, 0)));
+	Lua::pushBoolean(
+	    L, npc->doMoveTo(position, Lua::getInteger<int32_t>(L, argsStart, 1),
+	                     Lua::getInteger<int32_t>(L, argsStart + 1, 1), Lua::getBoolean(L, argsStart + 2, true),
+	                     Lua::getBoolean(L, argsStart + 3, true), Lua::getInteger<int32_t>(L, argsStart + 4, 0)));
 	return 1;
 }
 

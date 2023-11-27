@@ -2045,6 +2045,7 @@ void LuaScriptInterface::registerFunctions()
 
 	// os
 	registerMethod("os", "mtime", LuaScriptInterface::luaSystemTime);
+	registerMethod("os", "ntime", LuaScriptInterface::luaSystemNanoTime);
 
 	// table
 	registerMethod("table", "create", LuaScriptInterface::luaTableCreate);
@@ -3154,6 +3155,13 @@ int LuaScriptInterface::luaSystemTime(lua_State* L)
 {
 	// os.mtime()
 	lua_pushinteger(L, OTSYS_TIME());
+	return 1;
+}
+
+int LuaScriptInterface::luaSystemNanoTime(lua_State* L)
+{
+	// os.ntime()
+	lua_pushinteger(L, OTSYS_NANOTIME());
 	return 1;
 }
 

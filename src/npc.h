@@ -175,7 +175,7 @@ private:
 	void setIdle(const bool idle);
 
 	bool canWalkTo(const Position& fromPos, Direction dir) const;
-	bool getRandomStep(Direction& dir) const;
+	bool getRandomStep(Direction& direction) const;
 
 	void reset();
 	bool loadFromXml();

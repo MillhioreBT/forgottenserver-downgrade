@@ -30,10 +30,11 @@ int luaContainerCreate(lua_State* L)
 
 int luaContainerGetSize(lua_State* L)
 {
-	// container:getSize()
+	// container:getSize([recursive = false])
 	Container* container = getUserdata<Container>(L, 1);
 	if (container) {
-		lua_pushinteger(L, container->size());
+		const bool recursive = getBoolean(L, 2, false);
+		lua_pushinteger(L, container->size(recursive));
 	} else {
 		lua_pushnil(L);
 	}

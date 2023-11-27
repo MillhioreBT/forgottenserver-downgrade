@@ -11,8 +11,6 @@
 #include "monster.h"
 #include "scheduler.h"
 
-#include <fmt/format.h>
-
 extern ConfigManager g_config;
 extern CreatureEvents* g_creatureEvents;
 extern Events* g_events;
@@ -720,7 +718,7 @@ void Creature::onDeath()
 	if (master) {
 		setMaster(nullptr);
 
-		if (getMonster()) {
+		if (dynamic_cast<Monster*>(this) != nullptr) {
 			decrementReferenceCounter();
 		}
 	}

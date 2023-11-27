@@ -73,8 +73,11 @@ itemAttrTypes stringToItemAttribute(std::string_view str);
 std::string_view getReturnMessage(ReturnValue value);
 
 int64_t OTSYS_TIME();
+int64_t OTSYS_NANOTIME();
 
 SpellGroup_t stringToSpellGroup(std::string_view value);
+
+const std::vector<Direction>& getShuffleDirections();
 
 namespace tfs {
 

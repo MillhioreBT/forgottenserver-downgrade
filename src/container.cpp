@@ -612,6 +612,18 @@ void Container::startDecaying()
 	}
 }
 
+size_t Container::size(const bool recursive /*= false*/) const
+{
+	if (recursive) {
+		size_t count = 0;
+		for (ContainerIterator it = iterator(); it.hasNext(); it.advance()) {
+			++count;
+		}
+		return count;
+	}
+	return itemlist.size();
+}
+
 ContainerIterator Container::iterator() const
 {
 	ContainerIterator cit;

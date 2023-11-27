@@ -1136,6 +1136,13 @@ int64_t OTSYS_TIME()
 	    .count();
 }
 
+int64_t OTSYS_NANOTIME()
+{
+	return std::chrono::duration_cast<std::chrono::nanoseconds>(
+	           std::chrono::high_resolution_clock::now().time_since_epoch())
+	    .count();
+}
+
 SpellGroup_t stringToSpellGroup(std::string_view value)
 {
 	auto tmpStr = boost::algorithm::to_lower_copy<std::string>(std::string{value});
@@ -1150,4 +1157,11 @@ SpellGroup_t stringToSpellGroup(std::string_view value)
 	}
 
 	return SPELLGROUP_NONE;
+}
+
+const std::vector<Direction>& getShuffleDirections()
+{
+	static std::vector<Direction> dirList{DIRECTION_NORTH, DIRECTION_WEST, DIRECTION_EAST, DIRECTION_SOUTH};
+	std::shuffle(dirList.begin(), dirList.end(), getRandomGenerator());
+	return dirList;
 }

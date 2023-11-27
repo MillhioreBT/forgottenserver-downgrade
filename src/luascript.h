@@ -351,6 +351,7 @@ private:
 	static int luaRawGetMetatable(lua_State* L);
 
 	static int luaSystemTime(lua_State* L);
+	static int luaSystemNanoTime(lua_State* L);
 
 	static int luaTableCreate(lua_State* L);
 

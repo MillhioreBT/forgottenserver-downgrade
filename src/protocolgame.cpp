@@ -14,8 +14,6 @@
 #include "player.h"
 #include "scheduler.h"
 
-#include <fmt/format.h>
-
 extern ConfigManager g_config;
 extern CreatureEvents* g_creatureEvents;
 extern Chat* g_chat;
