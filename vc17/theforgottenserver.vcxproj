@@ -226,6 +226,7 @@
     <ClCompile Include="..\src\luaweapons.cpp" />
     <ClCompile Include="..\src\luaxml.cpp" />
     <ClCompile Include="..\src\mailbox.cpp" />
+    <ClCompile Include="..\src\main.cpp" />
     <ClCompile Include="..\src\map.cpp" />
     <ClCompile Include="..\src\matrixarea.cpp" />
     <ClCompile Include="..\src\monster.cpp" />
