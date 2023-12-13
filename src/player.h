@@ -813,12 +813,6 @@ public:
 			client->sendCloseTrade();
 		}
 	}
-	void sendWorldLight(LightInfo lightInfo)
-	{
-		if (client) {
-			client->sendWorldLight(lightInfo);
-		}
-	}
 	void sendChannelsDialog()
 	{
 		if (client) {

@@ -3,12 +3,11 @@
 
 #include "otpch.h"
 
-#include "player.h"
-
 #include "chat.h"
 #include "game.h"
 #include "iologindata.h"
 #include "luascript.h"
+#include "player.h"
 #include "spells.h"
 #include "vocation.h"
 

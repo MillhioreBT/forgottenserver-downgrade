@@ -132,7 +132,7 @@ end
 registerMonsterType.summons = function(mtype, mask)
 	if type(mask.summons) == "table" then
 		for k, v in pairs(mask.summons) do
-			mtype:addSummon(v.name, v.interval, v.chance)
+			mtype:addSummon(v.name, v.interval, v.chance, v.effect, v.masterEffect)
 		end
 	end
 end

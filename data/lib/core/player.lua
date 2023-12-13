@@ -1,8 +1,7 @@
 local foodCondition = Condition(CONDITION_REGENERATION, CONDITIONID_DEFAULT)
 
 function Player.feed(self, food)
-	local condition =
-		self:getCondition(CONDITION_REGENERATION, CONDITIONID_DEFAULT)
+	local condition = self:getCondition(CONDITION_REGENERATION, CONDITIONID_DEFAULT)
 	if condition then
 		condition:setTicks(condition:getTicks() + (food * 1000))
 	else
@@ -10,14 +9,10 @@ function Player.feed(self, food)
 		if not vocation then return nil end
 
 		foodCondition:setTicks(food * 1000)
-		foodCondition:setParameter(CONDITION_PARAM_HEALTHGAIN,
-		                           vocation:getHealthGainAmount())
-		foodCondition:setParameter(CONDITION_PARAM_HEALTHTICKS,
-		                           vocation:getHealthGainTicks() * 1000)
-		foodCondition:setParameter(CONDITION_PARAM_MANAGAIN,
-		                           vocation:getManaGainAmount())
-		foodCondition:setParameter(CONDITION_PARAM_MANATICKS,
-		                           vocation:getManaGainTicks() * 1000)
+		foodCondition:setParameter(CONDITION_PARAM_HEALTHGAIN, vocation:getHealthGainAmount())
+		foodCondition:setParameter(CONDITION_PARAM_HEALTHTICKS, vocation:getHealthGainTicks() * 1000)
+		foodCondition:setParameter(CONDITION_PARAM_MANAGAIN, vocation:getManaGainAmount())
+		foodCondition:setParameter(CONDITION_PARAM_MANATICKS, vocation:getManaGainTicks() * 1000)
 
 		self:addCondition(foodCondition)
 	end
@@ -25,9 +20,7 @@ function Player.feed(self, food)
 end
 
 function Player.getClosestFreePosition(self, position, extended)
-	if self:getGroup():getAccess() and self:getAccountType() >= ACCOUNT_TYPE_GOD then
-		return position
-	end
+	if self:getGroup():getAccess() and self:getAccountType() >= ACCOUNT_TYPE_GOD then return position end
 	return Creature.getClosestFreePosition(self, position, extended)
 end
 
@@ -39,22 +32,13 @@ function Player.hasFlag(self, flag) return self:getGroup():hasFlag(flag) end
 
 function Player.getLossPercent(self)
 	local blessings = 0
-	local lossPercent = {
-		[0] = 100,
-		[1] = 70,
-		[2] = 45,
-		[3] = 25,
-		[4] = 10,
-		[5] = 0
-	}
+	local lossPercent = {[0] = 100, [1] = 70, [2] = 45, [3] = 25, [4] = 10, [5] = 0}
 
 	for i = 1, 5 do if self:hasBlessing(i) then blessings = blessings + 1 end end
 	return lossPercent[blessings]
 end
 
-function Player.getPremiumTime(self)
-	return math.max(0, self:getPremiumEndsAt() - os.time())
-end
+function Player.getPremiumTime(self) return math.max(0, self:getPremiumEndsAt() - os.time()) end
 
 function Player.setPremiumTime(self, seconds)
 	self:setPremiumEndsAt(os.time() + seconds)
@@ -74,21 +58,14 @@ function Player.removePremiumTime(self, seconds)
 	return true
 end
 
-function Player.getPremiumDays(self)
-	return math.floor(self:getPremiumTime() / 86400)
-end
+function Player.getPremiumDays(self) return math.floor(self:getPremiumTime() / 86400) end
 
-function Player.addPremiumDays(self, days)
-	return self:addPremiumTime(days * 86400)
-end
+function Player.addPremiumDays(self, days) return self:addPremiumTime(days * 86400) end
 
-function Player.removePremiumDays(self, days)
-	return self:removePremiumTime(days * 86400)
-end
+function Player.removePremiumDays(self, days) return self:removePremiumTime(days * 86400) end
 
 function Player.isPremium(self)
-	return self:getPremiumTime() > 0 or
-		       configManager.getBoolean(configKeys.FREE_PREMIUM) or
+	return self:getPremiumTime() > 0 or configManager.getBoolean(configKeys.FREE_PREMIUM) or
 		       self:hasFlag(PlayerFlag_IsAlwaysPremium)
 end
 
@@ -97,14 +74,12 @@ function Player.sendCancelMessage(self, message)
 	return self:sendTextMessage(MESSAGE_STATUS_SMALL, message)
 end
 
-function Player.isUsingOtClient(self)
-	return self:getClient().os >= CLIENTOS_OTCLIENT_LINUX
-end
+function Player.isUsingOtClient(self) return self:getClient().os >= CLIENTOS_OTCLIENT_LINUX end
 
 function Player.sendExtendedOpcode(self, opcode, buffer)
 	if not self:isUsingOtClient() then return false end
 
-	local networkMessage <close> = NetworkMessage()
+	local networkMessage<close> = NetworkMessage()
 	networkMessage:addByte(0x32)
 	networkMessage:addByte(opcode)
 	networkMessage:addString(buffer)
@@ -125,8 +100,8 @@ function Player.transferMoneyTo(self, target, amount)
 	if targetPlayer then
 		targetPlayer:setBankBalance(targetPlayer:getBankBalance() + amount)
 	else
-		db.query("UPDATE `players` SET `balance` = `balance` + " .. amount ..
-			         " WHERE `id` = '" .. target.guid .. "'")
+		db.query("UPDATE `players` SET `balance` = `balance` + " .. amount .. " WHERE `id` = '" ..
+			         target.guid .. "'")
 	end
 
 	self:setBankBalance(self:getBankBalance() - amount)
@@ -163,9 +138,7 @@ function Player.canCarryMoney(self, amount)
 
 	-- If player don't have enough available inventory slots to carry this money
 	local backpack = self:getSlotItem(CONST_SLOT_BACKPACK)
-	if not backpack or backpack:getEmptySlots(true) < inventorySlots then
-		return false
-	end
+	if not backpack or backpack:getEmptySlots(true) < inventorySlots then return false end
 	return true
 end
 
@@ -215,12 +188,11 @@ function Player.addLevel(self, amount, round)
 	local level, amount = self:getLevel(), amount or 1
 	if amount > 0 then
 		return self:addExperience(Game.getExperienceForLevel(level + amount) -
-			                          (round and self:getExperience() or
-				                          Game.getExperienceForLevel(level)))
+			                          (round and self:getExperience() or Game.getExperienceForLevel(level)))
 	else
-		return self:removeExperience(((round and self:getExperience() or
-			                             Game.getExperienceForLevel(level)) -
-			                             Game.getExperienceForLevel(level + amount)))
+		return self:removeExperience(
+			       ((round and self:getExperience() or Game.getExperienceForLevel(level)) -
+				       Game.getExperienceForLevel(level + amount)))
 	end
 end
 
@@ -238,8 +210,7 @@ function Player.addMagicLevel(self, value)
 	else
 		value = math.min(currentMagLevel, math.abs(value))
 		while value > 0 do
-			sum = sum +
-				      self:getVocation():getRequiredManaSpent(currentMagLevel - value + 1)
+			sum = sum + self:getVocation():getRequiredManaSpent(currentMagLevel - value + 1)
 			value = value - 1
 		end
 
@@ -253,9 +224,7 @@ function Player.addSkillLevel(self, skillId, value)
 
 	if value > 0 then
 		while value > 0 do
-			sum = sum +
-				      self:getVocation()
-					      :getRequiredSkillTries(skillId, currentSkillLevel + value)
+			sum = sum + self:getVocation():getRequiredSkillTries(skillId, currentSkillLevel + value)
 			value = value - 1
 		end
 
@@ -263,9 +232,7 @@ function Player.addSkillLevel(self, skillId, value)
 	else
 		value = math.min(currentSkillLevel, math.abs(value))
 		while value > 0 do
-			sum = sum +
-				      self:getVocation()
-					      :getRequiredSkillTries(skillId, currentSkillLevel - value + 1)
+			sum = sum + self:getVocation():getRequiredSkillTries(skillId, currentSkillLevel - value + 1)
 			value = value - 1
 		end
 
@@ -296,4 +263,23 @@ function Player.removeTibiaCoins(self, removeCoins)
 	local tibiaCoins = self:getTibiaCoins()
 	if tibiaCoins < removeCoins then return false end
 	return self:setTibiaCoins(tibiaCoins - removeCoins)
+end
+
+function Player.sendWorldLight(self, color, level)
+	local msg<close> = NetworkMessage()
+	msg:addByte(0x82)
+	msg:addByte(self:getGroup():getAccess() and 0xFF or level)
+	msg:addByte(color)
+	msg:sendToPlayer(self)
+	return true
+end
+
+function Player.sendWorldTime(self, time)
+	if self:getClient().version < 1272 then return false end
+	local msg<close> = NetworkMessage()
+	msg:addByte(0xEF)
+	msg:addByte(time / 60) -- hour
+	msg:addByte(time % 60) -- min
+	msg:sendToPlayer(self)
+	return true
 end
