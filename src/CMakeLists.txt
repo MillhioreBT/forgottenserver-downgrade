@@ -200,6 +200,7 @@ target_link_libraries(tfslib PRIVATE
 	Boost::iostreams
 	Boost::system
 	fmt::fmt
+	sol2::sol2
 	pugixml::pugixml
 	${CMAKE_THREAD_LIBS_INIT}
 	${Crypto++_LIBRARIES}
