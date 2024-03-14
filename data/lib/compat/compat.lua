@@ -375,12 +375,12 @@ function getCreatureMaxHealth(cid)
 	return c and c:getMaxHealth() or false
 end
 function getCreatureMana(cid)
-	local c = Creature(cid)
-	return c and c:getMana() or false
+	local p = Player(cid)
+	return p and p:getMana() or false
 end
 function getCreatureMaxMana(cid)
-	local c = Creature(cid)
-	return c and c:getMaxMana() or false
+	local p = Player(cid)
+	return p and p:getMaxMana() or false
 end
 function getCreaturePosition(cid)
 	local c = Creature(cid)
@@ -449,8 +449,8 @@ function doCreatureAddHealth(cid, health)
 	return c and c:addHealth(health) or false
 end
 function doCreatureAddMana(cid, mana)
-	local c = Creature(cid)
-	return c and c:addMana(mana) or false
+	local p = Player(cid)
+	return p and p:addMana(mana) or false
 end
 function doRemoveCreature(cid)
 	local c = Creature(cid)
@@ -473,8 +473,8 @@ function setCreatureMaxHealth(cid, health)
 	return c and c:setMaxHealth(health) or false
 end
 function setCreatureMaxMana(cid, mana)
-	local c = Creature(cid)
-	return c and c:setMaxMana(mana) or false
+	local p = Player(cid)
+	return p and p:setMaxMana(mana) or false
 end
 function doCreatureSetHideHealth(cid, hide)
 	local c = Creature(cid)
@@ -591,9 +591,9 @@ function getPlayerRequiredMana(cid, magicLevel)
 	local p = Player(cid)
 	return p and p:getVocation():getRequiredManaSpent(magicLevel) or false
 end
-function getPlayerRequiredSkillTries(cid, skillId)
+function getPlayerRequiredSkillTries(cid, skillId, skillLevel)
 	local p = Player(cid)
-	return p and p:getVocation():getRequiredSkillTries(skillId) or false
+	return p and p:getVocation():getRequiredSkillTries(skillId, skillLevel) or false
 end
 function getPlayerAccess(cid)
 	local player = Player(cid)
@@ -1296,12 +1296,13 @@ function getItemIdByName(name)
 	if id == 0 then return false end
 	return id
 end
-function getItemWeightByUID(uid, ...)
+function getItemWeightByUID(uid, count)
 	local item = Item(uid)
 	if item == nil then return false end
 
 	local itemType = ItemType(item:getId())
-	return itemType:isStackable() and (itemType:getWeight(item:getCount(), ...) / 100) or (itemType:getWeight(1, ...) / 100)
+	return itemType:isStackable() and (itemType:getWeight(item:getCount()) / 100) or
+		       (itemType:getWeight(1) / 100)
 end
 function getItemRWInfo(uid)
 	local item = Item(uid)
@@ -1324,8 +1325,11 @@ function hasProperty(uid, prop)
 	if item == nil then return false end
 
 	local parent = item:getParent()
-	if parent:isTile() and item == parent:getGround() then
-		return parent:hasProperty(prop)
+	if not parent then return item:hasProperty(prop) end
+
+	local tile = parent:getTile()
+	if tile and item == tile:getGround() then
+		return tile:hasProperty(prop)
 	else
 		return item:hasProperty(prop)
 	end
@@ -1401,7 +1405,7 @@ function getTileInfo(position)
 	ret.protection = t:hasFlag(TILESTATE_PROTECTIONZONE)
 	ret.nopz = ret.protection
 	ret.nologout = t:hasFlag(TILESTATE_NOLOGOUT)
-	ret.refresh = t:hasFlag(TILESTATE_REFRESH)
+	ret.refresh = false --t:hasFlag(TILESTATE_REFRESH)
 	ret.house = t:getHouse() ~= nil
 	ret.bed = t:hasFlag(TILESTATE_BED)
 	ret.depot = t:hasFlag(TILESTATE_DEPOT)

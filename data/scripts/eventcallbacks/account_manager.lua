@@ -115,13 +115,12 @@ local function CreateAccount(account, IP)
 		                          db.escapeString(transformToSHA1(account.password)),
 		                          timeNow))
 	if dbResult then
-		result.free(dbResult)
-		dbResult = db.storeQuery("SELECT `id` FROM `accounts` WHERE `name` = " ..
+		local resultId = db.storeQuery("SELECT `id` FROM `accounts` WHERE `name` = " ..
 			                         db.escapeString(account.accountName) .. " LIMIT 1;")
-		if not dbResult then error("CreateAccount - can't get account id") end
+		if not resultId then error("CreateAccount - can't get account id") end
 
-		local accountId = result.getNumber(dbResult, "id")
-		result.free(dbResult)
+		local accountId = result.getNumber(resultId, "id")
+		result.free(resultId)
 		if not CREATE_ACCOUNT_TABLE[IP] then
 			CREATE_ACCOUNT_TABLE[IP] = timeNow + CREATE_ACCOUNT_EXHAUST
 		end
@@ -179,7 +178,6 @@ local function CreateCharacter(character, IP)
 		                          CHARACTER_DEFAULT.SKILL, CHARACTER_DEFAULT.SKILL,
 		                          CHARACTER_DEFAULT.SKILL))
 	if dbResult then
-		result.free(dbResult)
 		if not CREATE_CHARACTER_TABLE[IP] then
 			CREATE_CHARACTER_TABLE[IP] = timeNow + CREATE_CHARACTER_EXHAUST
 		end

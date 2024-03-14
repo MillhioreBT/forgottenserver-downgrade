@@ -22,7 +22,8 @@ local config = {
 local clayLump = Action()
 
 function clayLump.onUse(player, item, fromPosition, target, toPosition, isHotkey)
-	local random, tmpItem = math.random(0, 10000) * 0.01
+	local random = math.random(0, 10000) * 0.01
+	local tmpItem = nil
 	for i = 1, #config do
 		tmpItem = config[i]
 		if random >= tmpItem.chance[1] and random < tmpItem.chance[2] then

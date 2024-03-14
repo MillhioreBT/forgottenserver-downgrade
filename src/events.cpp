@@ -1215,7 +1215,7 @@ void Events::eventPlayerOnRotateItem(Player* player, Item* item)
 
 bool Events::eventPlayerOnSpellCheck(Player* player, const Spell* spell)
 {
-	// Player:onCanCastSpell(spell)
+	// Player:onSpellCheck(spell)
 	if (info.playerOnSpellCheck == -1) {
 		return true;
 	}
