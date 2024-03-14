@@ -3989,168 +3989,163 @@ GuildEmblems_t Player::getGuildEmblem(const Player* player) const
 	return GUILDEMBLEM_NEUTRAL;
 }
 
-/*
-uint8_t Player::getCurrentMount() const
+uint16_t Player::getRandomMount() const
 {
-    int32_t value;
-    if (getStorageValue(PSTRG_MOUNTS_CURRENTMOUNT, value)) {
-        return value;
-    }
-    return 0;
+	std::vector<uint16_t> mountsId;
+	for (const Mount& mount : g_game.mounts.getMounts()) {
+		if (hasMount(&mount)) {
+			mountsId.push_back(mount.id);
+		}
+	}
+
+	return mountsId[uniform_random(0, mountsId.size() - 1)];
 }
 
-void Player::setCurrentMount(uint8_t mountId)
-{
-    addStorageValue(PSTRG_MOUNTS_CURRENTMOUNT, mountId);
-}
+uint16_t Player::getCurrentMount() const { return currentMount; }
+
+void Player::setCurrentMount(uint16_t mountId) { currentMount = mountId; }
 
 bool Player::toggleMount(bool mount)
 {
-    if ((OTSYS_TIME() - lastToggleMount) < 3000 && !wasMounted) {
-        sendCancelMessage(RETURNVALUE_YOUAREEXHAUSTED);
-        return false;
-    }
+	if ((OTSYS_TIME() - lastToggleMount) < 3000 && !wasMounted) {
+		sendCancelMessage(RETURNVALUE_YOUAREEXHAUSTED);
+		return false;
+	}
 
-    if (mount) {
-        if (isMounted()) {
-            return false;
-        }
+	if (mount) {
+		if (isMounted()) {
+			return false;
+		}
 
-        if (!group->access && tile->hasFlag(TILESTATE_PROTECTIONZONE)) {
-            sendCancelMessage(RETURNVALUE_ACTIONNOTPERMITTEDINPROTECTIONZONE);
-            return false;
-        }
+		if (!group->access && tile->hasFlag(TILESTATE_PROTECTIONZONE)) {
+			sendCancelMessage(RETURNVALUE_ACTIONNOTPERMITTEDINPROTECTIONZONE);
+			return false;
+		}
 
-        const Outfit* playerOutfit = Outfits::getInstance().getOutfitByLookType(defaultOutfit.lookType);
-        if (!playerOutfit) {
-            return false;
-        }
+		const Outfit* playerOutfit = Outfits::getInstance().getOutfitByLookType(defaultOutfit.lookType);
+		if (!playerOutfit) {
+			return false;
+		}
 
-        uint8_t currentMountId = getCurrentMount();
-        if (currentMountId == 0) {
-            sendOutfitWindow();
-            return false;
-        }
+		uint16_t currentMountId = getCurrentMount();
+		if (currentMountId == 0) {
+			sendOutfitWindow();
+			return false;
+		}
 
-        Mount* currentMount = g_game.mounts.getMountByID(currentMountId);
-        if (!currentMount) {
-            return false;
-        }
+		Mount* currentMount = g_game.mounts.getMountByID(currentMountId);
+		if (!currentMount) {
+			return false;
+		}
 
-        if (!hasMount(currentMount)) {
-            setCurrentMount(0);
-            sendOutfitWindow();
-            return false;
-        }
+		if (!hasMount(currentMount)) {
+			setCurrentMount(0);
+			sendOutfitWindow();
+			return false;
+		}
 
-        if (currentMount->premium && !isPremium()) {
-            sendCancelMessage(RETURNVALUE_YOUNEEDPREMIUMACCOUNT);
-            return false;
-        }
+		if (currentMount->premium && !isPremium()) {
+			sendCancelMessage(RETURNVALUE_YOUNEEDPREMIUMACCOUNT);
+			return false;
+		}
 
-        if (hasCondition(CONDITION_OUTFIT)) {
-            sendCancelMessage(RETURNVALUE_NOTPOSSIBLE);
-            return false;
-        }
+		if (hasCondition(CONDITION_OUTFIT)) {
+			sendCancelMessage(RETURNVALUE_NOTPOSSIBLE);
+			return false;
+		}
 
-        defaultOutfit.lookMount = currentMount->clientId;
+		defaultOutfit.lookMount = currentMount->clientId;
 
-        if (currentMount->speed != 0) {
-            g_game.changeSpeed(this, currentMount->speed);
-        }
-    } else {
-        if (!isMounted()) {
-            return false;
-        }
+		if (currentMount->speed != 0) {
+			g_game.changeSpeed(this, currentMount->speed);
+		}
+	} else {
+		if (!isMounted()) {
+			return false;
+		}
 
-        dismount();
-    }
+		dismount();
+	}
 
-    g_game.internalCreatureChangeOutfit(this, defaultOutfit);
-    lastToggleMount = OTSYS_TIME();
-    return true;
+	g_game.internalCreatureChangeOutfit(this, defaultOutfit);
+	lastToggleMount = OTSYS_TIME();
+	return true;
 }
 
-bool Player::tameMount(uint8_t mountId)
+bool Player::tameMount(uint16_t mountId)
 {
-    if (!g_game.mounts.getMountByID(mountId)) {
-        return false;
-    }
+	if (!g_game.mounts.getMountByID(mountId)) {
+		return false;
+	}
 
-    const uint8_t tmpMountId = mountId - 1;
-    const uint32_t key = PSTRG_MOUNTS_RANGE_START + (tmpMountId / 31);
+	Mount* mount = g_game.mounts.getMountByID(mountId);
+	if (hasMount(mount)) {
+		return false;
+	}
 
-    int32_t value;
-    if (getStorageValue(key, value)) {
-        value |= (1 << (tmpMountId % 31));
-    } else {
-        value = (1 << (tmpMountId % 31));
-    }
-
-    addStorageValue(key, value);
-    return true;
+	mounts.insert(mountId);
+	return true;
 }
 
-bool Player::untameMount(uint8_t mountId)
+bool Player::untameMount(uint16_t mountId)
 {
-    if (!g_game.mounts.getMountByID(mountId)) {
-        return false;
-    }
+	if (!g_game.mounts.getMountByID(mountId)) {
+		return false;
+	}
 
-    const uint8_t tmpMountId = mountId - 1;
-    const uint32_t key = PSTRG_MOUNTS_RANGE_START + (tmpMountId / 31);
+	Mount* mount = g_game.mounts.getMountByID(mountId);
+	if (!hasMount(mount)) {
+		return false;
+	}
 
-    int32_t value;
-    if (!getStorageValue(key, value)) {
-        return true;
-    }
+	mounts.erase(mountId);
 
-    value &= ~(1 << (tmpMountId % 31));
-    addStorageValue(key, value);
+	if (getCurrentMount() == mountId) {
+		if (isMounted()) {
+			dismount();
+			g_game.internalCreatureChangeOutfit(this, defaultOutfit);
+		}
 
-    if (getCurrentMount() == mountId) {
-        if (isMounted()) {
-            dismount();
-            g_game.internalCreatureChangeOutfit(this, defaultOutfit);
-        }
+		setCurrentMount(0);
+	}
 
-        setCurrentMount(0);
-    }
-
-    return true;
+	return true;
 }
 
 bool Player::hasMount(const Mount* mount) const
 {
-    if (isAccessPlayer()) {
-        return true;
-    }
+	if (isAccessPlayer()) {
+		return true;
+	}
 
-    if (mount->premium && !isPremium()) {
-        return false;
-    }
+	if (mount->premium && !isPremium()) {
+		return false;
+	}
 
-    const uint8_t tmpMountId = mount->id - 1;
+	return mounts.find(mount->id) != mounts.end();
+}
 
-    int32_t value;
-    if (!getStorageValue(PSTRG_MOUNTS_RANGE_START + (tmpMountId / 31), value)) {
-        return false;
-    }
-
-    return ((1 << (tmpMountId % 31)) & value) != 0;
+bool Player::hasMounts() const
+{
+	for (const Mount& mount : g_game.mounts.getMounts()) {
+		if (hasMount(&mount)) {
+			return true;
+		}
+	}
+	return false;
 }
 
 void Player::dismount()
 {
-    Mount* mount = g_game.mounts.getMountByID(getCurrentMount());
-    if (mount && mount->speed > 0) {
-        g_game.changeSpeed(this, -mount->speed);
-    }
+	Mount* mount = g_game.mounts.getMountByID(getCurrentMount());
+	if (mount && mount->speed > 0) {
+		g_game.changeSpeed(this, -mount->speed);
+	}
 
-    defaultOutfit.lookMount = 0;
+	defaultOutfit.lookMount = 0;
 }
 
-bool Player::addOfflineTrainingTries(skills_t skill, uint64_t tries)
+/*bool Player::addOfflineTrainingTries(skills_t skill, uint64_t tries)
 {
     if (tries == 0 || skill == SKILL_LEVEL) {
         return false;
@@ -4277,33 +4272,26 @@ skills[skill].level));
 towards level {:d}) to level {:d} (with {:.2f}% progress towards level {:d})", ucwords(getSkillName(skill)),
 oldSkillValue, oldPercentToNextLevel, (oldSkillValue + 1), newSkillValue, newPercentToNextLevel, (newSkillValue + 1)));
     return sendUpdate;
-}
+}*/
 
 bool Player::hasModalWindowOpen(uint32_t modalWindowId) const
 {
-    return find(modalWindows.begin(), modalWindows.end(), modalWindowId) != modalWindows.end();
+	return find(modalWindows.begin(), modalWindows.end(), modalWindowId) != modalWindows.end();
 }
 
-void Player::onModalWindowHandled(uint32_t modalWindowId)
-{
-    modalWindows.remove(modalWindowId);
-}
+void Player::onModalWindowHandled(uint32_t modalWindowId) { modalWindows.remove(modalWindowId); }
 
 void Player::sendModalWindow(const ModalWindow& modalWindow)
 {
-    if (!client) {
-        return;
-    }
+	if (!client) {
+		return;
+	}
 
-    modalWindows.push_front(modalWindow.id);
-    client->sendModalWindow(modalWindow);
+	modalWindows.push_front(modalWindow.id);
+	client->sendModalWindow(modalWindow);
 }
 
-void Player::clearModalWindows()
-{
-    modalWindows.clear();
-}
-*/
+void Player::clearModalWindows() { modalWindows.clear(); }
 
 void Player::sendClosePrivate(uint16_t channelId)
 {

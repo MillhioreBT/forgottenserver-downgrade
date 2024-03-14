@@ -117,6 +117,17 @@ public:
 
 	CreatureType_t getType() const override { return CREATURETYPE_PLAYER; }
 
+	uint16_t getRandomMount() const;
+	uint16_t getCurrentMount() const;
+	void setCurrentMount(uint16_t mountId);
+	bool isMounted() const { return defaultOutfit.lookMount != 0; }
+	bool toggleMount(bool mount);
+	bool tameMount(uint16_t mountId);
+	bool untameMount(uint16_t mountId);
+	bool hasMount(const Mount* mount) const;
+	bool hasMounts() const;
+	void dismount();
+
 	void sendFYIBox(std::string_view message)
 	{
 		if (client) {
@@ -265,6 +276,10 @@ public:
 	const Position& getTemplePosition() const { return town->getTemplePosition(); }
 	Town* getTown() const { return town; }
 	void setTown(Town* town) { this->town = town; }
+
+	void clearModalWindows();
+	bool hasModalWindowOpen(uint32_t modalWindowId) const;
+	void onModalWindowHandled(uint32_t modalWindowId);
 
 	bool isPushable() const override;
 	uint32_t isMuted() const;
@@ -637,6 +652,8 @@ public:
 		}
 	}
 
+	void sendModalWindow(const ModalWindow& modalWindow);
+
 	// container
 	void sendAddContainerItem(const Container* container, const Item* item);
 	void sendUpdateContainerItem(const Container* container, uint16_t slot, const Item* newItem);
@@ -936,6 +953,10 @@ public:
 	bool getSecureMode() const { return secureMode; }
 	auto getFightMode() const { return fightMode; }
 
+	bool hasDebugAssertSent() const { return client ? client->debugAssertSent : false; }
+
+	bool isOTCv8() const { return client ? client->isOTCv8 : false; }
+
 	static uint32_t playerAutoID;
 
 private:
@@ -990,11 +1011,13 @@ private:
 	std::map<uint32_t, DepotChest*> depotChests;
 
 	std::unordered_map<uint16_t, uint8_t> outfits;
+	std::unordered_set<uint16_t> mounts;
 	GuildWarVector guildWarVector;
 
 	std::list<ShopInfo> shopItemList;
 
 	std::forward_list<Party*> invitePartyList;
+	std::forward_list<uint32_t> modalWindows;
 	std::forward_list<std::string> learnedInstantSpellList;
 	std::forward_list<Condition*>
 	    storedConditionList; // TODO: This variable is only temporarily used when logging in, get rid of it somehow
@@ -1018,6 +1041,7 @@ private:
 	int64_t lastFailedFollow = 0;
 	int64_t skullTicks = 0;
 	int64_t lastWalkthroughAttempt = 0;
+	int64_t lastToggleMount = 0;
 	int64_t lastPing;
 	int64_t lastPong;
 	int64_t nextAction = 0;
@@ -1085,9 +1109,11 @@ private:
 	bool chaseMode = false;
 	bool secureMode = false;
 	bool ghostMode = false;
+	bool wasMounted = false;
 	bool pzLocked = false;
 	bool isConnecting = false;
 	bool addAttackSkillPoint = false;
+	bool randomizeMount = false;
 	bool inventoryAbilities[CONST_SLOT_LAST + 1] = {};
 
 	void updateItemsLight(bool internal = false);

@@ -7,6 +7,7 @@
 
 #include "combat.h"
 #include "configmanager.h"
+#include "events.h"
 #include "game.h"
 #include "luavariant.h"
 #include "monster.h"
@@ -14,6 +15,7 @@
 
 extern Game g_game;
 extern Spells* g_spells;
+extern Events* g_events;
 extern Monsters g_monsters;
 extern ConfigManager g_config;
 extern LuaEnvironment g_luaEnvironment;
@@ -478,6 +480,10 @@ bool Spell::playerSpellCheck(Player* player) const
 	}
 
 	if (!enabled) {
+		return false;
+	}
+
+	if (!g_events->eventPlayerOnSpellCheck(player, this)) {
 		return false;
 	}
 

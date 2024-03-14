@@ -10,7 +10,8 @@
         "fmt",
         "libmariadb",
         "lua",
-        "pugixml"
+        "pugixml",
+        "sol2"
     ],
     "features": {
         "luajit": {

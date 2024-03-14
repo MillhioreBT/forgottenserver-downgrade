@@ -140,7 +140,8 @@ bool CreatureEvents::playerAdvance(Player* player, skills_t skill, uint32_t oldL
 
 /////////////////////////////////////
 
-CreatureEvent::CreatureEvent(LuaScriptInterface* interface) : Event(interface), type(CREATURE_EVENT_NONE), loaded(false) {}
+CreatureEvent::CreatureEvent(LuaScriptInterface* interface) : Event(interface), type(CREATURE_EVENT_NONE), loaded(false)
+{}
 
 bool CreatureEvent::configureEvent(const pugi::xml_node& node)
 {
@@ -176,6 +177,8 @@ bool CreatureEvent::configureEvent(const pugi::xml_node& node)
 		type = CREATURE_EVENT_KILL;
 	} else if (tmpStr == "advance") {
 		type = CREATURE_EVENT_ADVANCE;
+	} else if (tmpStr == "modalwindow") {
+		type = CREATURE_EVENT_MODALWINDOW;
 	} else if (tmpStr == "textedit") {
 		type = CREATURE_EVENT_TEXTEDIT;
 	} else if (tmpStr == "healthchange") {
@@ -218,6 +221,9 @@ std::string_view CreatureEvent::getScriptEventName() const
 
 		case CREATURE_EVENT_ADVANCE:
 			return "onAdvance";
+
+		case CREATURE_EVENT_MODALWINDOW:
+			return "onModalWindow";
 
 		case CREATURE_EVENT_TEXTEDIT:
 			return "onTextEdit";
@@ -422,6 +428,30 @@ void CreatureEvent::executeOnKill(Creature* creature, Creature* target)
 	Lua::pushUserdata<Creature>(L, target);
 	Lua::setCreatureMetatable(L, -1, target);
 	scriptInterface->callVoidFunction(2);
+}
+
+void CreatureEvent::executeModalWindow(Player* player, uint32_t modalWindowId, uint8_t buttonId, uint8_t choiceId)
+{
+	// onModalWindow(player, modalWindowId, buttonId, choiceId)
+	if (!scriptInterface->reserveScriptEnv()) {
+		std::cout << "[Error - CreatureEvent::executeModalWindow] Call stack overflow" << std::endl;
+		return;
+	}
+
+	ScriptEnvironment* env = scriptInterface->getScriptEnv();
+	env->setScriptId(scriptId, scriptInterface);
+
+	lua_State* L = scriptInterface->getLuaState();
+	scriptInterface->pushFunction(scriptId);
+
+	Lua::pushUserdata(L, player);
+	Lua::setMetatable(L, -1, "Player");
+
+	lua_pushinteger(L, modalWindowId);
+	lua_pushinteger(L, buttonId);
+	lua_pushinteger(L, choiceId);
+
+	scriptInterface->callVoidFunction(4);
 }
 
 bool CreatureEvent::executeTextEdit(Player* player, Item* item, std::string_view text, const uint32_t windowTextId)

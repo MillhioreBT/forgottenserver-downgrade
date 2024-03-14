@@ -31,10 +31,9 @@ int luaContainerCreate(lua_State* L)
 int luaContainerGetSize(lua_State* L)
 {
 	// container:getSize([recursive = false])
-	Container* container = getUserdata<Container>(L, 1);
+	const Container* container = getUserdata<const Container>(L, 1);
 	if (container) {
-		const bool recursive = getBoolean(L, 2, false);
-		lua_pushinteger(L, container->size(recursive));
+		lua_pushinteger(L, container->size(getBoolean(L, 2, false)));
 	} else {
 		lua_pushnil(L);
 	}
@@ -44,7 +43,7 @@ int luaContainerGetSize(lua_State* L)
 int luaContainerGetCapacity(lua_State* L)
 {
 	// container:getCapacity()
-	Container* container = getUserdata<Container>(L, 1);
+	const Container* container = getUserdata<const Container>(L, 1);
 	if (container) {
 		lua_pushinteger(L, container->capacity());
 	} else {
@@ -56,21 +55,21 @@ int luaContainerGetCapacity(lua_State* L)
 int luaContainerGetEmptySlots(lua_State* L)
 {
 	// container:getEmptySlots([recursive = false])
-	Container* container = getUserdata<Container>(L, 1);
+	const Container* container = getUserdata<const Container>(L, 1);
 	if (!container) {
 		lua_pushnil(L);
 		return 1;
 	}
 
 	uint32_t slots = container->capacity() - container->size();
-	bool recursive = getBoolean(L, 2, false);
-	if (recursive) {
+	if (getBoolean(L, 2, false)) {
 		for (ContainerIterator it = container->iterator(); it.hasNext(); it.advance()) {
 			if (Container* tmpContainer = (*it)->getContainer()) {
 				slots += tmpContainer->capacity() - tmpContainer->size();
 			}
 		}
 	}
+
 	lua_pushinteger(L, slots);
 	return 1;
 }
@@ -78,7 +77,7 @@ int luaContainerGetEmptySlots(lua_State* L)
 int luaContainerGetItemHoldingCount(lua_State* L)
 {
 	// container:getItemHoldingCount()
-	Container* container = getUserdata<Container>(L, 1);
+	const Container* container = getUserdata<const Container>(L, 1);
 	if (container) {
 		lua_pushinteger(L, container->getItemHoldingCount());
 	} else {
@@ -90,7 +89,7 @@ int luaContainerGetItemHoldingCount(lua_State* L)
 int luaContainerGetItem(lua_State* L)
 {
 	// container:getItem(index)
-	Container* container = getUserdata<Container>(L, 1);
+	const Container* container = getUserdata<const Container>(L, 1);
 	if (!container) {
 		lua_pushnil(L);
 		return 1;
@@ -110,10 +109,13 @@ int luaContainerGetItem(lua_State* L)
 int luaContainerHasItem(lua_State* L)
 {
 	// container:hasItem(item)
-	Item* item = getUserdata<Item>(L, 2);
-	Container* container = getUserdata<Container>(L, 1);
+	const Container* container = getUserdata<const Container>(L, 1);
 	if (container) {
-		pushBoolean(L, container->isHoldingItem(item));
+		if (const Item* item = getUserdata<const Item>(L, 2)) {
+			pushBoolean(L, container->isHoldingItem(item));
+		} else {
+			lua_pushnil(L);
+		}
 	} else {
 		lua_pushnil(L);
 	}
@@ -200,7 +202,7 @@ int luaContainerAddItemEx(lua_State* L)
 int luaContainerGetCorpseOwner(lua_State* L)
 {
 	// container:getCorpseOwner()
-	Container* container = getUserdata<Container>(L, 1);
+	const Container* container = getUserdata<const Container>(L, 1);
 	if (container) {
 		lua_pushinteger(L, container->getCorpseOwner());
 	} else {
@@ -212,7 +214,7 @@ int luaContainerGetCorpseOwner(lua_State* L)
 int luaContainerGetItemCountById(lua_State* L)
 {
 	// container:getItemCountById(itemId[, subType = -1])
-	Container* container = getUserdata<Container>(L, 1);
+	const Container* container = getUserdata<const Container>(L, 1);
 	if (!container) {
 		lua_pushnil(L);
 		return 1;
@@ -237,14 +239,14 @@ int luaContainerGetItemCountById(lua_State* L)
 int luaContainerGetItems(lua_State* L)
 {
 	// container:getItems([recursive = false])
-	Container* container = getUserdata<Container>(L, 1);
+	const Container* container = getUserdata<const Container>(L, 1);
 	if (!container) {
 		lua_pushnil(L);
 		return 1;
 	}
 
 	bool recursive = getBoolean(L, 2, false);
-	std::vector<Item*> items = container->getItems(recursive);
+	const std::vector<Item*> items = container->getItems(recursive);
 
 	lua_createtable(L, items.size(), 0);
 

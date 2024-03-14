@@ -13,6 +13,7 @@
 #include "talkaction.h"
 
 extern Events* g_events;
+extern Vocations g_vocations;
 extern ConfigManager g_config;
 extern Game g_game;
 extern Monsters g_monsters;
@@ -209,6 +210,63 @@ int luaGameGetHouses(lua_State* L)
 		setMetatable(L, -1, "House");
 		lua_rawseti(L, -2, ++index);
 	}
+	return 1;
+}
+
+int luaGameGetOutfits(lua_State* L)
+{
+	// Game.getOutfits(playerSex)
+	if (!isInteger(L, 1)) {
+		lua_pushnil(L);
+		return 1;
+	}
+
+	PlayerSex_t playerSex = getInteger<PlayerSex_t>(L, 1);
+	if (playerSex > PLAYERSEX_LAST) {
+		lua_pushnil(L);
+		return 1;
+	}
+
+	const auto& outfits = Outfits::getInstance().getOutfits(playerSex);
+	lua_createtable(L, outfits.size(), 0);
+
+	int index = 0;
+	for (auto outfit : outfits) {
+		pushOutfit(L, outfit);
+		lua_rawseti(L, -2, ++index);
+	}
+
+	return 1;
+}
+
+int luaGameGetMounts(lua_State* L)
+{
+	// Game.getMounts()
+	const auto& mounts = g_game.mounts.getMounts();
+	lua_createtable(L, mounts.size(), 0);
+
+	int index = 0;
+	for (const auto& mount : mounts) {
+		pushMount(L, &mount);
+		lua_rawseti(L, -2, ++index);
+	}
+
+	return 1;
+}
+
+int luaGameGetVocations(lua_State* L)
+{
+	// Game.getVocations()
+	const auto& vocations = g_vocations.getVocations();
+	lua_createtable(L, vocations.size(), 0);
+
+	int index = 0;
+	for (const auto& [id, vocation] : vocations) {
+		pushUserdata<const Vocation>(L, &vocation);
+		setMetatable(L, -1, "Vocation");
+		lua_rawseti(L, -2, ++index);
+	}
+
 	return 1;
 }
 
@@ -616,6 +674,8 @@ void LuaScriptInterface::registerGame()
 
 	registerMethod("Game", "getTowns", luaGameGetTowns);
 	registerMethod("Game", "getHouses", luaGameGetHouses);
+	registerMethod("Game", "getOutfits", luaGameGetOutfits);
+	registerMethod("Game", "getMounts", luaGameGetMounts);
 
 	registerMethod("Game", "getGameState", luaGameGetGameState);
 	registerMethod("Game", "setGameState", luaGameSetGameState);

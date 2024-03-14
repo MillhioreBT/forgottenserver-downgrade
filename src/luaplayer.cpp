@@ -7,6 +7,7 @@
 #include "game.h"
 #include "iologindata.h"
 #include "luascript.h"
+#include "mounts.h"
 #include "player.h"
 #include "spells.h"
 #include "vocation.h"
@@ -1508,6 +1509,94 @@ int luaPlayerSendOutfitWindow(lua_State* L)
 	return 1;
 }
 
+int luaPlayerAddMount(lua_State* L)
+{
+	// player:addMount(mountId or mountName)
+	Player* player = getUserdata<Player>(L, 1);
+	if (!player) {
+		lua_pushnil(L);
+		return 1;
+	}
+
+	uint16_t mountId;
+	if (isInteger(L, 2)) {
+		mountId = getInteger<uint16_t>(L, 2);
+	} else {
+		Mount* mount = g_game.mounts.getMountByName(getString(L, 2));
+		if (!mount) {
+			lua_pushnil(L);
+			return 1;
+		}
+		mountId = mount->id;
+	}
+
+	pushBoolean(L, player->tameMount(mountId));
+	return 1;
+}
+
+int luaPlayerRemoveMount(lua_State* L)
+{
+	// player:removeMount(mountId or mountName)
+	Player* player = getUserdata<Player>(L, 1);
+	if (!player) {
+		lua_pushnil(L);
+		return 1;
+	}
+
+	uint16_t mountId;
+	if (isInteger(L, 2)) {
+		mountId = getInteger<uint16_t>(L, 2);
+	} else {
+		Mount* mount = g_game.mounts.getMountByName(getString(L, 2));
+		if (!mount) {
+			lua_pushnil(L);
+			return 1;
+		}
+		mountId = mount->id;
+	}
+
+	pushBoolean(L, player->untameMount(mountId));
+	return 1;
+}
+
+int luaPlayerHasMount(lua_State* L)
+{
+	// player:hasMount(mountId or mountName)
+	const Player* player = getUserdata<const Player>(L, 1);
+	if (!player) {
+		lua_pushnil(L);
+		return 1;
+	}
+
+	Mount* mount = nullptr;
+	if (isInteger(L, 2)) {
+		mount = g_game.mounts.getMountByID(getInteger<uint16_t>(L, 2));
+	} else {
+		mount = g_game.mounts.getMountByName(getString(L, 2));
+	}
+
+	if (mount) {
+		pushBoolean(L, player->hasMount(mount));
+	} else {
+		lua_pushnil(L);
+	}
+	return 1;
+}
+
+int luaPlayerToggleMount(lua_State* L)
+{
+	// player:toggleMount(mount)
+	Player* player = getUserdata<Player>(L, 1);
+	if (!player) {
+		lua_pushnil(L);
+		return 1;
+	}
+
+	bool mount = getBoolean(L, 2);
+	pushBoolean(L, player->toggleMount(mount));
+	return 1;
+}
+
 int luaPlayerGetPremiumEndsAt(lua_State* L)
 {
 	// player:getPremiumEndsAt()
@@ -2070,6 +2159,19 @@ int luaPlayerCloseContainer(lua_State* L)
 	return 1;
 }
 
+int luaPlayerHasDebugAssertSent(lua_State* L)
+{
+	// player:hasDebugAssertSent()
+	Player* player = getUserdata<Player>(L, 1);
+	if (!player) {
+		lua_pushnil(L);
+		return 1;
+	}
+
+	pushBoolean(L, player->hasDebugAssertSent());
+	return 1;
+}
+
 // OfflinePlayer
 int luaOfflinePlayerCreate(lua_State* L)
 {
@@ -2230,6 +2332,11 @@ void LuaScriptInterface::registerPlayer()
 	registerMethod("Player", "canWearOutfit", luaPlayerCanWearOutfit);
 	registerMethod("Player", "sendOutfitWindow", luaPlayerSendOutfitWindow);
 
+	registerMethod("Player", "addMount", luaPlayerAddMount);
+	registerMethod("Player", "removeMount", luaPlayerRemoveMount);
+	registerMethod("Player", "hasMount", luaPlayerHasMount);
+	registerMethod("Player", "toggleMount", luaPlayerToggleMount);
+
 	registerMethod("Player", "getPremiumEndsAt", luaPlayerGetPremiumEndsAt);
 	registerMethod("Player", "setPremiumEndsAt", luaPlayerSetPremiumEndsAt);
 
@@ -2274,6 +2381,8 @@ void LuaScriptInterface::registerPlayer()
 
 	registerMethod("Player", "openContainer", luaPlayerOpenContainer);
 	registerMethod("Player", "closeContainer", luaPlayerCloseContainer);
+
+	registerMethod("Player", "hasDebugAssertSent", luaPlayerHasDebugAssertSent);
 
 	// OfflinePlayer
 	registerClass("OfflinePlayer", "Player", luaOfflinePlayerCreate);

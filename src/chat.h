@@ -37,7 +37,7 @@ public:
 
 	bool isPublicChannel() const { return publicChannel; }
 
-	bool executeOnJoinEvent(const Player& player);
+	void executeOnJoinEvent(const Player& player);
 	bool executeCanJoinEvent(const Player& player);
 	bool executeOnLeaveEvent(const Player& player);
 	bool executeOnSpeakEvent(const Player& player, SpeakClasses& type, std::string_view message);

@@ -10,6 +10,7 @@
 #include "groups.h"
 #include "item.h"
 #include "map.h"
+#include "mounts.h"
 #include "npc.h"
 #include "player.h"
 #include "position.h"
@@ -302,10 +303,10 @@ public:
 	void sendGuildMotd(uint32_t playerId);
 	void kickPlayer(uint32_t playerId, bool displayEffect);
 	void playerReportBug(uint32_t playerId, std::string_view message);
-	void playerDebugAssert(uint32_t playerId, std::string_view assertLine, std::string_view date,
-	                       std::string_view description, std::string_view comment);
 	void playerReportRuleViolation(uint32_t playerId, std::string_view targetName, uint8_t reportType,
 	                               uint8_t reportReason, std::string_view comment, std::string_view translation);
+
+	void playerAnswerModalWindow(uint32_t playerId, uint32_t modalWindowId, uint8_t button, uint8_t choice);
 
 	bool internalStartTrade(Player* player, Player* tradePartner, Item* tradeItem);
 	void internalCloseTrade(Player* player, bool sendCancel = true);
@@ -370,7 +371,7 @@ public:
 	void playerRequestOutfit(uint32_t playerId);
 	void playerSay(uint32_t playerId, uint16_t channelId, SpeakClasses type, std::string_view receiver,
 	               std::string_view text);
-	void playerChangeOutfit(uint32_t playerId, Outfit_t outfit);
+	void playerChangeOutfit(uint32_t playerId, Outfit_t outfit, bool randomizeMount = false);
 	void playerInviteToParty(uint32_t playerId, uint32_t invitedId);
 	void playerJoinParty(uint32_t playerId, uint32_t leaderId);
 	void playerRevokePartyInvitation(uint32_t playerId, uint32_t invitedId);
@@ -477,6 +478,7 @@ public:
 	Groups groups;
 	Map map;
 	Raids raids;
+	Mounts mounts;
 
 	std::forward_list<Item*> toDecayItems;
 

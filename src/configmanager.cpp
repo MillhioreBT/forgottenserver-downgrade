@@ -100,8 +100,7 @@ ExperienceStages loadLuaStages(lua_State* L)
 	while (lua_next(L, -2) != 0) {
 		const auto tableIndex = lua_gettop(L);
 		auto minLevel = Lua::getField<uint32_t>(L, tableIndex, "minlevel", 1);
-		auto maxLevel =
-		    Lua::getField<uint32_t>(L, tableIndex, "maxlevel", std::numeric_limits<uint32_t>::max());
+		auto maxLevel = Lua::getField<uint32_t>(L, tableIndex, "maxlevel", std::numeric_limits<uint32_t>::max());
 		auto multiplier = Lua::getField<float>(L, tableIndex, "multiplier", 1);
 		stages.emplace_back(minLevel, maxLevel, multiplier);
 		lua_pop(L, 4);
@@ -291,6 +290,20 @@ bool ConfigManager::load()
 	integers[ConfigKeysInteger::HEALTH_GAIN_COLOUR] = getGlobalInteger(L, "healthGainColour", TEXTCOLOR_MAYABLUE);
 	integers[ConfigKeysInteger::MANA_GAIN_COLOUR] = getGlobalInteger(L, "manaGainColour", TEXTCOLOR_BLUE);
 	integers[ConfigKeysInteger::MANA_LOSS_COLOUR] = getGlobalInteger(L, "manaLossColour", TEXTCOLOR_BLUE);
+	integers[ConfigKeysInteger::MAX_PROTOCOL_OUTFITS] = getGlobalInteger(L, "maxProtocolOutfits", 50);
+	integers[ConfigKeysInteger::MOVE_CREATURE_INTERVAL] = getGlobalInteger(L, "MOVE_CREATURE_INTERVAL", MOVE_CREATURE_INTERVAL);
+	integers[ConfigKeysInteger::RANGE_MOVE_CREATURE_INTERVAL] =
+	    getGlobalInteger(L, "RANGE_MOVE_CREATURE_INTERVAL", RANGE_MOVE_CREATURE_INTERVAL);
+	integers[ConfigKeysInteger::RANGE_USE_WITH_CREATURE_INTERVAL] =
+	    getGlobalInteger(L, "RANGE_USE_WITH_CREATURE_INTERVAL", RANGE_USE_WITH_CREATURE_INTERVAL);
+	integers[ConfigKeysInteger::RANGE_MOVE_ITEM_INTERVAL] =
+	    getGlobalInteger(L, "RANGE_MOVE_ITEM_INTERVAL", RANGE_MOVE_ITEM_INTERVAL);
+	integers[ConfigKeysInteger::RANGE_USE_ITEM_INTERVAL] =
+	    getGlobalInteger(L, "RANGE_USE_ITEM_INTERVAL", RANGE_USE_ITEM_INTERVAL);
+	integers[ConfigKeysInteger::RANGE_USE_ITEM_EX_INTERVAL] =
+	    getGlobalInteger(L, "RANGE_USE_ITEM_EX_INTERVAL", RANGE_USE_ITEM_EX_INTERVAL);
+	integers[ConfigKeysInteger::RANGE_ROTATE_ITEM_INTERVAL] =
+	    getGlobalInteger(L, "RANGE_ROTATE_ITEM_INTERVAL", RANGE_ROTATE_ITEM_INTERVAL);
 
 	expStages = loadXMLStages();
 	if (expStages.empty()) {

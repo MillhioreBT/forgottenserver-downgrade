@@ -15,7 +15,7 @@ std::string_view NetworkMessage::getString(uint16_t stringLen /* = 0*/)
 	}
 
 	if (!canRead(stringLen)) {
-		return std::string();
+		return "";
 	}
 
 	auto it = buffer.data() + info.position;
@@ -80,12 +80,22 @@ void NetworkMessage::addPosition(const Position& pos)
 	addByte(pos.z);
 }
 
-void NetworkMessage::addItem(uint16_t id, uint8_t count)
+void NetworkMessage::addItemId(uint16_t itemId, bool isOTCv8)
 {
+	const ItemType& it = Item::items[itemId];
+	uint16_t clientId = it.clientId;
+	if (isOTCv8 && itemId > 12660) {
+		clientId = it.stackable ? 3031 : 105;
+	}
+
+	add<uint16_t>(clientId);
+}
+
+void NetworkMessage::addItem(uint16_t id, uint8_t count, bool isOTCv8)
+{
+	addItemId(id, isOTCv8);
+
 	const ItemType& it = Item::items[id];
-
-	add<uint16_t>(it.clientId);
-
 	if (it.stackable) {
 		addByte(count);
 	} else if (it.isSplash() || it.isFluidContainer()) {
@@ -93,17 +103,14 @@ void NetworkMessage::addItem(uint16_t id, uint8_t count)
 	}
 }
 
-void NetworkMessage::addItem(const Item* item)
+void NetworkMessage::addItem(const Item* item, bool isOTCv8)
 {
+	addItemId(item->getID(), isOTCv8);
+
 	const ItemType& it = Item::items[item->getID()];
-
-	add<uint16_t>(it.clientId);
-
 	if (it.stackable) {
 		addByte(static_cast<uint8_t>(std::min<uint16_t>(0xFF, item->getItemCount())));
 	} else if (it.isSplash() || it.isFluidContainer()) {
 		addByte(fluidMap[item->getFluidType() & 7]);
 	}
 }
-
-void NetworkMessage::addItemId(uint16_t itemId) { add<uint16_t>(Item::items[itemId].clientId); }

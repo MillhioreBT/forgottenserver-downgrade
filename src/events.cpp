@@ -114,6 +114,8 @@ bool Events::load()
 				info.playerOnAccountManager = event;
 			} else if (methodName == "onRotateItem") {
 				info.playerOnRotateItem = event;
+			} else if (methodName == "onSpellCheck") {
+				info.playerOnSpellCheck = event;
 			} else {
 				std::cout << "[Warning - Events::load] Unknown player method: " << methodName << std::endl;
 			}
@@ -1209,6 +1211,32 @@ void Events::eventPlayerOnRotateItem(Player* player, Item* item)
 	Lua::setItemMetatable(L, -1, item);
 
 	scriptInterface.callVoidFunction(2);
+}
+
+bool Events::eventPlayerOnSpellCheck(Player* player, const Spell* spell)
+{
+	// Player:onCanCastSpell(spell)
+	if (info.playerOnSpellCheck == -1) {
+		return true;
+	}
+
+	if (!scriptInterface.reserveScriptEnv()) {
+		std::cout << "[Error - Events::eventPlayerOnSpellCheck] Call stack overflow" << std::endl;
+		return false;
+	}
+
+	ScriptEnvironment* env = scriptInterface.getScriptEnv();
+	env->setScriptId(info.playerOnSpellCheck, &scriptInterface);
+
+	lua_State* L = scriptInterface.getLuaState();
+	scriptInterface.pushFunction(info.playerOnSpellCheck);
+
+	Lua::pushUserdata<Player>(L, player);
+	Lua::setMetatable(L, -1, "Player");
+
+	Lua::pushSpell(L, *spell);
+
+	return scriptInterface.callFunction(2);
 }
 
 void Events::eventMonsterOnDropLoot(Monster* monster, Container* corpse)

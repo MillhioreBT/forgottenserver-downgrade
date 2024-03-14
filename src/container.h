@@ -60,7 +60,7 @@ public:
 	ContainerIterator iterator() const;
 
 	const ItemDeque& getItemList() const { return itemlist; }
-	ItemVector getItems(bool recursive = false);
+	ItemVector getItems(bool recursive = false) const;
 
 	ItemDeque::const_reverse_iterator getReversedItems() const { return itemlist.rbegin(); }
 	ItemDeque::const_reverse_iterator getReversedEnd() const { return itemlist.rend(); }

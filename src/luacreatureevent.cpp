@@ -52,6 +52,8 @@ int luaCreatureEventType(lua_State* L)
 			creature->setEventType(CREATURE_EVENT_KILL);
 		} else if (tmpStr == "advance") {
 			creature->setEventType(CREATURE_EVENT_ADVANCE);
+		} else if (tmpStr == "modalwindow") {
+			creature->setEventType(CREATURE_EVENT_MODALWINDOW);
 		} else if (tmpStr == "textedit") {
 			creature->setEventType(CREATURE_EVENT_TEXTEDIT);
 		} else if (tmpStr == "healthchange") {
@@ -122,6 +124,7 @@ void LuaScriptInterface::registerCreatureEvents()
 	registerMethod("CreatureEvent", "onDeath", luaCreatureEventOnCallback);
 	registerMethod("CreatureEvent", "onKill", luaCreatureEventOnCallback);
 	registerMethod("CreatureEvent", "onAdvance", luaCreatureEventOnCallback);
+	registerMethod("CreatureEvent", "onModalWindow", luaCreatureEventOnCallback);
 	registerMethod("CreatureEvent", "onTextEdit", luaCreatureEventOnCallback);
 	registerMethod("CreatureEvent", "onHealthChange", luaCreatureEventOnCallback);
 	registerMethod("CreatureEvent", "onManaChange", luaCreatureEventOnCallback);

@@ -25,6 +25,7 @@ class Combat;
 class Container;
 class Creature;
 class Cylinder;
+class Spell;
 class InstantSpell;
 class Item;
 class LuaScriptInterface;
@@ -33,6 +34,7 @@ class Npc;
 class Player;
 class Thing;
 struct LootBlock;
+struct Mount;
 struct Outfit;
 
 using Combat_ptr = std::shared_ptr<Combat>;
@@ -85,6 +87,7 @@ public:
 
 	int32_t getScriptId() const { return scriptId; }
 	LuaScriptInterface* getScriptInterface() { return interface; }
+	void setScriptInterface(LuaScriptInterface* scriptInterface) { interface = scriptInterface; }
 
 	void setTimerEvent() { timerEvent = true; }
 
@@ -229,6 +232,7 @@ protected:
 	void registerTeleport();
 	void registerCreature();
 	void registerPlayer();
+	void registerModalWindow();
 	void registerMonster();
 	void registerNpc();
 	void registerGuild();
@@ -593,6 +597,11 @@ std::string getFieldString(lua_State* L, int32_t arg, std::string_view key);
 LuaDataType getUserdataType(lua_State* L, int32_t arg);
 std::optional<uint8_t> getBlessingId(lua_State* L, int32_t arg);
 
+inline bool getAssociatedValue(lua_State* L, int32_t arg, int32_t index)
+{
+	return lua_getiuservalue(L, arg, index) != LUA_TNONE;
+}
+
 // Is
 bool isNumber(lua_State* L, int32_t arg);
 bool isInteger(lua_State* L, int32_t arg);
@@ -629,9 +638,11 @@ inline void setField(lua_State* L, const char* index, std::string_view value)
 void pushBoolean(lua_State* L, bool value);
 void pushCombatDamage(lua_State* L, const CombatDamage& damage);
 void pushInstantSpell(lua_State* L, const InstantSpell& spell);
+void pushSpell(lua_State* L, const Spell& spell);
 void pushPosition(lua_State* L, const Position& position, int32_t stackpos = 0);
 void pushOutfit(lua_State* L, const Outfit_t& outfit);
 void pushOutfit(lua_State* L, const Outfit* outfit);
+void pushMount(lua_State* L, const Mount* mount);
 void pushLoot(lua_State* L, const std::vector<LootBlock>& lootList);
 
 // Userdata

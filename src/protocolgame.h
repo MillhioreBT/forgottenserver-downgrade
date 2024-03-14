@@ -92,7 +92,6 @@ private:
 	void parseFollow(NetworkMessage& msg);
 
 	void parseBugReport(NetworkMessage& msg);
-	void parseDebugAssert(NetworkMessage& msg);
 	void parseRuleViolationReport(NetworkMessage& msg);
 
 	void parseThrow(NetworkMessage& msg);
@@ -114,6 +113,8 @@ private:
 	void parseRevokePartyInvite(NetworkMessage& msg);
 	void parsePassPartyLeadership(NetworkMessage& msg);
 	void parseEnableSharedPartyExperience(NetworkMessage& msg);
+
+	void parseModalWindowAnswer(NetworkMessage& msg);
 
 	// trade methods
 	void parseRequestTrade(NetworkMessage& msg);
@@ -215,6 +216,9 @@ private:
 	// inventory
 	void sendInventoryItem(slots_t slot, const Item* item);
 
+	// messages
+	void sendModalWindow(const ModalWindow& modalWindow);
+
 	// Help functions
 
 	// translate a tile to client-readable format
@@ -255,9 +259,11 @@ private:
 	uint32_t eventConnect = 0;
 	uint32_t challengeTimestamp = 0;
 	uint16_t version = CLIENT_VERSION_MIN;
+	uint16_t OTCv8 = 0;
 
 	uint8_t challengeRandom = 0;
 
+	bool isOTCv8 = false;
 	bool debugAssertSent = false;
 	bool acceptPackets = false;
 };

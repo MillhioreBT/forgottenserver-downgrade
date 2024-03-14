@@ -13,9 +13,14 @@ using namespace Lua;
 // NetworkMessage
 int luaNetworkMessageCreate(lua_State* L)
 {
-	// NetworkMessage()
+	// NetworkMessage([player])
 	pushUserdata<NetworkMessage>(L, new NetworkMessage);
 	setMetatable(L, -1, "NetworkMessage");
+
+	if (const auto player = getPlayer(L, 1)) {
+		lua_pushinteger(L, player->getID());
+		lua_setiuservalue(L, 2, 1);
+	}
 	return 1;
 }
 
@@ -211,7 +216,18 @@ int luaNetworkMessageAddItem(lua_State* L)
 
 	NetworkMessage* message = getUserdata<NetworkMessage>(L, 1);
 	if (message) {
-		message->addItem(item);
+		if (getAssociatedValue(L, 1, 1)) {
+			if (const auto player = getPlayer(L, -1)) {
+				message->addItem(item, player->isOTCv8());
+			} else {
+				reportErrorFunc(L, LuaScriptInterface::getErrorDesc(LuaErrorCode::PLAYER_NOT_FOUND));
+				lua_pushnil(L);
+				return 1;
+			}
+		} else {
+			message->addItem(item, false);
+		}
+
 		pushBoolean(L, true);
 	} else {
 		lua_pushnil(L);
@@ -239,7 +255,18 @@ int luaNetworkMessageAddItemId(lua_State* L)
 		}
 	}
 
-	message->addItemId(itemId);
+	if (getAssociatedValue(L, 1, 1)) {
+		if (const auto player = getPlayer(L, -1)) {
+			message->addItemId(itemId, player->isOTCv8());
+		} else {
+			reportErrorFunc(L, LuaScriptInterface::getErrorDesc(LuaErrorCode::PLAYER_NOT_FOUND));
+			lua_pushnil(L);
+			return 1;
+		}
+	} else {
+		message->addItemId(itemId, false);
+	}
+
 	pushBoolean(L, true);
 	return 1;
 }
@@ -320,10 +347,19 @@ int luaNetworkMessageSendToPlayer(lua_State* L)
 	if (player) {
 		player->sendNetworkMessage(*message);
 		pushBoolean(L, true);
-	} else {
-		reportErrorFunc(L, LuaScriptInterface::getErrorDesc(LuaErrorCode::PLAYER_NOT_FOUND));
-		lua_pushnil(L);
+		return 1;
 	}
+
+	if (getAssociatedValue(L, 1, 1)) {
+		if (const auto p = getPlayer(L, -1)) {
+			p->sendNetworkMessage(*message);
+			pushBoolean(L, true);
+			return 1;
+		}
+	}
+
+	reportErrorFunc(L, LuaScriptInterface::getErrorDesc(LuaErrorCode::PLAYER_NOT_FOUND));
+	lua_pushnil(L);
 	return 1;
 }
 } // namespace

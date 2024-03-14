@@ -3,9 +3,8 @@
 
 #include "otpch.h"
 
-#include "item.h"
-
 #include "game.h"
+#include "item.h"
 #include "luascript.h"
 
 extern Game g_game;
@@ -189,7 +188,7 @@ int luaItemGetUniqueId(lua_State* L)
 int luaItemGetActionId(lua_State* L)
 {
 	// item:getActionId()
-	Item* item = getUserdata<Item>(L, 1);
+	const Item* item = getUserdata<const Item>(L, 1);
 	if (item) {
 		lua_pushinteger(L, item->getActionId());
 	} else {
@@ -215,7 +214,7 @@ int luaItemSetActionId(lua_State* L)
 int luaItemGetCount(lua_State* L)
 {
 	// item:getCount()
-	Item* item = getUserdata<Item>(L, 1);
+	const Item* item = getUserdata<const Item>(L, 1);
 	if (item) {
 		lua_pushinteger(L, item->getItemCount());
 	} else {
@@ -227,7 +226,7 @@ int luaItemGetCount(lua_State* L)
 int luaItemGetCharges(lua_State* L)
 {
 	// item:getCharges()
-	Item* item = getUserdata<Item>(L, 1);
+	const Item* item = getUserdata<const Item>(L, 1);
 	if (item) {
 		lua_pushinteger(L, item->getCharges());
 	} else {
@@ -239,7 +238,7 @@ int luaItemGetCharges(lua_State* L)
 int luaItemGetFluidType(lua_State* L)
 {
 	// item:getFluidType()
-	Item* item = getUserdata<Item>(L, 1);
+	const Item* item = getUserdata<const Item>(L, 1);
 	if (item) {
 		lua_pushinteger(L, item->getFluidType());
 	} else {
@@ -251,7 +250,7 @@ int luaItemGetFluidType(lua_State* L)
 int luaItemGetWeight(lua_State* L)
 {
 	// item:getWeight()
-	Item* item = getUserdata<Item>(L, 1);
+	const Item* item = getUserdata<const Item>(L, 1);
 	if (item) {
 		lua_pushinteger(L, item->getWeight());
 	} else {
@@ -263,7 +262,7 @@ int luaItemGetWeight(lua_State* L)
 int luaItemGetWorth(lua_State* L)
 {
 	// item:getWorth()
-	Item* item = getUserdata<Item>(L, 1);
+	const Item* item = getUserdata<const Item>(L, 1);
 	if (item) {
 		lua_pushinteger(L, item->getWorth());
 	} else {
@@ -275,7 +274,7 @@ int luaItemGetWorth(lua_State* L)
 int luaItemGetSubType(lua_State* L)
 {
 	// item:getSubType()
-	Item* item = getUserdata<Item>(L, 1);
+	const Item* item = getUserdata<const Item>(L, 1);
 	if (item) {
 		lua_pushinteger(L, item->getSubType());
 	} else {
@@ -287,7 +286,7 @@ int luaItemGetSubType(lua_State* L)
 int luaItemGetName(lua_State* L)
 {
 	// item:getName()
-	Item* item = getUserdata<Item>(L, 1);
+	const Item* item = getUserdata<const Item>(L, 1);
 	if (item) {
 		pushString(L, item->getName());
 	} else {
@@ -299,7 +298,7 @@ int luaItemGetName(lua_State* L)
 int luaItemGetPluralName(lua_State* L)
 {
 	// item:getPluralName()
-	Item* item = getUserdata<Item>(L, 1);
+	const Item* item = getUserdata<const Item>(L, 1);
 	if (item) {
 		pushString(L, item->getPluralName());
 	} else {
@@ -311,7 +310,7 @@ int luaItemGetPluralName(lua_State* L)
 int luaItemGetArticle(lua_State* L)
 {
 	// item:getArticle()
-	Item* item = getUserdata<Item>(L, 1);
+	const Item* item = getUserdata<const Item>(L, 1);
 	if (item) {
 		pushString(L, item->getArticle());
 	} else {
@@ -323,7 +322,7 @@ int luaItemGetArticle(lua_State* L)
 int luaItemGetPosition(lua_State* L)
 {
 	// item:getPosition()
-	Item* item = getUserdata<Item>(L, 1);
+	const Item* item = getUserdata<const Item>(L, 1);
 	if (item) {
 		pushPosition(L, item->getPosition());
 	} else {
@@ -335,15 +334,15 @@ int luaItemGetPosition(lua_State* L)
 int luaItemGetTile(lua_State* L)
 {
 	// item:getTile()
-	Item* item = getUserdata<Item>(L, 1);
+	const Item* item = getUserdata<const Item>(L, 1);
 	if (!item) {
 		lua_pushnil(L);
 		return 1;
 	}
 
-	Tile* tile = item->getTile();
+	const Tile* tile = item->getTile();
 	if (tile) {
-		pushUserdata<Tile>(L, tile);
+		pushUserdata<const Tile>(L, tile);
 		setMetatable(L, -1, "Tile");
 	} else {
 		lua_pushnil(L);
@@ -354,7 +353,7 @@ int luaItemGetTile(lua_State* L)
 int luaItemHasAttribute(lua_State* L)
 {
 	// item:hasAttribute(key)
-	Item* item = getUserdata<Item>(L, 1);
+	const Item* item = getUserdata<const Item>(L, 1);
 	if (!item) {
 		lua_pushnil(L);
 		return 1;
@@ -376,7 +375,7 @@ int luaItemHasAttribute(lua_State* L)
 int luaItemGetAttribute(lua_State* L)
 {
 	// item:getAttribute(key)
-	Item* item = getUserdata<Item>(L, 1);
+	const Item* item = getUserdata<const Item>(L, 1);
 	if (!item) {
 		lua_pushnil(L);
 		return 1;
@@ -689,7 +688,7 @@ int luaItemDecay(lua_State* L)
 int luaItemGetSpecialDescription(lua_State* L)
 {
 	// item:getSpecialDescription()
-	Item* item = getUserdata<Item>(L, 1);
+	const Item* item = getUserdata<const Item>(L, 1);
 	if (item) {
 		pushString(L, item->getSpecialDescription());
 	} else {
@@ -701,7 +700,7 @@ int luaItemGetSpecialDescription(lua_State* L)
 int luaItemHasProperty(lua_State* L)
 {
 	// item:hasProperty(property)
-	Item* item = getUserdata<Item>(L, 1);
+	const Item* item = getUserdata<const Item>(L, 1);
 	if (item) {
 		ITEMPROPERTY property = getInteger<ITEMPROPERTY>(L, 2);
 		pushBoolean(L, item->hasProperty(property));
@@ -714,7 +713,7 @@ int luaItemHasProperty(lua_State* L)
 int luaItemIsLoadedFromMap(lua_State* L)
 {
 	// item:isLoadedFromMap()
-	Item* item = getUserdata<Item>(L, 1);
+	const Item* item = getUserdata<const Item>(L, 1);
 	if (item) {
 		pushBoolean(L, item->isLoadedFromMap());
 	} else {

@@ -129,6 +129,7 @@ public:
 	std::string_view getOwnerName() const { return ownerName; }
 	void setOwner(uint32_t guid, bool updateDatabase = true, Player* player = nullptr);
 	uint32_t getOwner() const { return owner; }
+	uint32_t getOwnerAccountId() const { return ownerAccountId; }
 
 	void setPaidUntil(time_t paid) { paidUntil = paid; }
 	time_t getPaidUntil() const { return paidUntil; }

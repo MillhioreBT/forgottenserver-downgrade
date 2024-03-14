@@ -965,6 +965,19 @@ void Lua::pushInstantSpell(lua_State* L, const InstantSpell& spell)
 	setMetatable(L, -1, "Spell");
 }
 
+void Lua::pushSpell(lua_State* L, const Spell& spell)
+{
+	lua_createtable(L, 0, 5);
+
+	setField(L, "name", spell.getName());
+	setField(L, "level", spell.getLevel());
+	setField(L, "mlevel", spell.getMagicLevel());
+	setField(L, "mana", spell.getMana());
+	setField(L, "manapercent", spell.getManaPercent());
+
+	setMetatable(L, -1, "Spell");
+}
+
 void Lua::pushPosition(lua_State* L, const Position& position, int32_t stackpos /* = 0*/)
 {
 	lua_createtable(L, 0, 4);
@@ -979,9 +992,10 @@ void Lua::pushPosition(lua_State* L, const Position& position, int32_t stackpos 
 
 void Lua::pushOutfit(lua_State* L, const Outfit_t& outfit)
 {
-	lua_createtable(L, 0, 8);
+	lua_createtable(L, 0, 9);
 	setField(L, "lookType", outfit.lookType);
 	setField(L, "lookTypeEx", outfit.lookTypeEx);
+	setField(L, "lookMount", outfit.lookMount);
 	setField(L, "lookHead", outfit.lookHead);
 	setField(L, "lookBody", outfit.lookBody);
 	setField(L, "lookLegs", outfit.lookLegs);
@@ -998,6 +1012,16 @@ void Lua::pushOutfit(lua_State* L, const Outfit* outfit)
 	setField(L, "premium", outfit->premium);
 	setField(L, "unlocked", outfit->unlocked);
 	setMetatable(L, -1, "Outfit");
+}
+
+void Lua::pushMount(lua_State* L, const Mount* mount)
+{
+	lua_createtable(L, 0, 5);
+	setField(L, "name", mount->name);
+	setField(L, "speed", mount->speed);
+	setField(L, "clientId", mount->clientId);
+	setField(L, "id", mount->id);
+	setField(L, "premium", mount->premium);
 }
 
 void Lua::pushLoot(lua_State* L, const std::vector<LootBlock>& lootList)
@@ -1907,6 +1931,7 @@ void LuaScriptInterface::registerFunctions()
 	registerEnum(RELOAD_TYPE_GLOBALEVENTS);
 	registerEnum(RELOAD_TYPE_ITEMS);
 	registerEnum(RELOAD_TYPE_MONSTERS);
+	registerEnum(RELOAD_TYPE_MOUNTS);
 	registerEnum(RELOAD_TYPE_MOVEMENTS);
 	registerEnum(RELOAD_TYPE_NPCS);
 	registerEnum(RELOAD_TYPE_QUESTS);
@@ -2052,6 +2077,7 @@ void LuaScriptInterface::registerFunctions()
 	registerTeleport();
 	registerCreature();
 	registerPlayer();
+	registerModalWindow();
 	registerMonster();
 	registerNpc();
 	registerGuild();

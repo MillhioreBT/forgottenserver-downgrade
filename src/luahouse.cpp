@@ -186,6 +186,18 @@ int luaHouseGetOwnerGuid(lua_State* L)
 	return 1;
 }
 
+int luaHouseGetOwnerAccountId(lua_State* L)
+{
+	// house:getOwnerAccountId()
+	const House* house = getUserdata<const House>(L, 1);
+	if (house) {
+		lua_pushinteger(L, house->getOwnerAccountId());
+	} else {
+		lua_pushnil(L);
+	}
+	return 1;
+}
+
 int luaHouseSetOwnerGuid(lua_State* L)
 {
 	// house:setOwnerGuid(guid[, updateDatabase = true])
@@ -491,6 +503,7 @@ void LuaScriptInterface::registerHouse()
 	registerMethod("House", "getOwnerName", luaHouseGetOwnerName);
 	registerMethod("House", "getOwnerGuid", luaHouseGetOwnerGuid);
 	registerMethod("House", "setOwnerGuid", luaHouseSetOwnerGuid);
+	registerMethod("House", "getOwnerAccountId", luaHouseGetOwnerAccountId);
 	registerMethod("House", "startTrade", luaHouseStartTrade);
 
 	registerMethod("House", "getBeds", luaHouseGetBeds);

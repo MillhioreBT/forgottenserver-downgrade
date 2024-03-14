@@ -73,6 +73,7 @@
     <ClCompile Include="..\src\weapons.cpp" />
     <ClCompile Include="..\src\wildcardtree.cpp" />
     <ClCompile Include="..\src\xtea.cpp" />
+    <ClCompile Include="..\src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\luaactions.cpp">
@@ -115,6 +116,9 @@
       <Filter>Lua Modules</Filter>
     </ClCompile>
     <ClCompile Include="..\src\lualoot.cpp">
+      <Filter>Lua Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\luamodalwindow.cpp">
       <Filter>Lua Modules</Filter>
     </ClCompile>
     <ClCompile Include="..\src\luamonster.cpp">

@@ -62,7 +62,7 @@ bool ChatChannel::addUser(Player& player)
 		return false;
 	}
 
-	if (!executeOnJoinEvent(player)) {
+	if (!executeCanJoinEvent(player)) {
 		return false;
 	}
 
@@ -138,17 +138,17 @@ bool ChatChannel::executeCanJoinEvent(const Player& player)
 	return scriptInterface->callFunction(1);
 }
 
-bool ChatChannel::executeOnJoinEvent(const Player& player)
+void ChatChannel::executeOnJoinEvent(const Player& player)
 {
 	if (onJoinEvent == -1) {
-		return true;
+		return;
 	}
 
 	// onJoin(player)
 	LuaScriptInterface* scriptInterface = g_chat->getScriptInterface();
 	if (!scriptInterface->reserveScriptEnv()) {
 		std::cout << "[Error - OnJoinChannelEvent::execute] Call stack overflow" << std::endl;
-		return false;
+		return;
 	}
 
 	ScriptEnvironment* env = scriptInterface->getScriptEnv();
@@ -160,7 +160,7 @@ bool ChatChannel::executeOnJoinEvent(const Player& player)
 	Lua::pushUserdata(L, &player);
 	Lua::setMetatable(L, -1, "Player");
 
-	return scriptInterface->callFunction(1);
+	scriptInterface->callVoidFunction(1);
 }
 
 bool ChatChannel::executeOnLeaveEvent(const Player& player)
