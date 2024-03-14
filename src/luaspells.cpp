@@ -598,12 +598,8 @@ int luaSpellWords(lua_State* L)
 			pushString(L, spell->getSeparator());
 			return 2;
 		} else {
-			std::string sep = "";
-			if (lua_gettop(L) == 3) {
-				sep = getString(L, 3);
-			}
 			spell->setWords(getString(L, 2));
-			spell->setSeparator(sep);
+			spell->setSeparator(getString(L, 3));
 			pushBoolean(L, true);
 		}
 	} else {
