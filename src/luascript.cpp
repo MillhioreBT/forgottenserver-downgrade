@@ -1967,6 +1967,12 @@ void LuaScriptInterface::registerFunctions()
 	registerEnum(VARIANT_TARGETPOSITION);
 	registerEnum(VARIANT_STRING);
 
+	registerEnum(SPELLGROUP_NONE);
+	registerEnum(SPELLGROUP_ATTACK);
+	registerEnum(SPELLGROUP_HEALING);
+	registerEnum(SPELLGROUP_SUPPORT);
+	registerEnum(SPELLGROUP_SPECIAL);
+
 	// _G
 	registerGlobalVariable("INDEX_WHEREEVER", INDEX_WHEREEVER);
 	registerGlobalBoolean("VIRTUAL_PARENT", true);
