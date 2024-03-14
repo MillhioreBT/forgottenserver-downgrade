@@ -109,6 +109,8 @@ private:
 	MYSQL* handle = nullptr;
 	std::recursive_mutex databaseLock;
 	uint64_t maxPacketSize = 1048576;
+	// Do not retry queries if we are in the middle of a transaction
+	bool retryQueries = true;
 
 	friend class DBTransaction;
 };
@@ -146,8 +148,8 @@ public:
 		return data;
 	}
 
-	std::string_view getString(const std::string& s) const;
-	std::string_view getStream(const std::string& s, unsigned long& size) const;
+	std::string_view getString(std::string_view column) const;
+	std::string_view getStream(std::string_view column, unsigned long& size) const;
 
 	bool hasNext() const;
 	bool next();
@@ -156,7 +158,7 @@ private:
 	MYSQL_RES* handle;
 	MYSQL_ROW row;
 
-	std::map<std::string, size_t> listNames;
+	std::map<std::string_view, size_t> listNames;
 
 	friend class Database;
 };
