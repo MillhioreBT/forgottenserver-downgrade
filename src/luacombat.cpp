@@ -4,10 +4,10 @@
 #include "otpch.h"
 
 #include "combat.h"
-#include "matrixarea.h"
 #include "game.h"
 #include "luascript.h"
 #include "luavariant.h"
+#include "matrixarea.h"
 
 extern Game g_game;
 extern LuaEnvironment g_luaEnvironment;

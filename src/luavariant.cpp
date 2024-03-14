@@ -3,8 +3,9 @@
 
 #include "otpch.h"
 
-#include "luascript.h"
 #include "luavariant.h"
+
+#include "luascript.h"
 #include "thing.h"
 
 namespace {

@@ -3,10 +3,9 @@
 
 #include "otpch.h"
 
-#include "weapons.h"
-
 #include "luascript.h"
 #include "script.h"
+#include "weapons.h"
 
 extern Weapons* g_weapons;
 extern Scripts* g_scripts;

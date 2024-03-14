@@ -3,10 +3,9 @@
 
 #include "otpch.h"
 
-#include "town.h"
-
 #include "game.h"
 #include "luascript.h"
+#include "town.h"
 
 extern Game g_game;
 

@@ -3,9 +3,8 @@
 
 #include "otpch.h"
 
-#include "teleport.h"
-
 #include "luascript.h"
+#include "teleport.h"
 
 namespace {
 using namespace Lua;

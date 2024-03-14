@@ -3,11 +3,10 @@
 
 #include "otpch.h"
 
-#include "monster.h"
-
 #include "events.h"
 #include "game.h"
 #include "luascript.h"
+#include "monster.h"
 
 extern Events* g_events;
 extern Game g_game;

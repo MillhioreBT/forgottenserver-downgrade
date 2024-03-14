@@ -291,7 +291,8 @@ bool ConfigManager::load()
 	integers[ConfigKeysInteger::MANA_GAIN_COLOUR] = getGlobalInteger(L, "manaGainColour", TEXTCOLOR_BLUE);
 	integers[ConfigKeysInteger::MANA_LOSS_COLOUR] = getGlobalInteger(L, "manaLossColour", TEXTCOLOR_BLUE);
 	integers[ConfigKeysInteger::MAX_PROTOCOL_OUTFITS] = getGlobalInteger(L, "maxProtocolOutfits", 50);
-	integers[ConfigKeysInteger::MOVE_CREATURE_INTERVAL] = getGlobalInteger(L, "MOVE_CREATURE_INTERVAL", MOVE_CREATURE_INTERVAL);
+	integers[ConfigKeysInteger::MOVE_CREATURE_INTERVAL] =
+	    getGlobalInteger(L, "MOVE_CREATURE_INTERVAL", MOVE_CREATURE_INTERVAL);
 	integers[ConfigKeysInteger::RANGE_MOVE_CREATURE_INTERVAL] =
 	    getGlobalInteger(L, "RANGE_MOVE_CREATURE_INTERVAL", RANGE_MOVE_CREATURE_INTERVAL);
 	integers[ConfigKeysInteger::RANGE_USE_WITH_CREATURE_INTERVAL] =

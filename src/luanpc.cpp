@@ -3,10 +3,9 @@
 
 #include "otpch.h"
 
-#include "npc.h"
-
 #include "game.h"
 #include "luascript.h"
+#include "npc.h"
 
 extern Game g_game;
 

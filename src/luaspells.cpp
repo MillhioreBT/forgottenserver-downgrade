@@ -3,9 +3,8 @@
 
 #include "otpch.h"
 
-#include "spells.h"
-
 #include "luascript.h"
+#include "spells.h"
 
 extern Spells* g_spells;
 

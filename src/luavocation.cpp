@@ -3,9 +3,8 @@
 
 #include "otpch.h"
 
-#include "vocation.h"
-
 #include "luascript.h"
+#include "vocation.h"
 
 extern Vocations g_vocations;
 

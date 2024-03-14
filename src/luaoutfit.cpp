@@ -3,9 +3,8 @@
 
 #include "otpch.h"
 
-#include "outfit.h"
-
 #include "luascript.h"
+#include "outfit.h"
 
 namespace {
 using namespace Lua;
