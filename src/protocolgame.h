@@ -259,11 +259,9 @@ private:
 	uint32_t eventConnect = 0;
 	uint32_t challengeTimestamp = 0;
 	uint16_t version = CLIENT_VERSION_MIN;
-	uint16_t OTCv8 = 0;
 
 	uint8_t challengeRandom = 0;
 
-	bool isOTCv8 = false;
 	bool debugAssertSent = false;
 	bool acceptPackets = false;
 };
