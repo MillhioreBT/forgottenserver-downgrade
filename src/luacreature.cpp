@@ -716,8 +716,9 @@ int luaCreatureRemoveCondition(lua_State* L)
 	bool force = false;
 
 	if (isUserdata(L, 2)) {
-		condition = getUserdata<Condition>(L, 2);
+		auto tmpCondition = getUserdata<const Condition>(L, 2);
 		force = getBoolean(L, 3, false);
+		condition = creature->getCondition(tmpCondition->getType(), tmpCondition->getId(), tmpCondition->getSubId());
 	} else {
 		ConditionType_t conditionType = getInteger<ConditionType_t>(L, 2);
 		ConditionId_t conditionId = getInteger<ConditionId_t>(L, 3, CONDITIONID_COMBAT);
