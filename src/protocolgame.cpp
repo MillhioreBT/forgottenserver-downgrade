@@ -373,6 +373,12 @@ void ProtocolGame::onRecvFirstMessage(NetworkMessage& msg)
 		return;
 	}
 
+	// OTCv8 detect
+	const auto otcv8StrLen = msg.get<uint16_t>();
+	if (otcv8StrLen == OTCV8_LENGTH && msg.getString(OTCV8_LENGTH) == OTCV8_NAME) {
+		isOTCv8 = msg.get<uint16_t>() != 0;
+	}
+
 	if (version < CLIENT_VERSION_MIN || version > CLIENT_VERSION_MAX) {
 		disconnectClient(fmt::format("Only clients with protocol {:s} allowed!", CLIENT_VERSION_STR));
 		return;
@@ -755,7 +761,7 @@ void ProtocolGame::GetTileDescription(const Tile* tile, NetworkMessage& msg)
 {
 	int32_t count = 0;
 	if (const auto ground = tile->getGround()) {
-		msg.addItem(ground);
+		msg.addItem(ground, isOTCv8);
 		++count;
 	}
 
@@ -764,12 +770,16 @@ void ProtocolGame::GetTileDescription(const Tile* tile, NetworkMessage& msg)
 	const TileItemVector* items = tile->getItemList();
 	if (items) {
 		for (auto it = items->getBeginTopItem(), end = items->getEndTopItem(); it != end; ++it) {
-			msg.addItem(*it);
+			msg.addItem(*it, isOTCv8);
 
-			if (++count == 9 && isStacked) {
+			if (!isOTCv8) {
+				if (++count == 9 && isStacked) {
+					break;
+				} else if (count == MAX_STACKPOS_THINGS) {
+					return;
+				}
+			} else if (++count == MAX_STACKPOS_THINGS) {
 				break;
-			} else if (count == MAX_STACKPOS_THINGS) {
-				return;
 			}
 		}
 	}
@@ -777,7 +787,7 @@ void ProtocolGame::GetTileDescription(const Tile* tile, NetworkMessage& msg)
 	const CreatureVector* creatures = tile->getCreatures();
 	if (creatures) {
 		for (auto it = creatures->rbegin(), end = creatures->rend(); it != end; ++it) {
-			if (count == 9 && isStacked) {
+			if (!isOTCv8 && count == 9 && isStacked) {
 				auto [known, removedKnown] = isKnownCreature(player->getID());
 				AddCreature(msg, player, known, removedKnown);
 			} else {
@@ -790,15 +800,15 @@ void ProtocolGame::GetTileDescription(const Tile* tile, NetworkMessage& msg)
 				AddCreature(msg, creature, known, removedKnown);
 			}
 
-			if (++count == MAX_STACKPOS_THINGS) {
+			if (++count == MAX_STACKPOS_THINGS && !isOTCv8) {
 				return;
 			}
 		}
 	}
 
-	if (items) {
+	if (items && count < MAX_STACKPOS_THINGS) {
 		for (auto it = items->getBeginDownItem(), end = items->getEndDownItem(); it != end; ++it) {
-			msg.addItem(*it);
+			msg.addItem(*it, isOTCv8);
 
 			if (++count == MAX_STACKPOS_THINGS) {
 				return;
@@ -1031,6 +1041,7 @@ void ProtocolGame::parseSetOutfit(NetworkMessage& msg)
 	newOutfit.lookLegs = msg.getByte();
 	newOutfit.lookFeet = msg.getByte();
 	newOutfit.lookAddons = msg.getByte();
+	newOutfit.lookMount = isOTCv8 ? msg.get<uint16_t>() : 0;
 	g_dispatcher.addTask([=, playerID = player->getID()]() { g_game.playerChangeOutfit(playerID, newOutfit); });
 }
 
@@ -1339,6 +1350,10 @@ void ProtocolGame::parseEnableSharedPartyExperience(NetworkMessage& msg)
 
 void ProtocolGame::parseModalWindowAnswer(NetworkMessage& msg)
 {
+	if (isOTCv8) {
+		return;
+	}
+
 	uint32_t id = msg.get<uint32_t>();
 	uint8_t button = msg.getByte();
 	uint8_t choice = msg.getByte();
@@ -1546,7 +1561,7 @@ void ProtocolGame::sendContainer(uint8_t cid, const Container* container, bool h
 
 	msg.addByte(cid);
 
-	msg.addItem(container);
+	msg.addItem(container, isOTCv8);
 	msg.addString(container->getName());
 
 	msg.addByte(static_cast<uint8_t>(container->capacity()));
@@ -1559,7 +1574,7 @@ void ProtocolGame::sendContainer(uint8_t cid, const Container* container, bool h
 	const ItemDeque& itemList = container->getItemList();
 	for (ItemDeque::const_iterator cit = itemList.begin() + firstIndex, end = itemList.end(); i < 0xFF && cit != end;
 	     ++cit, ++i) {
-		msg.addItem(*cit);
+		msg.addItem(*cit, isOTCv8);
 	}
 	writeToOutputBuffer(msg);
 }
@@ -1661,7 +1676,7 @@ void ProtocolGame::sendSaleItemList(const std::list<ShopInfo>& shop)
 
 	uint8_t i = 0;
 	for (std::map<uint16_t, uint32_t>::const_iterator it = saleMap.begin(); i < itemsToSend; ++it, ++i) {
-		msg.addItemId(it->first);
+		msg.addItemId(it->first, isOTCv8);
 		msg.addByte(static_cast<uint8_t>(std::min<uint32_t>(it->second, std::numeric_limits<uint8_t>::max())));
 	}
 
@@ -1698,11 +1713,11 @@ void ProtocolGame::sendTradeItemRequest(std::string_view traderName, const Item*
 
 		msg.addByte(itemList.size());
 		for (const Item* listItem : itemList) {
-			msg.addItem(listItem);
+			msg.addItem(listItem, isOTCv8);
 		}
 	} else {
 		msg.addByte(0x01);
-		msg.addItem(item);
+		msg.addItem(item, isOTCv8);
 	}
 	writeToOutputBuffer(msg);
 }
@@ -1934,7 +1949,7 @@ void ProtocolGame::sendAddTileItem(const Position& pos, uint32_t stackpos, const
 	msg.addByte(0x6A);
 	msg.addPosition(pos);
 	msg.addByte(static_cast<uint8_t>(stackpos));
-	msg.addItem(item);
+	msg.addItem(item, isOTCv8);
 	writeToOutputBuffer(msg);
 }
 
@@ -1948,7 +1963,7 @@ void ProtocolGame::sendUpdateTileItem(const Position& pos, uint32_t stackpos, co
 	msg.addByte(0x6B);
 	msg.addPosition(pos);
 	msg.addByte(static_cast<uint8_t>(stackpos));
-	msg.addItem(item);
+	msg.addItem(item, isOTCv8);
 	writeToOutputBuffer(msg);
 }
 
@@ -2103,7 +2118,7 @@ void ProtocolGame::sendMoveCreature(const Creature* creature, const Position& ne
 				MoveUpCreature(msg, creature, newPos, oldPos);
 			}
 
-			if (newStackPos >= MAX_STACKPOS_THINGS) {
+			if (!isOTCv8 && newStackPos >= MAX_STACKPOS_THINGS) {
 				msg.addByte(0x64);
 				msg.addPosition(player->getPosition());
 				GetMapDescription(newPos.x - Map::maxClientViewportX, newPos.y - Map::maxClientViewportY, newPos.z,
@@ -2156,7 +2171,7 @@ void ProtocolGame::sendInventoryItem(slots_t slot, const Item* item)
 	if (item) {
 		msg.addByte(0x78);
 		msg.addByte(slot);
-		msg.addItem(item);
+		msg.addItem(item, isOTCv8);
 	} else {
 		msg.addByte(0x79);
 		msg.addByte(slot);
@@ -2166,6 +2181,10 @@ void ProtocolGame::sendInventoryItem(slots_t slot, const Item* item)
 
 void ProtocolGame::sendModalWindow(const ModalWindow& modalWindow)
 {
+	if (isOTCv8) {
+		return;
+	}
+
 	NetworkMessage msg;
 	msg.addByte(0xFA);
 
@@ -2197,7 +2216,7 @@ void ProtocolGame::sendAddContainerItem(uint8_t cid, const Item* item)
 	NetworkMessage msg;
 	msg.addByte(0x70);
 	msg.addByte(cid);
-	msg.addItem(item);
+	msg.addItem(item, isOTCv8);
 	writeToOutputBuffer(msg);
 }
 
@@ -2207,7 +2226,7 @@ void ProtocolGame::sendUpdateContainerItem(uint8_t cid, uint16_t slot, const Ite
 	msg.addByte(0x71);
 	msg.addByte(cid);
 	msg.addByte(slot);
-	msg.addItem(item);
+	msg.addItem(item, isOTCv8);
 	writeToOutputBuffer(msg);
 }
 
@@ -2225,7 +2244,7 @@ void ProtocolGame::sendTextWindow(uint32_t windowTextId, Item* item, uint16_t ma
 	NetworkMessage msg;
 	msg.addByte(0x96);
 	msg.add<uint32_t>(windowTextId);
-	msg.addItem(item);
+	msg.addItem(item, isOTCv8);
 
 	if (canWrite) {
 		msg.add<uint16_t>(maxlen);
@@ -2258,7 +2277,7 @@ void ProtocolGame::sendTextWindow(uint32_t windowTextId, uint16_t itemId, std::s
 	NetworkMessage msg;
 	msg.addByte(0x96);
 	msg.add<uint32_t>(windowTextId);
-	msg.addItem(itemId, 1);
+	msg.addItem(itemId, 1, isOTCv8);
 	msg.add<uint16_t>(text.size());
 	msg.addString(text);
 	msg.add<uint16_t>(0x00);
@@ -2331,6 +2350,21 @@ void ProtocolGame::sendOutfitWindow()
 		msg.add<uint16_t>(outfit.lookType);
 		msg.addString(outfit.name);
 		msg.addByte(outfit.addons);
+	}
+
+	if (isOTCv8) {
+		std::vector<const Mount*> mounts;
+		for (const Mount& mount : g_game.mounts.getMounts()) {
+			if (player->hasMount(&mount)) {
+				mounts.push_back(&mount);
+			}
+		}
+
+		msg.addByte(mounts.size());
+		for (const Mount* mount : mounts) {
+			msg.add<uint16_t>(mount->clientId);
+			msg.addString(mount->name);
+		}
 	}
 
 	writeToOutputBuffer(msg);
@@ -2469,6 +2503,10 @@ void ProtocolGame::AddPlayerSkills(NetworkMessage& msg)
 void ProtocolGame::AddOutfit(NetworkMessage& msg, const Outfit_t& outfit)
 {
 	uint16_t lookType = outfit.lookType;
+	if (isOTCv8 && lookType >= 367) {
+		lookType = 128;
+	}
+
 	msg.add<uint16_t>(lookType);
 
 	if (lookType != 0) {
@@ -2478,7 +2516,11 @@ void ProtocolGame::AddOutfit(NetworkMessage& msg, const Outfit_t& outfit)
 		msg.addByte(outfit.lookFeet);
 		msg.addByte(outfit.lookAddons);
 	} else {
-		msg.addItemId(outfit.lookTypeEx);
+		msg.addItemId(outfit.lookTypeEx, isOTCv8);
+	}
+
+	if (isOTCv8) {
+		msg.add<uint16_t>(outfit.lookMount);
 	}
 }
 

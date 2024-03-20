@@ -989,20 +989,19 @@ void Player::onCreatureAppear(Creature* creature, bool isLogin)
 		}
 
 		// load mount speed bonus
-		/*uint16_t currentMountId = currentOutfit.lookMount;
+		uint16_t currentMountId = currentOutfit.lookMount;
 		if (currentMountId != 0) {
-		    Mount* currentMount = g_game.mounts.getMountByClientID(currentMountId);
-		    if (currentMount && hasMount(currentMount)) {
-		        g_game.changeSpeed(this, currentMount->speed);
-		    } else {
-		        defaultOutfit.lookMount = 0;
-		        g_game.internalCreatureChangeOutfit(this, defaultOutfit);
-		    }
+			Mount* currentMount = g_game.mounts.getMountByClientID(currentMountId);
+			if (currentMount && hasMount(currentMount)) {
+				g_game.changeSpeed(this, currentMount->speed);
+			} else {
+				defaultOutfit.lookMount = 0;
+				g_game.internalCreatureChangeOutfit(this, defaultOutfit);
+			}
 		}
 
 		// mounted player moved to pz on login, update mount status
 		onChangeZone(getZone());
-		*/
 
 		if (guild) {
 			guild->addMember(this);

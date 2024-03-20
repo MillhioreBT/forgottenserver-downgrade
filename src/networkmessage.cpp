@@ -80,15 +80,20 @@ void NetworkMessage::addPosition(const Position& pos)
 	addByte(pos.z);
 }
 
-void NetworkMessage::addItemId(uint16_t itemId)
+void NetworkMessage::addItemId(uint16_t itemId, const bool isOTCv8)
 {
 	const ItemType& it = Item::items[itemId];
-	add<uint16_t>(it.clientId);
+	uint16_t clientId = it.clientId;
+	if (isOTCv8 && itemId > 12660) {
+		clientId = it.stackable ? 3031 : 105;
+	}
+
+	add<uint16_t>(clientId);
 }
 
-void NetworkMessage::addItem(uint16_t id, uint8_t count)
+void NetworkMessage::addItem(uint16_t id, uint8_t count, const bool isOTCv8)
 {
-	addItemId(id);
+	addItemId(id, isOTCv8);
 
 	const ItemType& it = Item::items[id];
 	if (it.stackable) {
@@ -98,9 +103,9 @@ void NetworkMessage::addItem(uint16_t id, uint8_t count)
 	}
 }
 
-void NetworkMessage::addItem(const Item* item)
+void NetworkMessage::addItem(const Item* item, const bool isOTCv8)
 {
-	addItemId(item->getID());
+	addItemId(item->getID(), isOTCv8);
 
 	const ItemType& it = Item::items[item->getID()];
 	if (it.stackable) {

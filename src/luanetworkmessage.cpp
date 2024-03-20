@@ -211,7 +211,7 @@ int luaNetworkMessageAddItem(lua_State* L)
 
 	NetworkMessage* message = getUserdata<NetworkMessage>(L, 1);
 	if (message) {
-		message->addItem(item);
+		message->addItem(item, false);
 		pushBoolean(L, true);
 	} else {
 		lua_pushnil(L);
@@ -239,7 +239,7 @@ int luaNetworkMessageAddItemId(lua_State* L)
 		}
 	}
 
-	message->addItemId(itemId);
+	message->addItemId(itemId, false);
 	pushBoolean(L, true);
 	return 1;
 }

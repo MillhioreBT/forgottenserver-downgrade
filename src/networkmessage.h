@@ -111,9 +111,9 @@ public:
 
 	// write functions for complex types
 	void addPosition(const Position& pos);
-	void addItemId(uint16_t itemId);
-	void addItem(uint16_t id, uint8_t count);
-	void addItem(const Item* item);
+	void addItemId(uint16_t itemId, const bool isOTCv8);
+	void addItem(uint16_t id, uint8_t count, const bool isOTCv8);
+	void addItem(const Item* item, const bool isOTCv8);
 
 	MsgSize_t getLength() const { return info.length; }
 

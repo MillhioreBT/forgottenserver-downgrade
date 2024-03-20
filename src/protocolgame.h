@@ -37,6 +37,9 @@ struct TextMessage
 	TextMessage(MessageClasses type, std::string_view text) : type{type}, text{text} {}
 };
 
+inline constexpr auto OTCV8_NAME = "OTCv8";
+inline constexpr auto OTCV8_LENGTH = 5;
+
 class ProtocolGame final : public Protocol
 {
 public:
@@ -262,6 +265,7 @@ private:
 
 	uint8_t challengeRandom = 0;
 
+	bool isOTCv8 = false;
 	bool debugAssertSent = false;
 	bool acceptPackets = false;
 };
