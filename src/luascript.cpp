@@ -2164,22 +2164,11 @@ void LuaScriptInterface::registerClass(const std::string& className, const std::
 	lua_rawseti(luaState, metatable, 'p');
 
 	// className.metatable['t'] = type
-	if (className == "Item") {
-		lua_pushinteger(luaState, LuaData_Item);
-	} else if (className == "Container") {
-		lua_pushinteger(luaState, LuaData_Container);
-	} else if (className == "Teleport") {
-		lua_pushinteger(luaState, LuaData_Teleport);
-	} else if (className == "Player") {
-		lua_pushinteger(luaState, LuaData_Player);
-	} else if (className == "Monster") {
-		lua_pushinteger(luaState, LuaData_Monster);
-	} else if (className == "Npc") {
-		lua_pushinteger(luaState, LuaData_Npc);
-	} else if (className == "Tile") {
-		lua_pushinteger(luaState, LuaData_Tile);
-	} else {
+	auto luaDataType = LuaDataTypeByClassName.find(className);
+	if (luaDataType == LuaDataTypeByClassName.end()) {
 		lua_pushinteger(luaState, LuaData_Unknown);
+	} else {
+		lua_pushinteger(luaState, luaDataType->second);
 	}
 	lua_rawseti(luaState, metatable, 't');
 

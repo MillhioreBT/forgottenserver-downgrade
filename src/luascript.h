@@ -19,29 +19,6 @@
 #endif
 #endif
 
-class AreaCombat;
-class SpectatorVec;
-class Combat;
-class Container;
-class Creature;
-class Cylinder;
-class Spell;
-class InstantSpell;
-class Item;
-class LuaScriptInterface;
-class LuaVariant;
-class Npc;
-class Player;
-class Thing;
-struct LootBlock;
-struct Mount;
-struct Outfit;
-
-using Combat_ptr = std::shared_ptr<Combat>;
-
-inline constexpr int32_t EVENT_ID_LOADING = 1;
-inline constexpr int32_t EVENT_ID_USER = 1000;
-
 enum LuaDataType
 {
 	LuaData_Unknown,
@@ -49,10 +26,186 @@ enum LuaDataType
 	LuaData_Item,
 	LuaData_Container,
 	LuaData_Teleport,
+	LuaData_Creature,
 	LuaData_Player,
 	LuaData_Monster,
 	LuaData_Npc,
 	LuaData_Tile,
+	LuaData_Condition,
+
+	LuaData_Combat,
+	LuaData_Group,
+	LuaData_Guild,
+	LuaData_House,
+	LuaData_ItemType,
+	LuaData_ModalWindow,
+	LuaData_MonsterType,
+	LuaData_NetworkMessage,
+	LuaData_Party,
+	LuaData_Vocation,
+	LuaData_Town,
+	LuaData_LuaVariant,
+	LuaData_Position,
+
+	LuaData_Outfit,
+	LuaData_Loot,
+	LuaData_MonsterSpell,
+	LuaData_Spell,
+	LuaData_Action,
+	LuaData_TalkAction,
+	LuaData_CreatureEvent,
+	LuaData_MoveEvent,
+	LuaData_GlobalEvent,
+	LuaData_Weapon,
+
+	LuaData_XMLDocument,
+	LuaData_XMLNode,
+};
+
+template <class T>
+inline constexpr LuaDataType LuaDataTypeByClass = LuaData_Unknown;
+
+#define NEW_LUA_DATA_TYPE(CLASS) \
+	template <> \
+	inline constexpr LuaDataType LuaDataTypeByClass<CLASS> = LuaData_##CLASS; \
+	template <> \
+	inline constexpr LuaDataType LuaDataTypeByClass<const CLASS> = LuaData_##CLASS;
+
+class Action;
+class AreaCombat;
+class Combat;
+class Condition;
+class Container;
+class Container;
+class Creature;
+class CreatureEvent;
+class Cylinder;
+class GlobalEvent;
+class Guild;
+class House;
+class InstantSpell;
+class Item;
+class ItemType;
+class Loot;
+class LuaScriptInterface;
+class LuaVariant;
+class Monster;
+class MonsterSpell;
+class MonsterType;
+class MoveEvent;
+class NetworkMessage;
+class Npc;
+class Party;
+class Player;
+class RuneSpell;
+class SpectatorVec;
+class Spell;
+class TalkAction;
+class Teleport;
+class Thing;
+class Tile;
+class Town;
+class Vocation;
+class Weapon;
+class WeaponDistance;
+class WeaponMelee;
+class WeaponWand;
+
+struct Group;
+struct LootBlock;
+struct ModalWindow;
+struct Mount;
+struct Outfit;
+struct Position;
+
+using Combat_ptr = std::shared_ptr<Combat>;
+
+using XMLDocument = pugi::xml_document;
+using XMLNode = pugi::xml_node;
+
+inline constexpr int32_t EVENT_ID_LOADING = 1;
+inline constexpr int32_t EVENT_ID_USER = 1000;
+
+NEW_LUA_DATA_TYPE(Item);
+NEW_LUA_DATA_TYPE(Container);
+NEW_LUA_DATA_TYPE(Teleport);
+NEW_LUA_DATA_TYPE(Creature);
+NEW_LUA_DATA_TYPE(Player);
+NEW_LUA_DATA_TYPE(Monster);
+NEW_LUA_DATA_TYPE(Npc);
+NEW_LUA_DATA_TYPE(Tile);
+NEW_LUA_DATA_TYPE(Condition);
+
+NEW_LUA_DATA_TYPE(Combat);
+NEW_LUA_DATA_TYPE(Group);
+NEW_LUA_DATA_TYPE(Guild);
+NEW_LUA_DATA_TYPE(House);
+NEW_LUA_DATA_TYPE(ItemType);
+NEW_LUA_DATA_TYPE(ModalWindow);
+NEW_LUA_DATA_TYPE(MonsterType);
+NEW_LUA_DATA_TYPE(NetworkMessage);
+NEW_LUA_DATA_TYPE(Party);
+NEW_LUA_DATA_TYPE(Vocation);
+NEW_LUA_DATA_TYPE(Town);
+NEW_LUA_DATA_TYPE(Position);
+
+NEW_LUA_DATA_TYPE(LuaVariant);
+
+NEW_LUA_DATA_TYPE(Outfit);
+NEW_LUA_DATA_TYPE(Loot);
+NEW_LUA_DATA_TYPE(MonsterSpell);
+NEW_LUA_DATA_TYPE(Spell);
+NEW_LUA_DATA_TYPE(Action);
+NEW_LUA_DATA_TYPE(TalkAction);
+NEW_LUA_DATA_TYPE(CreatureEvent);
+NEW_LUA_DATA_TYPE(MoveEvent);
+NEW_LUA_DATA_TYPE(GlobalEvent);
+NEW_LUA_DATA_TYPE(Weapon);
+
+NEW_LUA_DATA_TYPE(XMLDocument);
+NEW_LUA_DATA_TYPE(XMLNode);
+
+const std::unordered_map<std::string_view, LuaDataType> LuaDataTypeByClassName = {
+    {"Item", LuaData_Item},
+    {"Container", LuaData_Container},
+    {"Teleport", LuaData_Teleport},
+    {"Creature", LuaData_Creature},
+    {"Player", LuaData_Player},
+    {"Monster", LuaData_Monster},
+    {"Npc", LuaData_Npc},
+    {"Tile", LuaData_Tile},
+    {"Condition", LuaData_Condition},
+
+    {"Combat", LuaData_Combat},
+    {"Group", LuaData_Group},
+    {"Guild", LuaData_Guild},
+    {"House", LuaData_House},
+    {"ItemType", LuaData_ItemType},
+    {"ModalWindow", LuaData_ModalWindow},
+    {"MonsterType", LuaData_MonsterType},
+    {"NetworkMessage", LuaData_NetworkMessage},
+    {"Party", LuaData_Party},
+    {"Vocation", LuaData_Vocation},
+    {"Town", LuaData_Town},
+    {"LuaVariant", LuaData_LuaVariant},
+    {"Position", LuaData_Position},
+
+    {"Outfit", LuaData_Outfit},
+    {"Loot", LuaData_Loot},
+    {"MonsterSpell", LuaData_MonsterSpell},
+    {"Spell", LuaData_Spell},
+    {"InstantSpell", LuaData_Spell},
+    {"Action", LuaData_Action},
+    {"TalkAction", LuaData_TalkAction},
+    {"CreatureEvent", LuaData_CreatureEvent},
+    {"MoveEvent", LuaData_MoveEvent},
+    {"GlobalEvent", LuaData_GlobalEvent},
+    {"Weapon", LuaData_Weapon},
+    {"WeaponDistance", LuaData_Weapon},
+    {"WeaponWand", LuaData_Weapon},
+    {"WeaponMelee", LuaData_Weapon},
+    {"XMLDocument", LuaData_XMLDocument},
+    {"XMLNode", LuaData_XMLNode},
 };
 
 struct LuaTimerEventDesc
@@ -537,8 +690,12 @@ inline T* getUserdata(lua_State* L, int32_t arg)
 template <class T>
 inline T** getRawUserdata(lua_State* L, int32_t arg)
 {
+	if (!isType<T>(L, arg)) {
+		return nullptr;
+	}
 	return static_cast<T**>(lua_touserdata(L, arg));
 }
+
 template <class T>
 inline std::shared_ptr<T>& getSharedPtr(lua_State* L, int32_t arg)
 {
@@ -632,6 +789,24 @@ inline void setField(lua_State* L, const char* index, std::string_view value)
 {
 	pushString(L, value);
 	lua_setfield(L, -2, index);
+}
+
+template <class T>
+inline const bool isType(lua_State* L, int32_t arg)
+{
+	const LuaDataType classType = LuaDataTypeByClass<T>;
+	if (classType == LuaData_Unknown) {
+		return false;
+	}
+
+	const LuaDataType userdataType = getUserdataType(L, arg);
+	if (classType == LuaData_Creature) {
+		return userdataType >= LuaData_Creature && userdataType <= LuaData_Npc;
+	} else if (classType == LuaData_Item) {
+		return userdataType >= LuaData_Item && userdataType <= LuaData_Teleport;
+	}
+
+	return userdataType == classType;
 }
 
 // Push
