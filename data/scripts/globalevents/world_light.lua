@@ -24,7 +24,7 @@ local function calculateWorldLightLevel()
 		return math.floor(((worldConfig.dayTime - worldConfig.sunrise) - (worldConfig.dayTime - worldTime)) *
 			       lightChange.sunrise + lightConfig.night)
 	elseif worldTime >= worldConfig.sunset and worldTime <= worldConfig.nightTime then
-		return lightConfig.day - ((worldTime - worldConfig.sunset) * lightChange.sunset)
+		return math.floor(lightConfig.day - ((worldTime - worldConfig.sunset) * lightChange.sunset))
 	elseif worldTime >= worldConfig.nightTime or worldTime < worldConfig.sunrise then
 		return lightConfig.night
 	end

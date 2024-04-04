@@ -8,7 +8,7 @@ function event.onTime(interval)
 	local currentTime = os.time()
 	local sec = os.date("%S", currentTime)
 	local min = os.date("%M", currentTime)
-	local worldTime = (sec + (min * 60)) / 2.5
+	local worldTime = math.floor((sec + (min * 60)) / 2.5)
 	Game.setWorldTime(worldTime)
 	return true
 end
