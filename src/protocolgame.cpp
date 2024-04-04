@@ -2317,12 +2317,12 @@ void ProtocolGame::sendOutfitWindow()
 		currentOutfit.lookMount = currentMount->clientId;
 	}
 
-	bool mounted;
+	/*bool mounted;
 	if (player->wasMounted) {
-		mounted = currentOutfit.lookMount != 0;
+	    mounted = currentOutfit.lookMount != 0;
 	} else {
-		mounted = player->isMounted();
-	}
+	    mounted = player->isMounted();
+	}*/
 
 	AddOutfit(msg, currentOutfit);
 
