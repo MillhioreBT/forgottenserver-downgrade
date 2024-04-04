@@ -2,11 +2,15 @@ function Item:getType() return ItemType(self:getId()) end
 
 function Item:getContainer() return Container(self:getUniqueId()) end
 
+function Item:getTeleport() return Teleport(self:getUniqueId()) end
+
 function Item:isContainer() return false end
 
 function Item:isCreature() return false end
 
 function Item:getCreature() return nil end
+
+function Item:getPlayer() return nil end
 
 function Item:isMonster() return false end
 
@@ -35,7 +39,9 @@ function Item:getDefense()
 end
 
 function Item:getExtraDefense()
-	if self:hasAttribute(ITEM_ATTRIBUTE_EXTRADEFENSE) then return self:getAttribute(ITEM_ATTRIBUTE_EXTRADEFENSE) --[[@as integer]] end
+	if self:hasAttribute(ITEM_ATTRIBUTE_EXTRADEFENSE) then
+		return self:getAttribute(ITEM_ATTRIBUTE_EXTRADEFENSE) --[[@as integer]]
+	end
 	return self:getType():getExtraDefense()
 end
 
@@ -45,22 +51,30 @@ function Item:getArmor()
 end
 
 function Item:getAttackSpeed()
-	if self:hasAttribute(ITEM_ATTRIBUTE_ATTACK_SPEED) then return self:getAttribute(ITEM_ATTRIBUTE_ATTACK_SPEED) --[[@as integer]] end
+	if self:hasAttribute(ITEM_ATTRIBUTE_ATTACK_SPEED) then
+		return self:getAttribute(ITEM_ATTRIBUTE_ATTACK_SPEED) --[[@as integer]]
+	end
 	return self:getType():getAttackSpeed()
 end
 
 function Item:getHitChance()
-	if self:hasAttribute(ITEM_ATTRIBUTE_HITCHANCE) then return self:getAttribute(ITEM_ATTRIBUTE_HITCHANCE) --[[@as integer]] end
+	if self:hasAttribute(ITEM_ATTRIBUTE_HITCHANCE) then
+		return self:getAttribute(ITEM_ATTRIBUTE_HITCHANCE) --[[@as integer]]
+	end
 	return self:getType():getHitChance()
 end
 
 function Item:getShootRange()
-	if self:hasAttribute(ITEM_ATTRIBUTE_SHOOTRANGE) then return self:getAttribute(ITEM_ATTRIBUTE_SHOOTRANGE) --[[@as integer]] end
+	if self:hasAttribute(ITEM_ATTRIBUTE_SHOOTRANGE) then
+		return self:getAttribute(ITEM_ATTRIBUTE_SHOOTRANGE) --[[@as integer]]
+	end
 	return self:getType():getShootRange()
 end
 
 function Item:getDuration()
-	if self:hasAttribute(ITEM_ATTRIBUTE_DURATION) then return self:getAttribute(ITEM_ATTRIBUTE_DURATION) --[[@as integer]] end
+	if self:hasAttribute(ITEM_ATTRIBUTE_DURATION) then
+		return self:getAttribute(ITEM_ATTRIBUTE_DURATION) --[[@as integer]]
+	end
 	return self:getType():getDuration()
 end
 
@@ -111,13 +125,16 @@ function Item:setWriter(writer)
 	end
 end
 
+local fmt = string.format
+local concat = table.concat
+
 do
 	local StreamMeta = {}
 	StreamMeta.__index = StreamMeta
 
-	function StreamMeta:append(s, ...) self[#self + 1] = string.format(s, ...) end
+	function StreamMeta:append(s, ...) self[#self + 1] = fmt(s, ...) end
 
-	function StreamMeta:concat(s) return table.concat(self, s) end
+	function StreamMeta:concat(s) return concat(self, s) end
 
 	function StringStream() return setmetatable({}, StreamMeta) end
 
@@ -144,7 +161,9 @@ do
 		return internalItemGetNameDescription(self:getType(), self, subType, addArticle)
 	end
 
-	function ItemType:getNameDescription(subType, addArticle) return internalItemGetNameDescription(self, nil, subType, addArticle) end
+	function ItemType:getNameDescription(subType, addArticle)
+		return internalItemGetNameDescription(self, nil, subType, addArticle)
+	end
 end
 
 do
@@ -217,7 +236,7 @@ do
 		-- spell words
 		do
 			local spellName = itemType:getRuneSpellName()
-			if spellName then descriptions[#descriptions + 1] = string.format('"%s"', spellName) end
+			if spellName then descriptions[#descriptions + 1] = fmt('"%s"', spellName) end
 		end
 
 		-- container capacity
@@ -225,7 +244,7 @@ do
 			-- show container capacity only on non-quest containers
 			if not isUnique then
 				local isContainer = itemType:isContainer()
-				if isContainer then descriptions[#descriptions + 1] = string.format("Vol:%d", itemType:getCapacity()) end
+				if isContainer then descriptions[#descriptions + 1] = fmt("Vol:%d", itemType:getCapacity()) end
 			end
 		end
 
@@ -234,7 +253,11 @@ do
 		if not isVirtual then actionId = item:getActionId() end
 
 		-- key
-		do if not isVirtual and itemType:isKey() then descriptions[#descriptions + 1] = string.format("Key:%0.4d", actionId) end end
+		do
+			if not isVirtual and itemType:isKey() then
+				descriptions[#descriptions + 1] = fmt("Key:%0.4d", actionId)
+			end
+		end
 
 		-- weapon type (will be reused)
 		local weaponType = itemType:getWeaponType()
@@ -246,20 +269,21 @@ do
 			-- bows and crossbows
 			-- range, attack, hit%
 			if itemType:isBow() then
-				descriptions[#descriptions + 1] = string.format("Range:%d", item:getShootRange())
+				descriptions[#descriptions + 1] = fmt("Range:%d", item:getShootRange())
 
-				if attack ~= 0 then descriptions[#descriptions + 1] = string.format("Atk+%d", attack) end
+				if attack ~= 0 then descriptions[#descriptions + 1] = fmt("Atk+%d", attack) end
 
 				local hitPercent = item:getHitChance()
-				if hitPercent ~= 0 then descriptions[#descriptions + 1] = string.format("Hit%%+%d", hitPercent) end
+				if hitPercent ~= 0 then descriptions[#descriptions + 1] = fmt("Hit%%+%d", hitPercent) end
 
 				-- melee weapons and missiles
 				-- atk x physical +y% element
 			elseif table.contains(showAtkWeaponTypes, weaponType) then
-				local atkString = string.format("Atk:%d", attack)
+				local atkString = fmt("Atk:%d", attack)
 				local elementDmg = itemType:getElementDamage()
 				if elementDmg ~= 0 then
-					atkString = string.format("%s physical %+d %s", atkString, elementDmg, getCombatName(itemType:getElementType()))
+					atkString = fmt("%s physical %+d %s", atkString, elementDmg,
+					                getCombatName(itemType:getElementType()))
 				end
 
 				descriptions[#descriptions + 1] = atkString
@@ -269,7 +293,7 @@ do
 		-- attack speed
 		do
 			local atkSpeed = item:getAttackSpeed()
-			if atkSpeed ~= 0 then descriptions[#descriptions + 1] = string.format("AS:%0.2f/turn", 2000 / atkSpeed) end
+			if atkSpeed ~= 0 then descriptions[#descriptions + 1] = fmt("AS:%0.2f/turn", 2000 / atkSpeed) end
 		end
 
 		-- defense attributes
@@ -283,7 +307,9 @@ do
 				if defense ~= 0 then
 					if weaponType == WEAPON_DISTANCE then
 						-- throwables
-						if ammoType ~= AMMO_ARROW and ammoType ~= AMMO_BOLT then defAttrs[#defAttrs + 1] = defense end
+						if ammoType ~= AMMO_ARROW and ammoType ~= AMMO_BOLT then
+							defAttrs[#defAttrs + 1] = defense
+						end
 					else
 						defAttrs[#defAttrs + 1] = defense
 					end
@@ -291,16 +317,16 @@ do
 
 				-- extra def
 				local xD = item:getExtraDefense()
-				if xD ~= 0 then defAttrs[#defAttrs + 1] = string.format("%+d", xD) end
+				if xD ~= 0 then defAttrs[#defAttrs + 1] = fmt("%+d", xD) end
 
-				if #defAttrs > 0 then descriptions[#descriptions + 1] = string.format("Def:%s", table.concat(defAttrs, " ")) end
+				if #defAttrs > 0 then descriptions[#descriptions + 1] = fmt("Def:%s", concat(defAttrs, " ")) end
 			end
 		end
 
 		-- armor
 		do
 			local arm = item:getArmor()
-			if arm > 0 then descriptions[#descriptions + 1] = string.format("Arm:%d", arm) end
+			if arm > 0 then descriptions[#descriptions + 1] = fmt("Arm:%d", arm) end
 		end
 
 		-- abilities (will be reused)
@@ -316,7 +342,9 @@ do
 			end
 
 			-- percent buffs
-			for stat, value in pairs(abilities.statsPercent) do if value ~= 0 then stats[stat].percent = value end end
+			for stat, value in pairs(abilities.statsPercent) do
+				if value ~= 0 then stats[stat].percent = value end
+			end
 
 			-- display the buffs
 			for _, statData in pairs(stats) do
@@ -329,8 +357,8 @@ do
 				-- +5%
 				-- +20 and 5%
 				if #displayValues > 0 then
-					displayValues[1] = string.format("%+d", displayValues[1])
-					descriptions[#descriptions + 1] = string.format("%s %s", statData.name, table.concat(displayValues, " and "))
+					displayValues[1] = fmt("%+d", displayValues[1])
+					descriptions[#descriptions + 1] = fmt("%s %s", statData.name, concat(displayValues, " and "))
 				end
 			end
 		end
@@ -338,7 +366,18 @@ do
 		-- skill boosts
 		do
 			for skill, value in pairs(abilities.skills) do
-				if value ~= 0 then descriptions[#descriptions + 1] = string.format("%s %+d", getSkillName(skill - 1), value) end
+				if value ~= 0 then
+					descriptions[#descriptions + 1] = fmt("%s %+d", getSkillName(skill - 1), value)
+				end
+			end
+		end
+
+		-- element magic level
+		do
+			for element, value in pairs(abilities.specialMagicLevel) do
+				if value ~= 0 then
+					descriptions[#descriptions + 1] = fmt("%s magic level %+d", getCombatName(2^(element-1)), value)
+				end
 			end
 		end
 
@@ -348,14 +387,14 @@ do
 				if value ~= 0 then
 					-- add + symbol to special skill "amount" fields
 					if skill - 1 < 6 and skill % 2 == 1 then
-						value = string.format("%+d", value)
+						value = fmt("%+d", value)
 					elseif skill - 1 >= 6 then
 						-- fatal, dodge, momentum coming from the item natively
 						-- (stats coming from tier are near tier info)
-						value = string.format("%0.2f", value / 100)
+						value = fmt("%0.2f", value / 100)
 					end
 
-					descriptions[#descriptions + 1] = string.format("%s %s%%", getSpecialSkillName(skill - 1), value)
+					descriptions[#descriptions + 1] = fmt("%s %s%%", getSpecialSkillName(skill - 1), value)
 				end
 			end
 		end
@@ -364,10 +403,14 @@ do
 		do
 			local protections = {}
 			for element, value in pairs(abilities.absorbPercent) do
-				if value ~= 0 then protections[#protections + 1] = string.format("%s %+d%%", getCombatName(2 ^ (element - 1)), value) end
+				if value ~= 0 then
+					protections[#protections + 1] = fmt("%s %+d%%", getCombatName(2 ^ (element - 1)), value)
+				end
 			end
 
-			if #protections > 0 then descriptions[#descriptions + 1] = string.format("protection %s", table.concat(protections, ", ")) end
+			if #protections > 0 then
+				descriptions[#descriptions + 1] = fmt("protection %s", concat(protections, ", "))
+			end
 		end
 
 		-- damage reflection
@@ -391,12 +434,16 @@ do
 		do
 			local suppressions = abilities.conditionSuppressions
 			for conditionId, conditionName in pairs(suppressedConditionNames) do
-				if (abilities.conditionSuppressions & conditionId) ~= 0 then descriptions[#descriptions + 1] = conditionName end
+				if (abilities.conditionSuppressions & conditionId) ~= 0 then
+					descriptions[#descriptions + 1] = conditionName
+				end
 			end
 		end
 
 		-- speed
-		if abilities.speed ~= 0 then descriptions[#descriptions + 1] = string.format("speed %+d", math.floor(abilities.speed / 2)) end
+		if abilities.speed ~= 0 then
+			descriptions[#descriptions + 1] = fmt("speed %+d", math.floor(abilities.speed / 2))
+		end
 
 		-- collecting attributes finished
 		-- build the output text
@@ -409,7 +456,7 @@ do
 		do
 			if (itemGroup == ITEM_GROUP_FLUID or itemGroup == ITEM_GROUP_SPLASH) and subType > 0 then
 				local subTypeName = getSubTypeName(subType)
-				response[#response + 1] = string.format(" of %s", (subTypeName ~= "" and subTypeName or "unknown"))
+				response[#response + 1] = fmt(" of %s", (subTypeName ~= "" and subTypeName or "unknown"))
 			end
 		end
 
@@ -421,13 +468,15 @@ do
 			if not isVirtual then
 				local minLevelDoor = itemType:getLevelDoor()
 				if minLevelDoor ~= 0 then
-					if actionId >= minLevelDoor then response[#response + 1] = string.format(" for level %d", actionId - minLevelDoor) end
+					if actionId >= minLevelDoor then
+						response[#response + 1] = fmt(" for level %d", actionId - minLevelDoor)
+					end
 				end
 			end
 		end
 
 		-- primary attributes parenthesis
-		if #descriptions > 0 then response[#response + 1] = string.format(" (%s)", table.concat(descriptions, ", ")) end
+		if #descriptions > 0 then response[#response + 1] = fmt(" (%s)", concat(descriptions, ", ")) end
 
 		-- charges and duration
 		do
@@ -436,7 +485,7 @@ do
 			-- charges
 			if itemType:hasShowCharges() then
 				local charges = item:getCharges()
-				expireInfo[#expireInfo + 1] = string.format("has %d charge%s left", charges, (charges ~= 1 and "s" or ""))
+				expireInfo[#expireInfo + 1] = fmt("has %d charge%s left", charges, (charges ~= 1 and "s" or ""))
 			end
 
 			-- duration
@@ -456,12 +505,12 @@ do
 				if currentDuration == maxDuration then
 					expireInfo[#expireInfo + 1] = "is brand-new"
 				elseif currentDuration ~= 0 then
-					expireInfo[#expireInfo + 1] = string.format("will expire in %s",
-					                                            Game.getCountdownString(math.floor(currentDuration / 1000), true, true))
+					expireInfo[#expireInfo + 1] = fmt("will expire in %s", Game.getCountdownString(
+						                                  math.floor(currentDuration / 1000), true, true))
 				end
 			end
 
-			if #expireInfo > 0 then response[#response + 1] = string.format(" that %s", table.concat(expireInfo, " and ")) end
+			if #expireInfo > 0 then response[#response + 1] = fmt(" that %s", concat(expireInfo, " and ")) end
 		end
 
 		-- dot after primary attributes info
@@ -485,9 +534,10 @@ do
 						isForSale = true
 					end
 
-					response[#response + 1] = string.format(" It belongs to house '%s'. %s owns this house.", houseName, houseOwnerName)
+					response[#response + 1] = fmt(" It belongs to house '%s'. %s owns this house.", houseName,
+					                              houseOwnerName)
 					if housePriceVisible and isForSale and pricePerSQM > 0 then
-						response[#response + 1] = string.format(" It costs %d gold coins.", pricePerSQM * house:getTileCount())
+						response[#response + 1] = fmt(" It costs %d gold coins.", pricePerSQM * house:getTileCount())
 					end
 				end
 			end
@@ -519,18 +569,18 @@ do
 							end
 						end
 
-						if #vocAttrs > 1 then vocAttrs[#vocAttrs - 1] = string.format("and %s", vocAttrs[#vocAttrs - 1]) end
+						if #vocAttrs > 1 then vocAttrs[#vocAttrs - 1] = fmt("and %s", vocAttrs[#vocAttrs - 1]) end
 
 						local levelInfo = {}
-						if hasLevel then levelInfo[#levelInfo + 1] = string.format("level %d", runeLevel) end
+						if hasLevel then levelInfo[#levelInfo + 1] = fmt("level %d", runeLevel) end
 
-						if hasMLvl then levelInfo[#levelInfo + 1] = string.format("magic level %d", runeMagLevel) end
+						if hasMLvl then levelInfo[#levelInfo + 1] = fmt("magic level %d", runeMagLevel) end
 
 						local levelStr = ""
-						if #levelInfo > 0 then levelStr = string.format(" of %s or higher", table.concat(levelInfo, " and ")) end
+						if #levelInfo > 0 then levelStr = fmt(" of %s or higher", concat(levelInfo, " and ")) end
 
-						response[#response + 1] = string.format("\n%s can only be used properly by %s%s.", (count > 1 and "They" or "It"),
-						                                        table.concat(vocAttrs, ", "), levelStr)
+						response[#response + 1] = fmt("\n%s can only be used properly by %s%s.",
+						                              (count > 1 and "They" or "It"), concat(vocAttrs, ", "), levelStr)
 					end
 				end
 			else
@@ -548,17 +598,19 @@ do
 
 					local levelInfo = {}
 					if (wieldInfo & WIELDINFO_LEVEL) ~= 0 then
-						levelInfo[#levelInfo + 1] = string.format("level %d", itemType:getMinReqLevel())
+						levelInfo[#levelInfo + 1] = fmt("level %d", itemType:getMinReqLevel())
 					end
 
 					if (wieldInfo & WIELDINFO_MAGLV) ~= 0 then
-						levelInfo[#levelInfo + 1] = string.format("magic level %d", itemType:getMinReqMagicLevel())
+						levelInfo[#levelInfo + 1] = fmt("magic level %d", itemType:getMinReqMagicLevel())
 					end
 
-					if #levelInfo > 0 then wieldAttrs[#wieldAttrs + 1] = string.format("of %s or higher", table.concat(levelInfo, " and ")) end
+					if #levelInfo > 0 then
+						wieldAttrs[#wieldAttrs + 1] = fmt("of %s or higher", concat(levelInfo, " and "))
+					end
 
-					response[#response + 1] = string.format("\n%s can only be wielded properly by %s.", (count > 1 and "They" or "It"),
-					                                        table.concat(wieldAttrs, " "))
+					response[#response + 1] = fmt("\n%s can only be wielded properly by %s.",
+					                              (count > 1 and "They" or "It"), concat(wieldAttrs, " "))
 				end
 			end
 		end
@@ -566,9 +618,8 @@ do
 		if lookDistance <= 1 then
 			local weight = item:getWeight()
 			if isPickupable and not isUnique then
-				response[#response + 1] = string.format("\n%s %0.2f oz.",
-				                                        (count == 1 or not itemType:hasShowCount()) and "It weighs" or "They weigh",
-				                                        weight / 100)
+				response[#response + 1] = fmt("\n%s %0.2f oz.", (count == 1 or not itemType:hasShowCount()) and
+					                              "It weighs" or "They weigh", weight / 100)
 			end
 		end
 
@@ -581,15 +632,17 @@ do
 					local writeDate = item:getAttribute(ITEM_ATTRIBUTE_DATE)
 					local writeInfo = {}
 					if writer and writer:len() > 0 then
-						writeInfo[#writeInfo + 1] = string.format("\n%s wrote", writer)
+						writeInfo[#writeInfo + 1] = fmt("\n%s wrote", writer)
 
-						if writeDate and writeDate > 0 then writeInfo[#writeInfo + 1] = string.format(" on %s", os.date("%d %b %Y", writeDate)) end
+						if writeDate and writeDate > 0 then
+							writeInfo[#writeInfo + 1] = fmt(" on %s", os.date("%d %b %Y", writeDate))
+						end
 					end
 
 					if #writeInfo > 0 then
-						response[#response + 1] = string.format("%s:\n%s", table.concat(writeInfo, ""), text)
+						response[#response + 1] = fmt("%s:\n%s", concat(writeInfo, ""), text)
 					else
-						response[#response + 1] = string.format("\nYou read: %s", text)
+						response[#response + 1] = fmt("\nYou read: %s", text)
 					end
 				else
 					response[#response + 1] = "\nYou are too far away to read it."
@@ -614,12 +667,14 @@ do
 			end
 
 			if desc and desc:len() > 0 then
-				if not (isBed and desc == "Nobody is sleeping there.") then response[#response + 1] = string.format("\n%s", desc) end
+				if not (isBed and desc == "Nobody is sleeping there.") then
+					response[#response + 1] = fmt("\n%s", desc)
+				end
 			end
 		end
 
 		-- turn response into a single string
-		return table.concat(response, "")
+		return concat(response, "")
 	end
 
 	function Item:getDescription(lookDistance, subType, addArticle)

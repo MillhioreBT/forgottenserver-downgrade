@@ -1,4 +1,30 @@
-function Creature.getClosestFreePosition(self, position, maxRadius, mustBeReachable)
+function Creature:getCreature() return self end
+
+function Creature:getPlayer() return Player(self) end
+
+function Creature:getMonster() return Monster(self) end
+
+function Creature:getNpc() return Npc(self) end
+
+function Creature:getTeleport() return nil end
+
+function Creature:isContainer() return false end
+
+function Creature:isItem() return false end
+
+function Creature:getItem() return nil end
+
+function Creature:isMonster() return false end
+
+function Creature:isNpc() return false end
+
+function Creature:isPlayer() return false end
+
+function Creature:isTeleport() return false end
+
+function Creature:isTile() return false end
+
+function Creature:getClosestFreePosition(position, maxRadius, mustBeReachable)
 	maxRadius = maxRadius or 1
 
 	-- backward compatability (extended)
@@ -24,34 +50,14 @@ function Creature.getClosestFreePosition(self, position, maxRadius, mustBeReacha
 	return Position()
 end
 
-function Creature.getCreature(self) return self:isCreature() and self or nil end
-
-function Creature.getPlayer(self) return self:isPlayer() and self or nil end
-
-function Creature.isContainer(self) return false end
-
-function Creature.isItem(self) return false end
-
-function Creature.getItem(self) return nil end
-
-function Creature.isMonster(self) return false end
-
-function Creature.getMonster(self) return self:isMonster() and self or nil end
-
-function Creature.isNpc(self) return false end
-
-function Creature.isPlayer(self) return false end
-
-function Creature.isTeleport(self) return false end
-
-function Creature.isTile(self) return false end
-
 function Creature:setMonsterOutfit(monster, time)
 	local monsterType = MonsterType(monster)
 	if not monsterType then return false end
 
 	local player = self:getPlayer()
-	if player and not (player:hasFlag(PlayerFlag_CanIllusionAll) or monsterType:isIllusionable()) then return false end
+	if player and not (player:hasFlag(PlayerFlag_CanIllusionAll) or monsterType:isIllusionable()) then
+		return false
+	end
 
 	local condition = Condition(CONDITION_OUTFIT)
 	condition:setOutfit(monsterType:getOutfit())
@@ -82,7 +88,8 @@ function Creature:addSummon(monster)
 	summon:setDropLoot(false)
 	summon:setSkillLoss(false)
 	summon:setMaster(self)
-	summon:getPosition():notifySummonAppear(summon)
+
+	if self:isPlayer() then summon:getPosition():notifySummonAppear(summon) end
 
 	return true
 end

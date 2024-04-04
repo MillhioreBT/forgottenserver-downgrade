@@ -69,6 +69,7 @@ function Player.isPremium(self)
 		       self:hasFlag(PlayerFlag_IsAlwaysPremium)
 end
 
+---@param message string|number
 function Player.sendCancelMessage(self, message)
 	if type(message) == "number" then message = Game.getReturnMessage(message) end
 	return self:sendTextMessage(MESSAGE_STATUS_SMALL, message)
@@ -137,7 +138,7 @@ function Player.canCarryMoney(self, amount)
 	if self:getFreeCapacity() < totalWeight then return false end
 
 	-- If player don't have enough available inventory slots to carry this money
-	local backpack = self:getSlotItem(CONST_SLOT_BACKPACK)
+	local backpack = self:getSlotItem(CONST_SLOT_BACKPACK) --[[@as Container]]
 	if not backpack or backpack:getEmptySlots(true) < inventorySlots then return false end
 	return true
 end
@@ -283,3 +284,15 @@ function Player.sendWorldTime(self, time)
 	msg:sendToPlayer(self)
 	return true
 end
+
+function Player.setExhaustion(self, key, milliseconds)
+	return self:setStorageValue(key, os.mtime() + milliseconds)
+end
+
+function Player.getExhaustion(self, key)
+	local milliseconds = self:getStorageValue(key)
+	if not milliseconds then return 0 end
+	return math.max(0, os.mtime() - milliseconds)
+end
+
+function Player.hasExhaustion(self, key) return self:getExhaustion(key) > 0 end

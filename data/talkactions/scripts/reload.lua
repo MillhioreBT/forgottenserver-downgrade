@@ -26,6 +26,9 @@ local reloadTypes = {
 	["monster"] = RELOAD_TYPE_MONSTERS,
 	["monsters"] = RELOAD_TYPE_MONSTERS,
 
+	["mount"] = RELOAD_TYPE_MOUNTS,
+	["mounts"] = RELOAD_TYPE_MOUNTS,
+
 	["move"] = RELOAD_TYPE_MOVEMENTS,
 	["movement"] = RELOAD_TYPE_MOVEMENTS,
 	["movements"] = RELOAD_TYPE_MOVEMENTS,
@@ -53,11 +56,15 @@ local reloadTypes = {
 function onSay(player, words, param)
 	logCommand(player, words, param)
 
-	local reloadType = reloadTypes[param:lower()]
+	local paramToLower = param:lower()
+	local reloadType = reloadTypes[paramToLower]
 	if not reloadType then
 		player:sendTextMessage(MESSAGE_STATUS_CONSOLE_BLUE, "Reload type not found.")
 		return false
 	end
+
+	-- call to Event.onReload
+	if hasEvent.onReload then Event.onReload(player, reloadType) end
 
 	-- need to clear EventCallback.data or we end up having duplicated events on /reload scripts
 	if table.contains({RELOAD_TYPE_SCRIPTS, RELOAD_TYPE_ALL}, reloadType) then
@@ -65,12 +72,29 @@ function onSay(player, words, param)
 		Game.clearQuests()
 	end
 
-	Game.reload(reloadType)
+	local description = {}
+	local reloaded, scriptsLib = Game.reload(reloadType)
 	if reloadType == RELOAD_TYPE_GLOBAL then
 		-- we need to reload the scripts as well
-		Game.reload(RELOAD_TYPE_SCRIPTS)
+		if not Game.reload(RELOAD_TYPE_SCRIPTS) then
+			description[#description + 1] = "Failed to reload scripts."
+		else
+			description[#description + 1] = "Reloaded scripts."
+		end
+
+		if not scriptsLib then
+			description[#description + 1] = "Failed to reload script libs."
+		else
+			description[#description + 1] = "Reloaded script libs."
+		end
 	end
-	player:sendTextMessage(MESSAGE_STATUS_CONSOLE_BLUE,
-	                       string.format("Reloaded %s.", param:lower()))
+
+	if not reloaded then
+		description[#description + 1] = string.format("Failed to reload %s.", paramToLower)
+	else
+		description[#description + 1] = string.format("Reloaded %s.", paramToLower)
+	end
+
+	for _, desc in ipairs(description) do player:sendTextMessage(MESSAGE_STATUS_CONSOLE_BLUE, desc) end
 	return false
 end

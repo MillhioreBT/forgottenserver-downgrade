@@ -1,30 +1,38 @@
-function Tile.isCreature(self) return false end
+function Tile:getParent() return nil end
 
-function Tile.isPlayer(self) return false end
+function Tile:getCreature() return nil end
 
-function Tile.isItem(self) return false end
+function Tile:getPlayer() return nil end
 
-function Tile.isMonster(self) return false end
+function Tile:getMonster() return nil end
 
-function Tile.isNpc(self) return false end
+function Tile:getNpc() return nil end
 
-function Tile.isTeleport(self) return false end
+function Tile:getItem() return nil end
 
-function Tile.isTile(self) return true end
+function Tile:getContainer() return nil end
 
-function Tile.isContainer(self) return false end
+function Tile:getTeleport() return nil end
 
-function Tile.isHouse(self) return self:getHouse() ~= nil end
+function Tile:isCreature() return false end
 
-function Tile.getCreature(self) return nil end
+function Tile:isPlayer() return false end
 
-function Tile.getPlayer(self) return nil end
+function Tile:isItem() return false end
 
-function Tile.getItem(self) return nil end
+function Tile:isMonster() return false end
 
-function Tile.getContainer(self) return nil end
+function Tile:isNpc() return false end
 
-function Tile.relocateTo(self, toPosition)
+function Tile:isTeleport() return false end
+
+function Tile:isTile() return true end
+
+function Tile:isContainer() return false end
+
+function Tile:isHouse() return self:getHouse() ~= nil end
+
+function Tile:relocateTo(toPosition)
 	if self:getPosition() == toPosition or not Tile(toPosition) then return false end
 
 	for i = self:getThingCount() - 1, 0, -1 do
@@ -47,7 +55,7 @@ function Tile.relocateTo(self, toPosition)
 	return true
 end
 
-function Tile.isWalkable(self)
+function Tile:isWalkable()
 	local ground = self:getGround()
 	if not ground or ground:hasProperty(CONST_PROP_BLOCKSOLID) then return false end
 
@@ -55,14 +63,13 @@ function Tile.isWalkable(self)
 	for i = 1, self:getItemCount() do
 		local item = items[i]
 		local itemType = item:getType()
-		if itemType:getType() ~= ITEM_TYPE_MAGICFIELD and not itemType:isMovable() and item:hasProperty(CONST_PROP_BLOCKSOLID) then
-			return false
-		end
+		if itemType:getType() ~= ITEM_TYPE_MAGICFIELD and not itemType:isMovable() and
+			item:hasProperty(CONST_PROP_BLOCKSOLID) then return false end
 	end
 	return true
 end
 
-function Tile.getTopPlayer(self)
+function Tile:getTopPlayer()
 	local creature = self:getTopCreature()
 	return creature and creature:getPlayer()
 end

@@ -1,5 +1,8 @@
 local logFormat = "[%s] %s %s"
 
+---@param player Player
+---@param words string
+---@param param string
 function logCommand(player, words, param)
 	local file = io.open("data/logs/" .. player:getName() .. " commands.log", "a")
 	if not file then

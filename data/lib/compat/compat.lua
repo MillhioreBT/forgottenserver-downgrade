@@ -38,19 +38,20 @@ NORTHWEST = DIRECTION_NORTHWEST
 NORTHEAST = DIRECTION_NORTHEAST
 
 do
-	local dummyStrTbl<const> = {}
-	local dummyStrMetaTbl = {}
-
 	local function storageProxy(player)
-		dummyStrMetaTbl.__index = function(_, key) return player:getStorageValue(PlayerStorageKeys[key] or key) end
-		dummyStrMetaTbl.__newindex = function(_, key, value) player:setStorageValue(PlayerStorageKeys[key] or key, value) end
-		return setmetatable(dummyStrTbl, dummyStrMetaTbl)
+		return setmetatable({}, {
+			__index = function(self, key) return player:getStorageValue(key) end,
+			__newindex = function(self, key, value) player:setStorageValue(key, value) end
+		})
 	end
 
 	local function accountStorageProxy(player)
-		dummyStrMetaTbl.__index = function(_, key) return Game.getAccountStorageValue(player:getAccountId(), key) end
-		dummyStrMetaTbl.__newindex = function(_, key, value) Game.setAccountStorageValue(player:getAccountId(), key, value) end
-		return setmetatable(dummyStrTbl, dummyStrMetaTbl)
+		return setmetatable({}, {
+			__index = function(self, key) return Game.getAccountStorageValue(player:getAccountId(), key) end,
+			__newindex = function(self, key, value)
+				Game.setAccountStorageValue(player:getAccountId(), key, value)
+			end
+		})
 	end
 
 	local function CreatureIndex(self, key)
@@ -75,6 +76,12 @@ do
 			if methods.isPlayer(self) then return storageProxy(self) end
 		elseif key == "accountStorage" then
 			if methods.isPlayer(self) then return accountStorageProxy(self) end
+		else
+			local storage = Creature[methods.getId(self)]
+			if storage then
+				local value = storage[key]
+				if value then return value end
+			end
 		end
 
 		return methods[key]
@@ -82,6 +89,20 @@ do
 	rawgetmetatable("Player").__index = CreatureIndex
 	rawgetmetatable("Monster").__index = CreatureIndex
 	rawgetmetatable("Npc").__index = CreatureIndex
+
+	local function CreatureNewIndex(self, key, value)
+		local playerId = self:getId()
+		local storage = Creature.storage[playerId]
+		if storage then
+			storage[key] = value
+		else
+			Creature.storage[playerId] = {[key] = value}
+		end
+	end
+
+	rawgetmetatable("Player").__newindex = CreatureNewIndex
+	rawgetmetatable("Monster").__newindex = CreatureNewIndex
+	rawgetmetatable("Npc").__newindex = CreatureNewIndex
 end
 
 do
@@ -334,10 +355,13 @@ end
 function doTargetCombatHealth(...) return doTargetCombat(...) end
 function doAreaCombatHealth(...) return doAreaCombat(...) end
 doCombatAreaHealth = doAreaCombatHealth
-function doTargetCombatMana(cid, target, min, max, effect) return doTargetCombat(cid, target, COMBAT_MANADRAIN, min, max, effect) end
+function doTargetCombatMana(cid, target, min, max, effect)
+	return doTargetCombat(cid, target, COMBAT_MANADRAIN, min, max, effect)
+end
 doCombatAreaMana = doTargetCombatMana
-function doAreaCombatMana(cid, pos, area, min, max, effect) return
-	doAreaCombat(cid, COMBAT_MANADRAIN, pos, area, min, max, effect) end
+function doAreaCombatMana(cid, pos, area, min, max, effect)
+	return doAreaCombat(cid, COMBAT_MANADRAIN, pos, area, min, max, effect)
+end
 
 createConditionObject = Condition
 setConditionParam = Condition.setParameter
@@ -507,9 +531,8 @@ function doAddCondition(cid, conditionId)
 end
 function doRemoveCondition(cid, conditionType, subId)
 	local c = Creature(cid)
-	return c and
-		       (c:removeCondition(conditionType, CONDITIONID_COMBAT, subId) or
-			       c:removeCondition(conditionType, CONDITIONID_DEFAULT, subId) or true)
+	return c and (c:removeCondition(conditionType, CONDITIONID_COMBAT, subId) or
+		       c:removeCondition(conditionType, CONDITIONID_DEFAULT, subId) or true)
 end
 function getCreatureCondition(cid, type, subId)
 	local c = Creature(cid)
@@ -796,7 +819,9 @@ function getPlayersByIPAddress(ip, mask)
 	if mask == nil then mask = 0xFFFFFFFF end
 	local masked = ip & mask
 	local result = {}
-	for _, player in ipairs(Game.getPlayers()) do if player:getIp() & mask == masked then result[#result + 1] = player:getId() end end
+	for _, player in ipairs(Game.getPlayers()) do
+		if player:getIp() & mask == masked then result[#result + 1] = player:getId() end
+	end
 	return result
 end
 getPlayersByIp = getPlayersByIPAddress
@@ -817,7 +842,8 @@ function getPlayerGUIDByName(name)
 	local player = Player(name)
 	if player then return player:getGuid() end
 
-	local resultId = db.storeQuery("SELECT `id` FROM `players` WHERE `name` = " .. db.escapeString(name))
+	local resultId = db.storeQuery("SELECT `id` FROM `players` WHERE `name` = " ..
+		                               db.escapeString(name))
 	if resultId ~= false then
 		local guid = result.getNumber(resultId, "id")
 		result.free(resultId)
@@ -829,7 +855,8 @@ function getAccountNumberByPlayerName(name)
 	local player = Player(name)
 	if player then return player:getAccountId() end
 
-	local resultId = db.storeQuery("SELECT `account_id` FROM `players` WHERE `name` = " .. db.escapeString(name))
+	local resultId = db.storeQuery("SELECT `account_id` FROM `players` WHERE `name` = " ..
+		                               db.escapeString(name))
 	if resultId ~= false then
 		local accountId = result.getNumber(resultId, "account_id")
 		result.free(resultId)
@@ -1105,7 +1132,9 @@ function getMonsterFriendList(cid)
 
 	local result = {}
 	for _, creature in ipairs(monster:getFriendList()) do
-		if not creature:isRemoved() and creature:getPosition().z == z then result[#result + 1] = creature:getId() end
+		if not creature:isRemoved() and creature:getPosition().z == z then
+			result[#result + 1] = creature:getId()
+		end
 	end
 	return result
 end
@@ -1217,11 +1246,15 @@ function doAddContainerItemEx(uid, virtualId)
 	return res
 end
 
-function doSendMagicEffect(pos, magicEffect, ...) return Position(pos):sendMagicEffect(magicEffect, ...) end
+function doSendMagicEffect(pos, magicEffect, ...)
+	return Position(pos):sendMagicEffect(magicEffect, ...)
+end
 function doSendDistanceShoot(fromPos, toPos, distanceEffect, ...)
 	return Position(fromPos):sendDistanceEffect(toPos, distanceEffect, ...)
 end
-function isSightClear(fromPos, toPos, floorCheck) return Position(fromPos):isSightClear(toPos, floorCheck) end
+function isSightClear(fromPos, toPos, floorCheck)
+	return Position(fromPos):isSightClear(toPos, floorCheck)
+end
 
 function getPromotedVocation(vocationId)
 	local vocation = Vocation(vocationId)
@@ -1234,7 +1267,8 @@ end
 getPlayerPromotionLevel = getPromotedVocation
 
 function getGuildId(guildName)
-	local resultId = db.storeQuery("SELECT `id` FROM `guilds` WHERE `name` = " .. db.escapeString(guildName))
+	local resultId = db.storeQuery("SELECT `id` FROM `guilds` WHERE `name` = " ..
+		                               db.escapeString(guildName))
 	if resultId == false then return false end
 
 	local guildId = result.getNumber(resultId, "id")
@@ -1318,7 +1352,7 @@ end
 function getContainerCapById(itemId) return ItemType(itemId):getCapacity() end
 function getFluidSourceType(itemId)
 	local it = ItemType(itemId)
-	return it.id ~= 0 and it:getFluidSource() or false
+	return it:getId() ~= 0 and it:getFluidSource() or false
 end
 function hasProperty(uid, prop)
 	local item = Item(uid)
@@ -1380,7 +1414,9 @@ function setHouseAccessList(id, listId, listText)
 end
 
 function getHouseByPlayerGUID(playerGUID)
-	for _, house in ipairs(Game.getHouses()) do if house:getOwnerGuid() == playerGUID then return house:getId() end end
+	for _, house in ipairs(Game.getHouses()) do
+		if house:getOwnerGuid() == playerGUID then return house:getId() end
+	end
 	return nil
 end
 
@@ -1405,7 +1441,7 @@ function getTileInfo(position)
 	ret.protection = t:hasFlag(TILESTATE_PROTECTIONZONE)
 	ret.nopz = ret.protection
 	ret.nologout = t:hasFlag(TILESTATE_NOLOGOUT)
-	ret.refresh = false --t:hasFlag(TILESTATE_REFRESH)
+	ret.refresh = false -- t:hasFlag(TILESTATE_REFRESH)
 	ret.house = t:getHouse() ~= nil
 	ret.bed = t:hasFlag(TILESTATE_BED)
 	ret.depot = t:hasFlag(TILESTATE_DEPOT)
@@ -1534,10 +1570,12 @@ function doRelocate(fromPos, toPos)
 	for i = fromTile:getThingCount() - 1, 0, -1 do
 		local thing = fromTile:getThing(i)
 		if thing then
-			if thing:isItem() then
-				if ItemType(thing:getId()):isMovable() then thing:moveTo(toPos) end
-			elseif thing:isCreature() then
-				thing:teleportTo(toPos)
+			local item = thing:getItem()
+			if item then
+				if ItemType(item:getId()):isMovable() then item:moveTo(toPos) end
+			else
+				local creature = thing:getCreature()
+				if creature then creature:teleportTo(toPos) end
 			end
 		end
 	end
@@ -1598,16 +1636,21 @@ variantToPosition = Variant.getPosition
 
 function doCreateTeleport(itemId, destination, position)
 	local item = Game.createItem(itemId, 1, position)
-	if not item:isTeleport() then
+	if not item then return false end
+
+	local teleport = item:getTeleport()
+	if not teleport then
 		item:remove()
 		return false
 	end
-	item:setDestination(destination)
-	return item:getUniqueId()
+
+	teleport:setDestination(destination)
+	return teleport:getUniqueId()
 end
 
 function getSpectators(centerPos, rangex, rangey, multifloor, onlyPlayers)
-	local result = Game.getSpectators(centerPos, multifloor, onlyPlayers or false, rangex, rangex, rangey, rangey)
+	local result = Game.getSpectators(centerPos, multifloor, onlyPlayers or false, rangex, rangex,
+	                                  rangey, rangey)
 	if #result == 0 then return nil end
 
 	for index, spectator in ipairs(result) do result[index] = spectator:getId() end
@@ -1693,7 +1736,9 @@ do
 	local exclude = {[2] = {"is"}, [3] = {"get", "set", "add", "can"}, [4] = {"need"}}
 
 	local function isExclude(name)
-		for strLen, strTable in pairs(exclude) do if table.contains(strTable, name:sub(1, strLen)) then return true end end
+		for strLen, strTable in pairs(exclude) do
+			if table.contains(strTable, name:sub(1, strLen)) then return true end
+		end
 		return false
 	end
 
@@ -1706,7 +1751,9 @@ do
 				local setFunc = function(self, ...) return func(self, ...) end
 				local get = "get" .. titleCase
 				local set = "set" .. titleCase
-				if not (rawget(class, get) and rawget(class, set)) then table.insert(temp, {set, setFunc, get, getFunc}) end
+				if not (rawget(class, get) and rawget(class, set)) then
+					table.insert(temp, {set, setFunc, get, getFunc})
+				end
 			end
 		end
 
@@ -1819,3 +1866,11 @@ bit = {
 }
 
 ItemType.getDuration = ItemType.getDurationMin
+
+do
+	local getmetatable = getmetatable
+
+	---@param obj any
+	---@param class table
+	function isClass(obj, class) return getmetatable(obj) == class end
+end
