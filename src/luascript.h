@@ -126,44 +126,44 @@ using XMLNode = pugi::xml_node;
 inline constexpr int32_t EVENT_ID_LOADING = 1;
 inline constexpr int32_t EVENT_ID_USER = 1000;
 
-NEW_LUA_DATA_TYPE(Item);
-NEW_LUA_DATA_TYPE(Container);
-NEW_LUA_DATA_TYPE(Teleport);
-NEW_LUA_DATA_TYPE(Creature);
-NEW_LUA_DATA_TYPE(Player);
-NEW_LUA_DATA_TYPE(Monster);
-NEW_LUA_DATA_TYPE(Npc);
-NEW_LUA_DATA_TYPE(Tile);
-NEW_LUA_DATA_TYPE(Condition);
+NEW_LUA_DATA_TYPE(Item)
+NEW_LUA_DATA_TYPE(Container)
+NEW_LUA_DATA_TYPE(Teleport)
+NEW_LUA_DATA_TYPE(Creature)
+NEW_LUA_DATA_TYPE(Player)
+NEW_LUA_DATA_TYPE(Monster)
+NEW_LUA_DATA_TYPE(Npc)
+NEW_LUA_DATA_TYPE(Tile)
+NEW_LUA_DATA_TYPE(Condition)
 
-NEW_LUA_DATA_TYPE(Combat);
-NEW_LUA_DATA_TYPE(Group);
-NEW_LUA_DATA_TYPE(Guild);
-NEW_LUA_DATA_TYPE(House);
-NEW_LUA_DATA_TYPE(ItemType);
-NEW_LUA_DATA_TYPE(ModalWindow);
-NEW_LUA_DATA_TYPE(MonsterType);
-NEW_LUA_DATA_TYPE(NetworkMessage);
-NEW_LUA_DATA_TYPE(Party);
-NEW_LUA_DATA_TYPE(Vocation);
-NEW_LUA_DATA_TYPE(Town);
-NEW_LUA_DATA_TYPE(Position);
+NEW_LUA_DATA_TYPE(Combat)
+NEW_LUA_DATA_TYPE(Group)
+NEW_LUA_DATA_TYPE(Guild)
+NEW_LUA_DATA_TYPE(House)
+NEW_LUA_DATA_TYPE(ItemType)
+NEW_LUA_DATA_TYPE(ModalWindow)
+NEW_LUA_DATA_TYPE(MonsterType)
+NEW_LUA_DATA_TYPE(NetworkMessage)
+NEW_LUA_DATA_TYPE(Party)
+NEW_LUA_DATA_TYPE(Vocation)
+NEW_LUA_DATA_TYPE(Town)
+NEW_LUA_DATA_TYPE(Position)
 
-NEW_LUA_DATA_TYPE(LuaVariant);
+NEW_LUA_DATA_TYPE(LuaVariant)
 
-NEW_LUA_DATA_TYPE(Outfit);
-NEW_LUA_DATA_TYPE(Loot);
-NEW_LUA_DATA_TYPE(MonsterSpell);
-NEW_LUA_DATA_TYPE(Spell);
-NEW_LUA_DATA_TYPE(Action);
-NEW_LUA_DATA_TYPE(TalkAction);
-NEW_LUA_DATA_TYPE(CreatureEvent);
-NEW_LUA_DATA_TYPE(MoveEvent);
-NEW_LUA_DATA_TYPE(GlobalEvent);
-NEW_LUA_DATA_TYPE(Weapon);
+NEW_LUA_DATA_TYPE(Outfit)
+NEW_LUA_DATA_TYPE(Loot)
+NEW_LUA_DATA_TYPE(MonsterSpell)
+NEW_LUA_DATA_TYPE(Spell)
+NEW_LUA_DATA_TYPE(Action)
+NEW_LUA_DATA_TYPE(TalkAction)
+NEW_LUA_DATA_TYPE(CreatureEvent)
+NEW_LUA_DATA_TYPE(MoveEvent)
+NEW_LUA_DATA_TYPE(GlobalEvent)
+NEW_LUA_DATA_TYPE(Weapon)
 
-NEW_LUA_DATA_TYPE(XMLDocument);
-NEW_LUA_DATA_TYPE(XMLNode);
+NEW_LUA_DATA_TYPE(XMLDocument)
+NEW_LUA_DATA_TYPE(XMLNode)
 
 const std::unordered_map<std::string_view, LuaDataType> LuaDataTypeByClassName = {
     {"Item", LuaData_Item},
@@ -793,7 +793,7 @@ inline void setField(lua_State* L, const char* index, std::string_view value)
 }
 
 template <class T>
-inline const bool isType(lua_State* L, int32_t arg)
+inline bool isType(lua_State* L, int32_t arg)
 {
 	const LuaDataType classType = LuaDataTypeByClass<T>;
 	if (classType == LuaData_Unknown) {
