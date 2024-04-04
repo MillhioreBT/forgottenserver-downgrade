@@ -2493,7 +2493,6 @@ void ProtocolGame::AddPlayerSkills(NetworkMessage& msg)
 	msg.addByte(0xA1);
 
 	for (uint8_t i = SKILL_FIRST; i <= SKILL_LAST; ++i) {
-		fmt::print("Skill: {}\n", player->getSkillLevel(i));
 		msg.addByte(
 		    std::min<uint8_t>(static_cast<uint8_t>(player->getSkillLevel(i)), std::numeric_limits<uint8_t>::max()));
 		msg.addByte(static_cast<uint8_t>(player->getSkillPercent(i) / 100));
