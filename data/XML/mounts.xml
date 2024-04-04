@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mounts>
+	<mount id="1" clientid="368" name="Cat Example" speed="20" premium="yes" />
+	<mount id="2" clientid="27" name="Wolf Example" speed="20" premium="yes" />
+</mounts>
