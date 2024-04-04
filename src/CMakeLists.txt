@@ -1,5 +1,3 @@
-add_subdirectory(luamodules)
-
 set(tfs_SRC
 	${CMAKE_CURRENT_LIST_DIR}/otpch.cpp
 	${CMAKE_CURRENT_LIST_DIR}/actions.cpp
@@ -47,6 +45,7 @@ set(tfs_SRC
     ${CMAKE_CURRENT_LIST_DIR}/luaitem.cpp
     ${CMAKE_CURRENT_LIST_DIR}/luaitemtype.cpp
     ${CMAKE_CURRENT_LIST_DIR}/lualoot.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/luamodalwindow.cpp
     ${CMAKE_CURRENT_LIST_DIR}/luamonster.cpp
     ${CMAKE_CURRENT_LIST_DIR}/luamonsterspell.cpp
     ${CMAKE_CURRENT_LIST_DIR}/luamonstertype.cpp
@@ -107,7 +106,7 @@ set(tfs_SRC
 	${CMAKE_CURRENT_LIST_DIR}/weapons.cpp
 	${CMAKE_CURRENT_LIST_DIR}/wildcardtree.cpp
 	${CMAKE_CURRENT_LIST_DIR}/xtea.cpp
-	${tfs_luamodules_SRC})
+)
 
 set(tfs_HDR
 	${CMAKE_CURRENT_LIST_DIR}/otpch.h
@@ -194,7 +193,7 @@ set(tfs_HDR
 	${CMAKE_CURRENT_LIST_DIR}/weapons.h
 	${CMAKE_CURRENT_LIST_DIR}/wildcardtree.h
 	${CMAKE_CURRENT_LIST_DIR}/xtea.h
-	${tfs_luamodules_HDR})
+)
 
 set(tfs_MAIN ${CMAKE_CURRENT_LIST_DIR}/main.cpp PARENT_SCOPE)
 
