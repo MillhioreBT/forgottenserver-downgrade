@@ -721,6 +721,58 @@ int luaItemIsLoadedFromMap(lua_State* L)
 	}
 	return 1;
 }
+
+int luaItemSetReflect(lua_State* L)
+{
+	// item:setReflect(combatType, reflect)
+	Item* item = getUserdata<Item>(L, 1);
+	if (!item) {
+		lua_pushnil(L);
+		return 1;
+	}
+
+	item->setReflect(getInteger<CombatType_t>(L, 2), getReflect(L, 3));
+	pushBoolean(L, true);
+	return 1;
+}
+
+int luaItemGetReflect(lua_State* L)
+{
+	// item:getReflect(combatType[, total = true])
+	const Item* item = getUserdata<const Item>(L, 1);
+	if (item) {
+		pushReflect(L, item->getReflect(getInteger<CombatType_t>(L, 2), getBoolean(L, 3, true)));
+	} else {
+		lua_pushnil(L);
+	}
+	return 1;
+}
+
+int luaItemSetBoostPercent(lua_State* L)
+{
+	// item:setBoostPercent(combatType, percent)
+	Item* item = getUserdata<Item>(L, 1);
+	if (!item) {
+		lua_pushnil(L);
+		return 1;
+	}
+
+	item->setBoostPercent(getInteger<CombatType_t>(L, 2), getInteger<uint16_t>(L, 3));
+	pushBoolean(L, true);
+	return 1;
+}
+
+int luaItemGetBoostPercent(lua_State* L)
+{
+	// item:getBoostPercent(combatType[, total = true])
+	const Item* item = getUserdata<const Item>(L, 1);
+	if (item) {
+		lua_pushinteger(L, item->getBoostPercent(getInteger<CombatType_t>(L, 2), getBoolean(L, 3, true)));
+	} else {
+		lua_pushnil(L);
+	}
+	return 1;
+}
 } // namespace
 
 void LuaScriptInterface::registerItem()
@@ -775,4 +827,10 @@ void LuaScriptInterface::registerItem()
 
 	registerMethod("Item", "hasProperty", luaItemHasProperty);
 	registerMethod("Item", "isLoadedFromMap", luaItemIsLoadedFromMap);
+
+	registerMethod("Item", "setReflect", luaItemSetReflect);
+	registerMethod("Item", "getReflect", luaItemGetReflect);
+
+	registerMethod("Item", "setBoostPercent", luaItemSetBoostPercent);
+	registerMethod("Item", "getBoostPercent", luaItemGetBoostPercent);
 }

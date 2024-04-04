@@ -637,20 +637,6 @@ int luaGameSaveAccountStorageValues(lua_State* L)
 
 	return 1;
 }
-
-int luaGameRegisterItemTypes(lua_State* L)
-{
-	// Game.registerItemTypes(items)
-	if (LuaScriptInterface::getScriptEnv()->getScriptInterface() != &g_scripts->getScriptInterface()) {
-		reportErrorFunc(L, "ItemTypes can only be registered in the Scripts interface.");
-		lua_pushnil(L);
-		return 1;
-	}
-
-	Item::items.loadFromLua(L);
-	pushBoolean(L, true);
-	return 1;
-}
 } // namespace
 
 void LuaScriptInterface::registerGame()
@@ -704,6 +690,4 @@ void LuaScriptInterface::registerGame()
 	registerMethod("Game", "getAccountStorageValue", luaGameGetAccountStorageValue);
 	registerMethod("Game", "setAccountStorageValue", luaGameSetAccountStorageValue);
 	registerMethod("Game", "saveAccountStorageValues", luaGameSaveAccountStorageValues);
-
-	registerMethod("Game", "registerItemTypes", luaGameRegisterItemTypes);
 }

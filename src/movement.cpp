@@ -770,6 +770,19 @@ ReturnValue MoveEvent::EquipItem(MoveEvent* moveEvent, Player* player, Item* ite
 		}
 	}
 
+	for (int32_t i = 0; i < COMBAT_COUNT; ++i) {
+		if (it.abilities->specialMagicLevelSkill[i]) {
+			player->setSpecialMagicLevelSkill(indexToCombatType(i), it.abilities->specialMagicLevelSkill[i]);
+		}
+	}
+
+	for (int32_t i = SPECIALSKILL_FIRST; i <= SPECIALSKILL_LAST; ++i) {
+		if (it.abilities->specialSkills[i]) {
+			needUpdateSkills = true;
+			player->setVarSpecialSkill(static_cast<SpecialSkills_t>(i), it.abilities->specialSkills[i]);
+		}
+	}
+
 	if (needUpdateSkills) {
 		player->sendSkills();
 	}
@@ -793,6 +806,7 @@ ReturnValue MoveEvent::EquipItem(MoveEvent* moveEvent, Player* player, Item* ite
 
 	if (needUpdateStats) {
 		player->sendStats();
+		player->sendSkills();
 	}
 
 	return RETURNVALUE_NOERROR;
@@ -847,6 +861,19 @@ ReturnValue MoveEvent::DeEquipItem(MoveEvent*, Player* player, Item* item, slots
 		}
 	}
 
+	for (int32_t i = 0; i < COMBAT_COUNT; ++i) {
+		if (it.abilities->specialMagicLevelSkill[i] != 0) {
+			player->setSpecialMagicLevelSkill(indexToCombatType(i), -it.abilities->specialMagicLevelSkill[i]);
+		}
+	}
+
+	for (int32_t i = SPECIALSKILL_FIRST; i <= SPECIALSKILL_LAST; ++i) {
+		if (it.abilities->specialSkills[i] != 0) {
+			needUpdateSkills = true;
+			player->setVarSpecialSkill(static_cast<SpecialSkills_t>(i), -it.abilities->specialSkills[i]);
+		}
+	}
+
 	if (needUpdateSkills) {
 		player->sendSkills();
 	}
@@ -870,6 +897,7 @@ ReturnValue MoveEvent::DeEquipItem(MoveEvent*, Player* player, Item* item, slots
 
 	if (needUpdateStats) {
 		player->sendStats();
+		player->sendSkills();
 	}
 
 	return RETURNVALUE_NOERROR;

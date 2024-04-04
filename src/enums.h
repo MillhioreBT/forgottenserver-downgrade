@@ -82,8 +82,9 @@ enum itemAttrTypes : uint32_t
 	ITEM_ATTRIBUTE_WRAPID = 1 << 24,
 	ITEM_ATTRIBUTE_STOREITEM = 1 << 25,
 	ITEM_ATTRIBUTE_ATTACK_SPEED = 1 << 26,
+	ITEM_ATTRIBUTE_OPENCONTAINER = 1 << 27,
 	ITEM_ATTRIBUTE_DURATION_MIN = ITEM_ATTRIBUTE_DURATION,
-	ITEM_ATTRIBUTE_DURATION_MAX = 1 << 27,
+	ITEM_ATTRIBUTE_DURATION_MAX = 1 << 28,
 
 	ITEM_ATTRIBUTE_CUSTOM = 1U << 31
 };
@@ -174,6 +175,7 @@ enum RaceType_t : uint8_t
 	RACE_UNDEAD,
 	RACE_FIRE,
 	RACE_ENERGY,
+	RACE_INK,
 };
 
 enum CombatType_t : uint16_t
@@ -604,6 +606,7 @@ enum CombatOrigin
 	ORIGIN_MELEE,
 	ORIGIN_RANGED,
 	ORIGIN_WAND,
+	ORIGIN_REFLECT,
 };
 
 struct CombatDamage
@@ -630,6 +633,22 @@ enum MonstersEvent_t : uint8_t
 	MONSTERS_EVENT_DISAPPEAR = 3,
 	MONSTERS_EVENT_MOVE = 4,
 	MONSTERS_EVENT_SAY = 5,
+};
+
+struct Reflect
+{
+	Reflect() = default;
+	Reflect(uint16_t percent, uint16_t chance) : percent(percent), chance(chance){};
+
+	Reflect& operator+=(const Reflect& other)
+	{
+		percent += other.percent;
+		chance = std::min<uint16_t>(100, chance + other.chance);
+		return *this;
+	}
+
+	uint16_t percent = 0;
+	uint16_t chance = 0;
 };
 
 #endif

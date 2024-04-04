@@ -856,6 +856,14 @@ InstantSpell* Lua::getInstantSpell(lua_State* L, int32_t arg)
 	return spell;
 }
 
+Reflect Lua::getReflect(lua_State* L, int32_t arg)
+{
+	uint16_t percent = getField<uint16_t>(L, arg, "percent");
+	uint16_t chance = getField<uint16_t>(L, arg, "chance");
+	lua_pop(L, 2);
+	return Reflect(percent, chance);
+}
+
 Thing* Lua::getThing(lua_State* L, int32_t arg)
 {
 	Thing* thing;
@@ -1044,6 +1052,13 @@ void Lua::pushLoot(lua_State* L, const std::vector<LootBlock>& lootList)
 
 		lua_rawseti(L, -2, ++index);
 	}
+}
+
+void Lua::pushReflect(lua_State* L, const Reflect& reflect)
+{
+	lua_createtable(L, 0, 2);
+	setField(L, "percent", reflect.percent);
+	setField(L, "chance", reflect.chance);
 }
 
 #define registerEnum(value) \
@@ -2322,7 +2337,7 @@ int LuaScriptInterface::luaTransformToSHA1(lua_State* L)
 int LuaScriptInterface::luaDebugPrint(lua_State* L)
 {
 	// debugPrint(text)
-	reportErrorFunc(L, Lua::getString(L, -1));
+	reportErrorFunc(L, Lua::getString(L, 1));
 	return 0;
 }
 
@@ -2507,14 +2522,14 @@ int LuaScriptInterface::luaDoChallengeCreature(lua_State* L)
 int LuaScriptInterface::luaIsValidUID(lua_State* L)
 {
 	// isValidUID(uid)
-	Lua::pushBoolean(L, getScriptEnv()->getThingByUID(Lua::getInteger<uint32_t>(L, -1)) != nullptr);
+	Lua::pushBoolean(L, getScriptEnv()->getThingByUID(Lua::getInteger<uint32_t>(L, 1)) != nullptr);
 	return 1;
 }
 
 int LuaScriptInterface::luaIsDepot(lua_State* L)
 {
 	// isDepot(uid)
-	Container* container = getScriptEnv()->getContainerByUID(Lua::getInteger<uint32_t>(L, -1));
+	Container* container = getScriptEnv()->getContainerByUID(Lua::getInteger<uint32_t>(L, 1));
 	Lua::pushBoolean(L, container && container->getDepotLocker());
 	return 1;
 }
@@ -2523,7 +2538,7 @@ int LuaScriptInterface::luaIsMoveable(lua_State* L)
 {
 	// isMoveable(uid)
 	// isMovable(uid)
-	Thing* thing = getScriptEnv()->getThingByUID(Lua::getInteger<uint32_t>(L, -1));
+	Thing* thing = getScriptEnv()->getThingByUID(Lua::getInteger<uint32_t>(L, 1));
 	Lua::pushBoolean(L, thing && thing->isPushable());
 	return 1;
 }
@@ -2596,7 +2611,7 @@ int LuaScriptInterface::luaDoAddContainerItem(lua_State* L)
 int LuaScriptInterface::luaGetDepotId(lua_State* L)
 {
 	// getDepotId(uid)
-	uint32_t uid = Lua::getInteger<uint32_t>(L, -1);
+	uint32_t uid = Lua::getInteger<uint32_t>(L, 1);
 
 	Container* container = getScriptEnv()->getContainerByUID(uid);
 	if (!container) {
@@ -3065,7 +3080,7 @@ int LuaScriptInterface::luaResultGetStream(lua_State* L)
 
 	auto stream = res->getString(Lua::getString(L, 2));
 	lua_pushlstring(L, stream.data(), stream.size());
-	lua_pushnumber(L, stream.size());
+	lua_pushinteger(L, stream.size());
 	return 2;
 }
 

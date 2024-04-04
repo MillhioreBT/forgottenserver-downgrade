@@ -22,10 +22,6 @@ int luaMonsterCreate(lua_State* L)
 	if (isInteger(L, 2)) {
 		monster = g_game.getMonsterByID(getInteger<uint32_t>(L, 2));
 	} else if (isUserdata(L, 2)) {
-		if (getUserdataType(L, 2) != LuaData_Monster) {
-			lua_pushnil(L);
-			return 1;
-		}
 		monster = getUserdata<Monster>(L, 2);
 	} else {
 		monster = nullptr;

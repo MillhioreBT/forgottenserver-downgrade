@@ -40,10 +40,6 @@ int luaPlayerCreate(lua_State* L)
 			return 2;
 		}
 	} else if (isUserdata(L, 2)) {
-		if (getUserdataType(L, 2) != LuaData_Player) {
-			lua_pushnil(L);
-			return 1;
-		}
 		player = getUserdata<Player>(L, 2);
 	} else {
 		player = nullptr;

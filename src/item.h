@@ -84,9 +84,14 @@ enum AttrTypes_t
 	ATTR_SHOOTRANGE = 33,
 	ATTR_CUSTOM_ATTRIBUTES = 34,
 	ATTR_DECAYTO = 35,
-	// ATTR_WRAPID = 36,
-	// ATTR_STOREITEM = 37,
+	ATTR_WRAPID = 36,
+	ATTR_STOREITEM = 37,
 	ATTR_ATTACK_SPEED = 38,
+	ATTR_OPENCONTAINER = 39,
+	ATTR_PODIUMOUTFIT = 40,
+	// ATTR_TIER = 41, // mapeditor
+	ATTR_REFLECT = 42,
+	ATTR_BOOST = 43,
 };
 
 enum Attr_ReadValue
@@ -270,6 +275,7 @@ private:
 	static int64_t emptyInt;
 	static double emptyDouble;
 	static bool emptyBool;
+	static Reflect emptyReflect;
 
 	using CustomAttributeMap = std::unordered_map<std::string, CustomAttribute>;
 
@@ -344,6 +350,20 @@ private:
 
 	std::vector<Attribute> attributes;
 	uint32_t attributeBits = 0;
+
+	std::map<CombatType_t, Reflect> reflect;
+	std::map<CombatType_t, uint16_t> boostPercent;
+
+	const Reflect& getReflect(CombatType_t combatType)
+	{
+		auto it = reflect.find(combatType);
+		return it != reflect.end() ? it->second : emptyReflect;
+	}
+	int16_t getBoostPercent(CombatType_t combatType)
+	{
+		auto it = boostPercent.find(combatType);
+		return it != boostPercent.end() ? it->second : 0;
+	}
 
 	std::string_view getStrAttr(itemAttrTypes type) const;
 	void setStrAttr(itemAttrTypes type, std::string_view value);
@@ -440,8 +460,8 @@ private:
 	    ITEM_ATTRIBUTE_ATTACK | ITEM_ATTRIBUTE_DEFENSE | ITEM_ATTRIBUTE_EXTRADEFENSE | ITEM_ATTRIBUTE_ARMOR |
 	    ITEM_ATTRIBUTE_HITCHANCE | ITEM_ATTRIBUTE_SHOOTRANGE | ITEM_ATTRIBUTE_OWNER | ITEM_ATTRIBUTE_DURATION |
 	    ITEM_ATTRIBUTE_DECAYSTATE | ITEM_ATTRIBUTE_CORPSEOWNER | ITEM_ATTRIBUTE_CHARGES | ITEM_ATTRIBUTE_FLUIDTYPE |
-	    ITEM_ATTRIBUTE_DOORID | ITEM_ATTRIBUTE_DECAYTO | ITEM_ATTRIBUTE_ATTACK_SPEED;
-
+	    ITEM_ATTRIBUTE_DOORID | ITEM_ATTRIBUTE_DECAYTO | ITEM_ATTRIBUTE_WRAPID | ITEM_ATTRIBUTE_STOREITEM |
+	    ITEM_ATTRIBUTE_ATTACK_SPEED | ITEM_ATTRIBUTE_OPENCONTAINER;
 	const static uint32_t stringAttributeTypes = ITEM_ATTRIBUTE_DESCRIPTION | ITEM_ATTRIBUTE_TEXT |
 	                                             ITEM_ATTRIBUTE_WRITER | ITEM_ATTRIBUTE_NAME | ITEM_ATTRIBUTE_ARTICLE |
 	                                             ITEM_ATTRIBUTE_PLURALNAME;
@@ -495,7 +515,7 @@ public:
 	std::string_view getStrAttr(itemAttrTypes type) const
 	{
 		if (!attributes) {
-			return "";
+			return ItemAttributes::emptyString;
 		}
 		return attributes->getStrAttr(type);
 	}
@@ -775,6 +795,12 @@ public:
 	uint32_t getWorth() const;
 	LightInfo getLightInfo() const;
 
+	void setReflect(CombatType_t combatType, const Reflect& reflect) { getAttributes()->reflect[combatType] = reflect; }
+	Reflect getReflect(CombatType_t combatType, bool total = true) const;
+
+	void setBoostPercent(CombatType_t combatType, uint16_t value) { getAttributes()->boostPercent[combatType] = value; }
+	uint16_t getBoostPercent(CombatType_t combatType, bool total = true) const;
+
 	bool hasProperty(ITEMPROPERTY prop) const;
 	bool isBlocking() const { return items[id].blockSolid; }
 	bool isStackable() const { return items[id].stackable; }
@@ -791,6 +817,16 @@ public:
 		return it.rotatable && it.rotateTo;
 	}
 	bool hasWalkStack() const { return items[id].walkStack; }
+	bool isSupply() const { return items[id].isSupply(); }
+
+	void setStoreItem(bool storeItem) { setIntAttr(ITEM_ATTRIBUTE_STOREITEM, static_cast<int64_t>(storeItem)); }
+	bool isStoreItem() const
+	{
+		if (hasAttribute(ITEM_ATTRIBUTE_STOREITEM)) {
+			return getIntAttr(ITEM_ATTRIBUTE_STOREITEM) == 1;
+		}
+		return items[id].storeItem;
+	}
 
 	std::string_view getName() const
 	{

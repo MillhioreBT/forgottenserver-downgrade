@@ -179,6 +179,7 @@ enum FluidColors_t : uint8_t
 	FLUID_YELLOW,
 	FLUID_WHITE,
 	FLUID_PURPLE,
+	FLUID_BLACK,
 };
 
 enum FluidTypes_t : uint8_t
@@ -191,6 +192,7 @@ enum FluidTypes_t : uint8_t
 	FLUID_LEMONADE = FLUID_YELLOW,
 	FLUID_MILK = FLUID_WHITE,
 	FLUID_MANA = FLUID_PURPLE,
+	FLUID_INK = FLUID_BLACK,
 
 	FLUID_LIFE = FLUID_RED + 8,
 	FLUID_OIL = FLUID_BROWN + 8,
@@ -300,6 +302,7 @@ enum WeaponType_t : uint8_t
 	WEAPON_DISTANCE,
 	WEAPON_WAND,
 	WEAPON_AMMO,
+	WEAPON_QUIVER,
 };
 
 enum Ammo_t : uint8_t

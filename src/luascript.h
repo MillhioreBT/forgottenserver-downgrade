@@ -711,6 +711,7 @@ Position getPosition(lua_State* L, int32_t arg);
 Outfit_t getOutfit(lua_State* L, int32_t arg);
 Outfit getOutfitClass(lua_State* L, int32_t arg);
 InstantSpell* getInstantSpell(lua_State* L, int32_t arg);
+Reflect getReflect(lua_State* L, int32_t arg);
 
 Thing* getThing(lua_State* L, int32_t arg);
 Creature* getCreature(lua_State* L, int32_t arg);
@@ -819,6 +820,7 @@ void pushOutfit(lua_State* L, const Outfit_t& outfit);
 void pushOutfit(lua_State* L, const Outfit* outfit);
 void pushMount(lua_State* L, const Mount* mount);
 void pushLoot(lua_State* L, const std::vector<LootBlock>& lootList);
+void pushReflect(lua_State* L, const Reflect& reflect);
 
 // Userdata
 template <class T>

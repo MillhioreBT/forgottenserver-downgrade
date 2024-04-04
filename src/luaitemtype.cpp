@@ -522,7 +522,7 @@ int luaItemTypeGetAbilities(lua_State* L)
 	ItemType* itemType = getUserdata<ItemType>(L, 1);
 	if (itemType) {
 		Abilities& abilities = itemType->getAbilities();
-		lua_createtable(L, 6, 12);
+		lua_createtable(L, 10, 12);
 		setField(L, "healthGain", abilities.healthGain);
 		setField(L, "healthTicks", abilities.healthTicks);
 		setField(L, "manaGain", abilities.manaGain);
@@ -587,6 +587,38 @@ int luaItemTypeGetAbilities(lua_State* L)
 			lua_rawseti(L, -2, i + 1);
 		}
 		lua_setfield(L, -2, "absorbPercent");
+
+		// special magic level
+		lua_createtable(L, 0, COMBAT_COUNT);
+		for (int32_t i = 0; i < COMBAT_COUNT; i++) {
+			lua_pushinteger(L, abilities.specialMagicLevelSkill[i]);
+			lua_rawseti(L, -2, i + 1);
+		}
+		lua_setfield(L, -2, "specialMagicLevel");
+
+		// Damage boost percent
+		lua_createtable(L, 0, COMBAT_COUNT);
+		for (int32_t i = 0; i < COMBAT_COUNT; i++) {
+			lua_pushinteger(L, abilities.boostPercent[i]);
+			lua_rawseti(L, -2, i + 1);
+		}
+		lua_setfield(L, -2, "boostPercent");
+
+		// Reflect chance
+		lua_createtable(L, 0, COMBAT_COUNT);
+		for (int32_t i = 0; i < COMBAT_COUNT; i++) {
+			lua_pushinteger(L, abilities.reflect[i].chance);
+			lua_rawseti(L, -2, i + 1);
+		}
+		lua_setfield(L, -2, "reflectChance");
+
+		// Reflect percent
+		lua_createtable(L, 0, COMBAT_COUNT);
+		for (int32_t i = 0; i < COMBAT_COUNT; i++) {
+			lua_pushinteger(L, abilities.reflect[i].percent);
+			lua_rawseti(L, -2, i + 1);
+		}
+		lua_setfield(L, -2, "reflectPercent");
 	}
 	return 1;
 }

@@ -405,12 +405,12 @@ Attr_ReadValue Item::readAttr(AttrTypes_t attr, PropStream& propStream)
 		}
 
 		case ATTR_DESC: {
-			auto [desc, ok] = propStream.readString();
+			auto [text, ok] = propStream.readString();
 			if (!ok) {
 				return ATTR_READ_ERROR;
 			}
 
-			setSpecialDescription(desc);
+			setSpecialDescription(text);
 			break;
 		}
 
@@ -566,9 +566,77 @@ Attr_ReadValue Item::readAttr(AttrTypes_t attr, PropStream& propStream)
 			break;
 		}
 
-		// these should be handled through derived classes
-		// If these are called then something has changed in the items.xml since the map was saved
-		// just read the values
+		case ATTR_WRAPID: {
+			uint16_t wrapId;
+			if (!propStream.read<uint16_t>(wrapId)) {
+				return ATTR_READ_ERROR;
+			}
+
+			setIntAttr(ITEM_ATTRIBUTE_WRAPID, wrapId);
+			break;
+		}
+
+		case ATTR_STOREITEM: {
+			uint8_t storeItem;
+			if (!propStream.read<uint8_t>(storeItem)) {
+				return ATTR_READ_ERROR;
+			}
+
+			setIntAttr(ITEM_ATTRIBUTE_STOREITEM, storeItem);
+			break;
+		}
+
+		case ATTR_OPENCONTAINER: {
+			uint8_t openContainer;
+			if (!propStream.read<uint8_t>(openContainer)) {
+				return ATTR_READ_ERROR;
+			}
+
+			setIntAttr(ITEM_ATTRIBUTE_OPENCONTAINER, openContainer);
+			break;
+		}
+
+		case ATTR_REFLECT: {
+			uint16_t size;
+			if (!propStream.read<uint16_t>(size)) {
+				return ATTR_READ_ERROR;
+			}
+
+			for (uint16_t i = 0; i < size; ++i) {
+				CombatType_t combatType;
+				Reflect reflect;
+
+				if (!propStream.read<CombatType_t>(combatType) || !propStream.read<uint16_t>(reflect.percent) ||
+				    !propStream.read<uint16_t>(reflect.chance)) {
+					return ATTR_READ_ERROR;
+				}
+
+				getAttributes()->reflect[combatType] = reflect;
+			}
+			break;
+		}
+
+		case ATTR_BOOST: {
+			uint16_t size;
+			if (!propStream.read<uint16_t>(size)) {
+				return ATTR_READ_ERROR;
+			}
+
+			for (uint16_t i = 0; i < size; ++i) {
+				CombatType_t combatType;
+				uint16_t percent;
+
+				if (!propStream.read<CombatType_t>(combatType) || !propStream.read<uint16_t>(percent)) {
+					return ATTR_READ_ERROR;
+				}
+
+				getAttributes()->boostPercent[combatType] = percent;
+			}
+			break;
+		}
+
+		// these should be handled through derived classes If these are called then something has changed in the
+		// items.xml since the map was saved just read the values
 
 		// Depot class
 		case ATTR_DEPOT_ID: {
@@ -596,6 +664,14 @@ Attr_ReadValue Item::readAttr(AttrTypes_t attr, PropStream& propStream)
 
 		case ATTR_SLEEPSTART: {
 			if (!propStream.skip(4)) {
+				return ATTR_READ_ERROR;
+			}
+			break;
+		}
+
+		// Podium class
+		case ATTR_PODIUMOUTFIT: {
+			if (!propStream.skip(15)) {
 				return ATTR_READ_ERROR;
 			}
 			break;
@@ -971,10 +1047,43 @@ LightInfo Item::getLightInfo() const
 	return {it.lightLevel, it.lightColor};
 }
 
+Reflect Item::getReflect(CombatType_t combatType, bool total /* = true */) const
+{
+	const ItemType& it = Item::items[id];
+
+	Reflect reflect;
+	if (attributes) {
+		reflect += attributes->getReflect(combatType);
+	}
+
+	if (total && it.abilities) {
+		reflect += it.abilities->reflect[combatTypeToIndex(combatType)];
+	}
+
+	return reflect;
+}
+
+uint16_t Item::getBoostPercent(CombatType_t combatType, bool total /* = true */) const
+{
+	const ItemType& it = Item::items[id];
+
+	uint16_t boostPercent = 0;
+	if (attributes) {
+		boostPercent += attributes->getBoostPercent(combatType);
+	}
+
+	if (total && it.abilities) {
+		boostPercent += it.abilities->boostPercent[combatTypeToIndex(combatType)];
+	}
+
+	return boostPercent;
+}
+
 std::string ItemAttributes::emptyString;
 int64_t ItemAttributes::emptyInt;
 double ItemAttributes::emptyDouble;
 bool ItemAttributes::emptyBool;
+Reflect ItemAttributes::emptyReflect;
 
 std::string_view ItemAttributes::getStrAttr(itemAttrTypes type) const
 {
@@ -1000,11 +1109,8 @@ void ItemAttributes::setStrAttr(itemAttrTypes type, std::string_view value)
 	}
 
 	Attribute& attr = getAttr(type);
-	if (attr.value.string) {
-		*attr.value.string = std::string{value};
-	} else {
-		attr.value.string = new std::string{value};
-	}
+	delete attr.value.string;
+	attr.value.string = new std::string(value);
 }
 
 void ItemAttributes::removeAttribute(itemAttrTypes type)
