@@ -165,49 +165,6 @@ NEW_LUA_DATA_TYPE(Weapon)
 NEW_LUA_DATA_TYPE(XMLDocument)
 NEW_LUA_DATA_TYPE(XMLNode)
 
-const std::unordered_map<std::string_view, LuaDataType> LuaDataTypeByClassName = {
-    {"Item", LuaData_Item},
-    {"Container", LuaData_Container},
-    {"Teleport", LuaData_Teleport},
-    {"Creature", LuaData_Creature},
-    {"Player", LuaData_Player},
-    {"Monster", LuaData_Monster},
-    {"Npc", LuaData_Npc},
-    {"Tile", LuaData_Tile},
-    {"Condition", LuaData_Condition},
-
-    {"Combat", LuaData_Combat},
-    {"Group", LuaData_Group},
-    {"Guild", LuaData_Guild},
-    {"House", LuaData_House},
-    {"ItemType", LuaData_ItemType},
-    {"ModalWindow", LuaData_ModalWindow},
-    {"MonsterType", LuaData_MonsterType},
-    {"NetworkMessage", LuaData_NetworkMessage},
-    {"Party", LuaData_Party},
-    {"Vocation", LuaData_Vocation},
-    {"Town", LuaData_Town},
-    {"LuaVariant", LuaData_LuaVariant},
-    {"Position", LuaData_Position},
-
-    {"Outfit", LuaData_Outfit},
-    {"Loot", LuaData_Loot},
-    {"MonsterSpell", LuaData_MonsterSpell},
-    {"Spell", LuaData_Spell},
-    {"InstantSpell", LuaData_Spell},
-    {"Action", LuaData_Action},
-    {"TalkAction", LuaData_TalkAction},
-    {"CreatureEvent", LuaData_CreatureEvent},
-    {"MoveEvent", LuaData_MoveEvent},
-    {"GlobalEvent", LuaData_GlobalEvent},
-    {"Weapon", LuaData_Weapon},
-    {"WeaponDistance", LuaData_Weapon},
-    {"WeaponWand", LuaData_Weapon},
-    {"WeaponMelee", LuaData_Weapon},
-    {"XMLDocument", LuaData_XMLDocument},
-    {"XMLNode", LuaData_XMLNode},
-};
-
 struct LuaTimerEventDesc
 {
 	int32_t scriptId = -1;
