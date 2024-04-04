@@ -1,17 +1,14 @@
 cmake_minimum_required(VERSION 3.16)
 
-set(CMAKE_CXX_COMPILER g++-10)
-
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
-set(CMAKE_BUILD_TYPE Release)
 
 # Ensure to pick up the default triplet from the environment if any. This helps
 # driving the vcpkg triplet in the same way either when starting vcpkg directly,
 # or when letting CMake start vcpkg at configure/generate time.
 # Note: this logic must happen before PROJECT command.
 if (DEFINED ENV{VCPKG_DEFAULT_TRIPLET} AND NOT DEFINED VCPKG_TARGET_TRIPLET)
-  set(VCPKG_TARGET_TRIPLET "$ENV{VCPKG_DEFAULT_TRIPLET}" CACHE STRING "The vcpkg triplet")
+    set(VCPKG_TARGET_TRIPLET "$ENV{VCPKG_DEFAULT_TRIPLET}" CACHE STRING "The vcpkg triplet")
 endif()
 
 project(tfs CXX)
@@ -19,11 +16,15 @@ project(tfs CXX)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 if (NOT WIN32)
-    add_compile_options(-Wall -Wextra -Wnon-virtual-dtor -pedantic -Werror -pipe -fvisibility=hidden)
+    add_compile_options(-Wall -Wextra -Wnon-virtual-dtor -Wold-style-cast -pedantic -Werror -pipe -fvisibility=hidden)
 endif ()
 
-if (CMAKE_COMPILER_IS_GNUCXX)
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     add_compile_options(-fno-strict-aliasing)
+endif ()
+
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    add_compile_options(-Wimplicit-fallthrough -Wmove)
 endif ()
 
 # Find packages.
@@ -50,7 +51,23 @@ endif ()
 
 find_package(Threads REQUIRED)
 find_package(PugiXML CONFIG REQUIRED)
-find_package(Lua54 REQUIRED)
+
+# Selects LuaJIT if user defines or auto-detected
+if (DEFINED USE_LUAJIT AND NOT USE_LUAJIT)
+    set(FORCE_LUAJIT ${USE_LUAJIT})
+else ()
+    find_package(LuaJIT)
+    set(FORCE_LUAJIT ${LuaJIT_FOUND})
+endif ()
+option(USE_LUAJIT "Use LuaJIT" ${FORCE_LUAJIT})
+
+if (NOT FORCE_LUAJIT)
+    find_package(Lua REQUIRED)
+endif ()
+
+if (APPLE)
+    find_package(Iconv REQUIRED)
+endif()
 
 find_package(Boost 1.66.0 REQUIRED COMPONENTS system iostreams)
 
@@ -88,14 +105,20 @@ endif ()
 # the source code for watching a git repository.
 option(SKIP_GIT "Skip checking for git updates" OFF)
 if(NOT SKIP_GIT)
-    set(PRE_CONFIGURE_FILE "cmake/gitmetadata.h.in")
-    set(POST_CONFIGURE_FILE "${CMAKE_CURRENT_BINARY_DIR}/gitmetadata.h")
-    include(git_watcher)
-    if(Git_FOUND)
-        add_dependencies(tfs check_git)
-        target_include_directories(tfs PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
-    endif()
+	set(PRE_CONFIGURE_FILE "cmake/gitmetadata.h.in")
+	set(POST_CONFIGURE_FILE "${CMAKE_CURRENT_BINARY_DIR}/gitmetadata.h")
+	include(git_watcher)
+	if(Git_FOUND)
+		add_dependencies(tfs check_git)
+		target_include_directories(tfs PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+	endif()
 endif()
 ### END  Git Version ###
+
+# Option to disable unity builds
+option(ENABLE_UNITY_BUILD "Enable unity build" ON)
+if(ENABLE_UNITY_BUILD)
+    set_target_properties(tfslib PROPERTIES UNITY_BUILD ON)
+endif()
 
 target_precompile_headers(tfs PUBLIC src/otpch.h)
