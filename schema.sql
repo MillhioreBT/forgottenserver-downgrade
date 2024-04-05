@@ -28,6 +28,8 @@ CREATE TABLE IF NOT EXISTS `players` (
   `looklegs` int NOT NULL DEFAULT '0',
   `looktype` int NOT NULL DEFAULT '136',
   `lookaddons` int NOT NULL DEFAULT '0',
+  `currentmount` smallint UNSIGNED NOT NULL DEFAULT '0',
+  `randomizemount` tinyint NOT NULL DEFAULT '0',
   `direction` tinyint unsigned NOT NULL DEFAULT '2',
   `maglevel` int NOT NULL DEFAULT '0',
   `mana` int NOT NULL DEFAULT '0',
@@ -350,6 +352,11 @@ CREATE TABLE IF NOT EXISTS `player_outfits` (
   PRIMARY KEY (`player_id`,`outfit_id`),
   FOREIGN KEY (`player_id`) REFERENCES `players`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARACTER SET=utf8;
+
+CREATE TABLE `player_mounts` (
+  `player_id` int NOT NULL DEFAULT '0',
+  `mount_id` smallint UNSIGNED NOT NULL DEFAULT '0'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `server_config` (
   `config` varchar(50) NOT NULL,
