@@ -137,7 +137,7 @@ public:
 
 	void setGUID(uint32_t guid) { this->guid = guid; }
 	uint32_t getGUID() const { return guid; }
-	bool isAccountManager() const { return guid == ACCOUNT_MANAGER_PLAYER_ID; }
+	bool isAccountManager() const;
 	bool canSeeInvisibility() const override { return hasFlag(PlayerFlag_CanSenseInvisibility) || group->access; }
 
 	void removeList() override;

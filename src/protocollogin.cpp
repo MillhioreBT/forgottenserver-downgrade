@@ -143,14 +143,13 @@ void ProtocolLogin::onRecvFirstMessage(NetworkMessage& msg)
 		return;
 	}
 
-	const auto& accountManager = g_config[ConfigKeysBoolean::ACCOUNT_MANAGER];
 	auto accountName = msg.getString();
 	auto password = msg.getString();
 
 	const bool accountNameEmpty = accountName.empty();
 	const bool passwordEmpty = password.empty();
 
-	if (accountManager && accountNameEmpty && passwordEmpty) {
+	if (g_config[ConfigKeysBoolean::ACCOUNT_MANAGER] && accountNameEmpty && passwordEmpty) {
 		g_dispatcher.addTask([=, thisPtr = std::static_pointer_cast<ProtocolLogin>(shared_from_this())]() {
 			thisPtr->getCharacterList(ACCOUNT_MANAGER_ACCOUNT_NAME, ACCOUNT_MANAGER_ACCOUNT_PASSWORD);
 		});

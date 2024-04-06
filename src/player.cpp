@@ -2074,6 +2074,11 @@ void Player::addInFightTicks(bool pzlock /*= false*/)
 	addCondition(condition);
 }
 
+bool Player::isAccountManager() const
+{
+	return g_config[ConfigKeysBoolean::ACCOUNT_MANAGER] && guid == ACCOUNT_MANAGER_PLAYER_ID;
+}
+
 void Player::removeList()
 {
 	g_game.removePlayer(this);
