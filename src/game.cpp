@@ -920,7 +920,7 @@ void Game::playerMoveItem(Player* player, const Position& fromPos, uint16_t spri
 
 	// hangable item specific code
 	const auto playerMoveHangableItem = [=, this](const Position& playerPos, const Position& mapFromPos,
-	                                        const Tile* toCylinderTile, const Position& mapToPos) -> bool {
+	                                              const Tile* toCylinderTile, const Position& mapToPos) -> bool {
 		if (!item->isHangable() || !toCylinderTile->hasFlag(TILESTATE_SUPPORTS_HANGABLE)) {
 			return false;
 		}
