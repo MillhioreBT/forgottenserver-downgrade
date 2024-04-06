@@ -11,8 +11,6 @@
 #include "pugicast.h"
 #include "scheduler.h"
 
-#include <fmt/format.h>
-
 extern Game g_game;
 extern ConfigManager g_config;
 

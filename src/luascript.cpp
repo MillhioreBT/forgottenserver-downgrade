@@ -3149,7 +3149,7 @@ int LuaScriptInterface::luaResultFree(lua_State* L)
 int LuaScriptInterface::luaUserdataCompare(lua_State* L)
 {
 	// userdataA == userdataB
-	Lua::pushBoolean(L, Lua::getUserdata<void>(L, 1) == Lua::getUserdata<void>(L, 2));
+	Lua::pushBoolean(L, Lua::getUserdata<void>(L, 1, false) == Lua::getUserdata<void>(L, 2, false));
 	return 1;
 }
 

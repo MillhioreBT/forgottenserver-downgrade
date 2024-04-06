@@ -636,18 +636,18 @@ inline T getNumber(lua_State* L, int32_t arg, T defaultValue)
 	return getNumber<T>(L, arg);
 }
 template <class T>
-inline T* getUserdata(lua_State* L, int32_t arg)
+inline T* getUserdata(lua_State* L, int32_t arg, const bool checkType = true)
 {
-	T** userdata = getRawUserdata<T>(L, arg);
+	T** userdata = getRawUserdata<T>(L, arg, checkType);
 	if (!userdata) {
 		return nullptr;
 	}
 	return *userdata;
 }
 template <class T>
-inline T** getRawUserdata(lua_State* L, int32_t arg)
+inline T** getRawUserdata(lua_State* L, int32_t arg, const bool checkType = true)
 {
-	if (!isType<T>(L, arg)) {
+	if (checkType && !isType<T>(L, arg)) {
 		return nullptr;
 	}
 	return static_cast<T**>(lua_touserdata(L, arg));

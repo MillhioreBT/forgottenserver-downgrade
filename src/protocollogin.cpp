@@ -13,7 +13,6 @@
 #include "tasks.h"
 #include "tools.h"
 
-#include <fmt/format.h>
 #include <iomanip>
 
 extern ConfigManager g_config;

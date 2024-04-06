@@ -8,8 +8,6 @@
 #include "game.h"
 #include "outputmessage.h"
 
-#include <fmt/format.h>
-
 extern Game g_game;
 
 void ProtocolOld::disconnectClient(std::string_view message)

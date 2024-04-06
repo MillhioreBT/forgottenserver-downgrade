@@ -11,8 +11,6 @@
 #include "iologindata.h"
 #include "pugicast.h"
 
-#include <fmt/format.h>
-
 extern ConfigManager g_config;
 extern Game g_game;
 
