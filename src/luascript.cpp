@@ -1043,6 +1043,7 @@ void Lua::pushLoot(lua_State* L, const std::vector<LootBlock>& lootList)
 		setField(L, "itemId", lootBlock.id);
 		setField(L, "chance", lootBlock.chance);
 		setField(L, "subType", lootBlock.subType);
+		setField(L, "minCount", lootBlock.countmin);
 		setField(L, "maxCount", lootBlock.countmax);
 		setField(L, "actionId", lootBlock.actionId);
 		setField(L, "text", lootBlock.text);

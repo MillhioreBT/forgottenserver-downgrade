@@ -3457,7 +3457,7 @@ void Game::playerSay(uint32_t playerId, uint16_t channelId, SpeakClasses type, s
 		return;
 	}
 
-	if (g_config[ConfigKeysBoolean::ACCOUNT_MANAGER] && player->isAccountManager()) {
+	if (player->isAccountManager()) {
 		if (player->isMuted() > 0) {
 			player->removeMessageBuffer();
 		}

@@ -11,6 +11,7 @@ const uint32_t MAX_LOOTCHANCE = 100000;
 struct LootBlock
 {
 	uint16_t id;
+	uint32_t countmin;
 	uint32_t countmax;
 	uint32_t chance;
 
@@ -23,6 +24,7 @@ struct LootBlock
 	LootBlock()
 	{
 		id = 0;
+		countmin = 1;
 		countmax = 1;
 		chance = 0;
 

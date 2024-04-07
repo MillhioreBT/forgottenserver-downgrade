@@ -637,6 +637,19 @@ int luaGameSaveAccountStorageValues(lua_State* L)
 
 	return 1;
 }
+
+int luaGameGetWaypoints(lua_State* L)
+{
+	// Game.getWaypoints()
+	lua_createtable(L, g_game.map.waypoints.size(), 0);
+
+	for (const auto& [name, position] : g_game.map.waypoints) {
+		pushPosition(L, position);
+		setMetatable(L, -1, "Position");
+		lua_setfield(L, -2, name.c_str());
+	}
+	return 1;
+}
 } // namespace
 
 void LuaScriptInterface::registerGame()
@@ -690,4 +703,6 @@ void LuaScriptInterface::registerGame()
 	registerMethod("Game", "getAccountStorageValue", luaGameGetAccountStorageValue);
 	registerMethod("Game", "setAccountStorageValue", luaGameSetAccountStorageValue);
 	registerMethod("Game", "saveAccountStorageValues", luaGameSaveAccountStorageValues);
+
+	registerMethod("Game", "getWaypoints", luaGameGetWaypoints);
 }

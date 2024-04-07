@@ -88,6 +88,19 @@ int luaLootSetChance(lua_State* L)
 	return 1;
 }
 
+int luaLootSetMinCount(lua_State* L)
+{
+	// loot:setMinCount(min)
+	Loot* loot = getUserdata<Loot>(L, 1);
+	if (loot) {
+		loot->lootBlock.countmin = getInteger<uint32_t>(L, 2);
+		pushBoolean(L, true);
+	} else {
+		lua_pushnil(L);
+	}
+	return 1;
+}
+
 int luaLootSetMaxCount(lua_State* L)
 {
 	// loot:setMaxCount(max)
@@ -152,4 +165,13 @@ void LuaScriptInterface::registerLoot()
 	registerMetaMethod("Loot", "__gc", luaDeleteLoot);
 	registerMetaMethod("Loot", "__close", luaDeleteLoot);
 	registerMethod("Loot", "delete", luaDeleteLoot);
+
+	registerMethod("Loot", "setId", luaLootSetId);
+	registerMethod("Loot", "setMinCount", luaLootSetMaxCount);
+	registerMethod("Loot", "setMaxCount", luaLootSetMaxCount);
+	registerMethod("Loot", "setSubType", luaLootSetSubType);
+	registerMethod("Loot", "setChance", luaLootSetChance);
+	registerMethod("Loot", "setActionId", luaLootSetActionId);
+	registerMethod("Loot", "setDescription", luaLootSetDescription);
+	registerMethod("Loot", "addChildLoot", luaLootAddChildLoot);
 }
