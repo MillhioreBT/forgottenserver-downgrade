@@ -222,6 +222,7 @@ public:
 		}
 	}
 	uint32_t getIP() const;
+	uint32_t getLastIP() const { return lastIP; }
 
 	void addContainer(uint8_t cid, Container* container);
 	void closeContainer(uint8_t cid);
@@ -258,6 +259,7 @@ public:
 	{
 		return std::max<int32_t>(0, specialMagicLevelSkill[combatTypeToIndex(type)]);
 	}
+	int32_t getExperienceRate(ExperienceRateType type) const { return experienceRate[static_cast<size_t>(type)]; }
 	uint32_t getBaseMagicLevel() const { return magLevel; }
 	uint16_t getMagicLevelPercent() const { return magLevelPercent; }
 	uint8_t getSoul() const { return soul; }
@@ -329,6 +331,9 @@ public:
 	{
 		specialMagicLevelSkill[combatTypeToIndex(type)] += modifier;
 	}
+
+	void setExperienceRate(ExperienceRateType type, int32_t rate) { experienceRate[static_cast<size_t>(type)] = rate; }
+	void addExperienceRate(ExperienceRateType type, int32_t rate) { experienceRate[static_cast<size_t>(type)] += rate; }
 
 	void setVarStats(stats_t stat, int32_t modifier);
 	int32_t getDefaultStats(stats_t stat) const;
@@ -1096,6 +1101,7 @@ private:
 	int32_t varSkills[SKILL_LAST + 1] = {};
 	int32_t varStats[STAT_LAST + 1] = {};
 	std::array<int16_t, COMBAT_COUNT> specialMagicLevelSkill = {0};
+	std::array<int32_t, static_cast<size_t>(ExperienceRateType::STAMINA) + 1> experienceRate = {0};
 	int32_t purchaseCallback = -1;
 	int32_t saleCallback = -1;
 	int32_t MessageBufferCount = 0;

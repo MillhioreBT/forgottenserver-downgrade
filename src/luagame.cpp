@@ -650,6 +650,62 @@ int luaGameGetWaypoints(lua_State* L)
 	}
 	return 1;
 }
+
+int luaGameGetThingFromClientPos(lua_State* L)
+{
+	// Game.getThingFromClientPos(player, position, stackPos)
+	const auto player = getPlayer(L, 1);
+	const Position& position = getPosition(L, 2);
+	const auto stackPos = getInteger<uint8_t>(L, 3);
+	auto thing = g_game.internalGetThing(player, position, stackPos, 0, STACKPOS_LOOK);
+	pushThing(L, thing);
+	return 1;
+}
+
+int luaGameGetGameStorageValue(lua_State* L)
+{
+	// Game.getStorageValue(key)
+	uint32_t key = getInteger<uint32_t>(L, 1);
+
+	const auto& value = g_game.getStorageValue(key);
+	if (value) {
+		lua_pushinteger(L, value.value());
+	} else if (isInteger(L, 3)) {
+		lua_pushinteger(L, getInteger<int64_t>(L, 3));
+	} else {
+		lua_pushnil(L);
+	}
+	return 1;
+}
+
+int luaGameSetGameStorageValue(lua_State* L)
+{
+	// Game.setGameStorageValue(key, value)
+	if (!isInteger(L, 1)) {
+		reportErrorFunc(L, "Invalid storage key.");
+		lua_pushnil(L);
+		return 1;
+	}
+
+	uint32_t key = getInteger<uint32_t>(L, 1);
+	if (isInteger(L, 2)) {
+		int64_t value = getInteger<int64_t>(L, 2);
+		g_game.setStorageValue(key, value);
+	} else {
+		g_game.setStorageValue(key, std::nullopt);
+	}
+
+	pushBoolean(L, true);
+	return 1;
+}
+
+int luaGameSaveGameStorageValues(lua_State* L)
+{
+	// Game.saveStorageValues()
+	pushBoolean(L, g_game.saveGameStorageValues());
+
+	return 1;
+}
 } // namespace
 
 void LuaScriptInterface::registerGame()
@@ -705,4 +761,9 @@ void LuaScriptInterface::registerGame()
 	registerMethod("Game", "saveAccountStorageValues", luaGameSaveAccountStorageValues);
 
 	registerMethod("Game", "getWaypoints", luaGameGetWaypoints);
+	registerMethod("Game", "getThingFromClientPos", luaGameGetThingFromClientPos);
+
+	registerMethod("Game", "getStorageValue", luaGameGetGameStorageValue);
+	registerMethod("Game", "setStorageValue", luaGameSetGameStorageValue);
+	registerMethod("Game", "saveStorageValues", luaGameSaveGameStorageValues);
 }

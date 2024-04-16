@@ -60,15 +60,15 @@ class NpcEventsHandler
 public:
 	NpcEventsHandler(const std::string& file, Npc* npc);
 
-	void onCreatureAppear(Creature* creature);
-	void onCreatureDisappear(Creature* creature);
-	void onCreatureMove(Creature* creature, const Position& oldPos, const Position& newPos);
-	void onCreatureSay(Creature* creature, SpeakClasses, std::string_view text);
+	void onCreatureAppear(Creature* creature) const;
+	void onCreatureDisappear(Creature* creature) const;
+	void onCreatureMove(Creature* creature, const Position& oldPos, const Position& newPos) const;
+	void onCreatureSay(Creature* creature, SpeakClasses, std::string_view text) const;
 	void onPlayerTrade(Player* player, int32_t callback, uint16_t itemId, uint8_t count, uint8_t amount,
-	                   bool ignore = false, bool inBackpacks = false);
-	void onPlayerCloseChannel(Player* player);
-	void onPlayerEndTrade(Player* player);
-	void onThink();
+	                   bool ignore = false, bool inBackpacks = false) const;
+	void onPlayerCloseChannel(Player* player) const;
+	void onPlayerEndTrade(Player* player) const;
+	void onThink() const;
 
 	bool isLoaded() const;
 

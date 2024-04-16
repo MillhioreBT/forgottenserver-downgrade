@@ -75,6 +75,7 @@ public:
 	void send(const OutputMessage_ptr& msg);
 
 	uint32_t getIP();
+	uint32_t getLastIp() const { return lastIp; }
 
 private:
 	void parseHeader(const boost::system::error_code& error);
@@ -106,6 +107,7 @@ private:
 
 	time_t timeConnected;
 	uint32_t packetsSent = 0;
+	uint32_t lastIp = 0;
 
 	bool closed = false;
 	bool receivedFirst = false;

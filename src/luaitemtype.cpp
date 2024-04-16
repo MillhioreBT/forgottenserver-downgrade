@@ -396,6 +396,18 @@ int luaItemTypeGetHitChance(lua_State* L)
 	return 1;
 }
 
+int luaItemTypeGetMaxHitChance(lua_State* L)
+{
+	// itemType:getMaxHitChance()
+	const ItemType* itemType = getUserdata<const ItemType>(L, 1);
+	if (itemType) {
+		lua_pushinteger(L, itemType->maxHitChance);
+	} else {
+		lua_pushnil(L);
+	}
+	return 1;
+}
+
 int luaItemTypeGetShootRange(lua_State* L)
 {
 	// itemType:getShootRange()
@@ -522,10 +534,12 @@ int luaItemTypeGetAbilities(lua_State* L)
 	ItemType* itemType = getUserdata<ItemType>(L, 1);
 	if (itemType) {
 		Abilities& abilities = itemType->getAbilities();
-		lua_createtable(L, 10, 12);
+		lua_createtable(L, 12, 13);
 		setField(L, "healthGain", abilities.healthGain);
+		setField(L, "healthGainPercent", abilities.healthGainPercent);
 		setField(L, "healthTicks", abilities.healthTicks);
 		setField(L, "manaGain", abilities.manaGain);
+		setField(L, "manaGainPercent", abilities.manaGainPercent);
 		setField(L, "manaTicks", abilities.manaTicks);
 		setField(L, "conditionImmunities", abilities.conditionImmunities);
 		setField(L, "conditionSuppressions", abilities.conditionSuppressions);
@@ -619,6 +633,15 @@ int luaItemTypeGetAbilities(lua_State* L)
 			lua_rawseti(L, -2, i + 1);
 		}
 		lua_setfield(L, -2, "reflectPercent");
+
+		// Experience Rates
+		lua_createtable(L, 0, static_cast<size_t>(ExperienceRateType::BONUS));
+		for (uint8_t e = static_cast<uint8_t>(ExperienceRateType::BASE);
+		     e <= static_cast<uint8_t>(ExperienceRateType::STAMINA); e++) {
+			lua_pushinteger(L, abilities.experienceRate[e]);
+			lua_rawseti(L, -2, e);
+		}
+		lua_setfield(L, -2, "experienceRate");
 	}
 	return 1;
 }
@@ -927,6 +950,7 @@ void LuaScriptInterface::registerItemType()
 	registerMethod("ItemType", "getStackSize", luaItemTypeGetStackSize);
 
 	registerMethod("ItemType", "getHitChance", luaItemTypeGetHitChance);
+	registerMethod("ItemType", "getMaxHitChance", luaItemTypeGetHitChance);
 	registerMethod("ItemType", "getShootRange", luaItemTypeGetShootRange);
 
 	registerMethod("ItemType", "getAttack", luaItemTypeGetAttack);

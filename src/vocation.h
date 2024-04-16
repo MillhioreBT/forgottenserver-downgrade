@@ -46,6 +46,7 @@ public:
 	float distDamageMultiplier = 1.0f;
 	float defenseMultiplier = 1.0f;
 	float armorMultiplier = 1.0f;
+	float wandDamageMultiplier = 1.0f;
 
 private:
 	friend class Vocations;

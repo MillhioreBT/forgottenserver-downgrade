@@ -515,20 +515,27 @@ int luaCreatureGetHealth(lua_State* L)
 
 int luaCreatureSetHealth(lua_State* L)
 {
-	// creature:setHealth(health)
+	// creature:setHealth(health[, actor = nil])
 	Creature* creature = getUserdata<Creature>(L, 1);
 	if (!creature) {
 		lua_pushnil(L);
 		return 1;
 	}
 
-	creature->setHealth(getInteger<uint32_t>(L, 2));
-	g_game.addCreatureHealth(creature);
-
-	Player* player = creature->getPlayer();
-	if (player) {
-		player->sendStats();
+	auto health = getInteger<int32_t>(L, 2);
+	if (health > 0) {
+		creature->setHealth(health);
+		g_game.addCreatureHealth(creature);
+	} else {
+		creature->drainHealth(getCreature(L, 3), creature->getHealth());
 	}
+
+	if (!creature->isDead()) {
+		if (dynamic_cast<Player*>(creature) != nullptr) {
+			static_cast<Player*>(creature)->sendStats();
+		}
+	}
+
 	pushBoolean(L, true);
 	return 1;
 }
@@ -785,9 +792,8 @@ int luaCreatureRemove(lua_State* L)
 		return 1;
 	}
 
-	Player* player = creature->getPlayer();
-	if (player) {
-		player->kickPlayer(true);
+	if (dynamic_cast<Player*>(creature) != nullptr) {
+		static_cast<Player*>(creature)->kickPlayer(true);
 	} else {
 		g_game.removeCreature(creature);
 	}

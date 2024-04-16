@@ -346,8 +346,8 @@ public:
 	// for lua module
 	CreatureEventList getCreatureEvents(CreatureEventType_t type) const;
 
-	void setHealth(int32_t newHealth) { health = std::min<int32_t>(newHealth, healthMax); }
-	void setMaxHealth(int32_t newMaxHealth) { healthMax = newMaxHealth; }
+	void setHealth(int32_t newHealth) { health = std::max<int32_t>(0, std::min<int32_t>(newHealth, healthMax)); }
+	void setMaxHealth(int32_t newMaxHealth) { healthMax = std::max<int32_t>(0, newMaxHealth); }
 
 	void setDefaultOutfit(Outfit_t outfit) { defaultOutfit = outfit; }
 

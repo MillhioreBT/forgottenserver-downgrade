@@ -905,10 +905,22 @@ void WeaponWand::configureWeapon(const ItemType& it)
 	Weapon::configureWeapon(it);
 }
 
-int32_t WeaponWand::getWeaponDamage(const Player*, const Creature*, const Item*, bool maxDamage /*= false*/) const
+int32_t WeaponWand::getWeaponDamage(const Player* player, const Creature*, const Item* item,
+                                    bool maxDamage /*= false*/) const
 {
-	if (maxDamage) {
-		return -maxChange;
+	int32_t maxValue = maxChange;
+	int32_t attackValue = std::max<int32_t>(0, item->getAttack());
+	if (attackValue != 0) {
+		int32_t magicLevel = player->getMagicLevel();
+		float attackFactor = player->getAttackFactor();
+
+		maxValue = static_cast<int32_t>(
+		    Weapons::getMaxWeaponDamage(player->getLevel(), magicLevel, attackValue, attackFactor) *
+		    player->getVocation()->wandDamageMultiplier);
 	}
-	return -normal_random(minChange, maxChange);
+
+	if (maxDamage) {
+		return -maxValue;
+	}
+	return -normal_random(minChange, maxValue);
 }

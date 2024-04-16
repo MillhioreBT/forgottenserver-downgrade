@@ -104,6 +104,10 @@ bool Vocations::loadFromXml()
 				if ((attr = childNode.attribute("armor"))) {
 					voc.armorMultiplier = pugi::cast<float>(attr.value());
 				}
+
+				if ((attr = childNode.attribute("wandDamage"))) {
+					voc.wandDamageMultiplier = pugi::cast<float>(attr.value());
+				}
 			}
 		}
 	}

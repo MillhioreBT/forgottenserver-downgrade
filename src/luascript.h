@@ -315,6 +315,7 @@ public:
 	static int luaErrorHandler(lua_State* L);
 	bool callFunction(int params);
 	void callVoidFunction(int params);
+	ReturnValue callReturnValueFunction(int params);
 
 	static std::string escapeString(std::string string);
 
@@ -718,6 +719,7 @@ inline bool getAssociatedValue(lua_State* L, int32_t arg, int32_t index)
 }
 
 // Is
+bool isNone(lua_State* L, int32_t arg);
 bool isNumber(lua_State* L, int32_t arg);
 bool isInteger(lua_State* L, int32_t arg);
 bool isString(lua_State* L, int32_t arg);

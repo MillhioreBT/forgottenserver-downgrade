@@ -11,6 +11,7 @@
 #include "databasemanager.h"
 #include "databasetasks.h"
 #include "depotchest.h"
+#include "events.h"
 #include "game.h"
 #include "housetile.h"
 #include "luavariant.h"
@@ -577,6 +578,23 @@ void LuaScriptInterface::callVoidFunction(int params)
 	resetScriptEnv();
 }
 
+ReturnValue LuaScriptInterface::callReturnValueFunction(int params)
+{
+	int size = lua_gettop(luaState);
+	if (protectedCall(luaState, params, 0) != 0) {
+		LuaScriptInterface::reportError(nullptr, Lua::popString(luaState));
+		return RETURNVALUE_NOTPOSSIBLE;
+	}
+
+	if ((lua_gettop(luaState) + params + 1) != size) {
+		LuaScriptInterface::reportError(nullptr, "Stack size changed!");
+		return RETURNVALUE_NOTPOSSIBLE;
+	}
+
+	resetScriptEnv();
+	return Lua::getInteger<ReturnValue>(luaState, -1);
+}
+
 void Lua::pushVariant(lua_State* L, const LuaVariant& var)
 {
 	lua_createtable(L, 0, 2);
@@ -725,6 +743,7 @@ void Lua::setCreatureMetatable(lua_State* L, int32_t index, const Creature* crea
 }
 
 // Is
+bool Lua::isNone(lua_State* L, int32_t arg) { return lua_isnone(L, arg); }
 bool Lua::isNumber(lua_State* L, int32_t arg) { return lua_type(L, arg) == LUA_TNUMBER; }
 bool Lua::isInteger(lua_State* L, int32_t arg) { return lua_isinteger(L, arg) != 0; }
 bool Lua::isString(lua_State* L, int32_t arg) { return lua_isstring(L, arg) != 0; }
@@ -1201,7 +1220,7 @@ void LuaScriptInterface::registerFunctions()
 	registerEnum(BUG_CATEGORY_TECHNICAL);
 	registerEnum(BUG_CATEGORY_OTHER);
 
-	// configKeys
+	// CallBackParam
 	registerTable("CallBackParam");
 
 	registerEnumClass(CallBackParam::LEVELMAGICVALUE);
@@ -1209,11 +1228,21 @@ void LuaScriptInterface::registerFunctions()
 	registerEnumClass(CallBackParam::TARGETTILE);
 	registerEnumClass(CallBackParam::TARGETCREATURE);
 
+	// ExperienceRateType
+	registerTable("ExperienceRateType");
+
+	registerEnumClass(ExperienceRateType::BASE);
+	registerEnumClass(ExperienceRateType::LOW_LEVEL);
+	registerEnumClass(ExperienceRateType::BONUS);
+	registerEnumClass(ExperienceRateType::STAMINA);
+
+	// Combat Formula
 	registerEnum(COMBAT_FORMULA_UNDEFINED);
 	registerEnum(COMBAT_FORMULA_LEVELMAGIC);
 	registerEnum(COMBAT_FORMULA_SKILL);
 	registerEnum(COMBAT_FORMULA_DAMAGE);
 
+	// Direction
 	registerEnum(DIRECTION_NORTH);
 	registerEnum(DIRECTION_EAST);
 	registerEnum(DIRECTION_SOUTH);

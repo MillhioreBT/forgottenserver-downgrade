@@ -62,6 +62,10 @@ void HouseTile::updateHouse(Item* item)
 ReturnValue HouseTile::queryAdd(int32_t index, const Thing& thing, uint32_t count, uint32_t flags,
                                 Creature* actor /* = nullptr*/) const
 {
+	if (hasBitSet(FLAG_NOLIMIT, flags)) {
+		return RETURNVALUE_NOERROR;
+	}
+
 	if (const Creature* creature = thing.getCreature()) {
 		if (const Player* player = creature->getPlayer()) {
 			if (!house->isInvited(player)) {

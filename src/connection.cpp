@@ -196,6 +196,7 @@ void Connection::parsePacket(const boost::system::error_code& error)
 	if (!receivedFirst) {
 		// First message received
 		receivedFirst = true;
+		lastIp = getIP();
 
 		if (!protocol) {
 			// Game protocol has already been created at this point

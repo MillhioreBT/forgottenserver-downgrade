@@ -1075,7 +1075,7 @@ NpcEventsHandler::NpcEventsHandler(const std::string& file, Npc* npc) :
 
 bool NpcEventsHandler::isLoaded() const { return loaded; }
 
-void NpcEventsHandler::onCreatureAppear(Creature* creature)
+void NpcEventsHandler::onCreatureAppear(Creature* creature) const
 {
 	if (creatureAppearEvent == -1) {
 		return;
@@ -1095,10 +1095,10 @@ void NpcEventsHandler::onCreatureAppear(Creature* creature)
 	scriptInterface->pushFunction(creatureAppearEvent);
 	Lua::pushUserdata<Creature>(L, creature);
 	Lua::setCreatureMetatable(L, -1, creature);
-	scriptInterface->callFunction(1);
+	scriptInterface->callVoidFunction(1);
 }
 
-void NpcEventsHandler::onCreatureDisappear(Creature* creature)
+void NpcEventsHandler::onCreatureDisappear(Creature* creature) const
 {
 	if (creatureDisappearEvent == -1) {
 		return;
@@ -1118,10 +1118,10 @@ void NpcEventsHandler::onCreatureDisappear(Creature* creature)
 	scriptInterface->pushFunction(creatureDisappearEvent);
 	Lua::pushUserdata<Creature>(L, creature);
 	Lua::setCreatureMetatable(L, -1, creature);
-	scriptInterface->callFunction(1);
+	scriptInterface->callVoidFunction(1);
 }
 
-void NpcEventsHandler::onCreatureMove(Creature* creature, const Position& oldPos, const Position& newPos)
+void NpcEventsHandler::onCreatureMove(Creature* creature, const Position& oldPos, const Position& newPos) const
 {
 	if (creatureMoveEvent == -1) {
 		return;
@@ -1143,10 +1143,10 @@ void NpcEventsHandler::onCreatureMove(Creature* creature, const Position& oldPos
 	Lua::setCreatureMetatable(L, -1, creature);
 	Lua::pushPosition(L, oldPos);
 	Lua::pushPosition(L, newPos);
-	scriptInterface->callFunction(3);
+	scriptInterface->callVoidFunction(3);
 }
 
-void NpcEventsHandler::onCreatureSay(Creature* creature, SpeakClasses type, std::string_view text)
+void NpcEventsHandler::onCreatureSay(Creature* creature, SpeakClasses type, std::string_view text) const
 {
 	if (creatureSayEvent == -1) {
 		return;
@@ -1168,11 +1168,11 @@ void NpcEventsHandler::onCreatureSay(Creature* creature, SpeakClasses type, std:
 	Lua::setCreatureMetatable(L, -1, creature);
 	lua_pushinteger(L, type);
 	Lua::pushString(L, text);
-	scriptInterface->callFunction(3);
+	scriptInterface->callVoidFunction(3);
 }
 
 void NpcEventsHandler::onPlayerTrade(Player* player, int32_t callback, uint16_t itemId, uint8_t count, uint8_t amount,
-                                     bool ignore, bool inBackpacks)
+                                     bool ignore, bool inBackpacks) const
 {
 	if (callback == -1) {
 		return;
@@ -1197,10 +1197,10 @@ void NpcEventsHandler::onPlayerTrade(Player* player, int32_t callback, uint16_t 
 	lua_pushinteger(L, amount);
 	Lua::pushBoolean(L, ignore);
 	Lua::pushBoolean(L, inBackpacks);
-	scriptInterface->callFunction(6);
+	scriptInterface->callVoidFunction(6);
 }
 
-void NpcEventsHandler::onPlayerCloseChannel(Player* player)
+void NpcEventsHandler::onPlayerCloseChannel(Player* player) const
 {
 	if (playerCloseChannelEvent == -1) {
 		return;
@@ -1220,10 +1220,10 @@ void NpcEventsHandler::onPlayerCloseChannel(Player* player)
 	scriptInterface->pushFunction(playerCloseChannelEvent);
 	Lua::pushUserdata<Player>(L, player);
 	Lua::setMetatable(L, -1, "Player");
-	scriptInterface->callFunction(1);
+	scriptInterface->callVoidFunction(1);
 }
 
-void NpcEventsHandler::onPlayerEndTrade(Player* player)
+void NpcEventsHandler::onPlayerEndTrade(Player* player) const
 {
 	if (playerEndTradeEvent == -1) {
 		return;
@@ -1243,10 +1243,10 @@ void NpcEventsHandler::onPlayerEndTrade(Player* player)
 	scriptInterface->pushFunction(playerEndTradeEvent);
 	Lua::pushUserdata<Player>(L, player);
 	Lua::setMetatable(L, -1, "Player");
-	scriptInterface->callFunction(1);
+	scriptInterface->callVoidFunction(1);
 }
 
-void NpcEventsHandler::onThink()
+void NpcEventsHandler::onThink() const
 {
 	if (thinkEvent == -1) {
 		return;
@@ -1263,5 +1263,5 @@ void NpcEventsHandler::onThink()
 	env->setNpc(npc);
 
 	scriptInterface->pushFunction(thinkEvent);
-	scriptInterface->callFunction(0);
+	scriptInterface->callVoidFunction(0);
 }
