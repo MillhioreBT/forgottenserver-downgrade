@@ -745,12 +745,20 @@ ReturnValue MoveEvent::EquipItem(MoveEvent* moveEvent, Player* player, Item* ite
 			condition->setParam(CONDITION_PARAM_HEALTHGAIN, it.abilities->healthGain);
 		}
 
+		if (it.abilities->healthGainPercent != 0) {
+			condition->setParam(CONDITION_PARAM_HEALTHGAINPERCENT, it.abilities->healthGainPercent);
+		}
+
 		if (it.abilities->healthTicks != 0) {
 			condition->setParam(CONDITION_PARAM_HEALTHTICKS, it.abilities->healthTicks);
 		}
 
 		if (it.abilities->manaGain != 0) {
 			condition->setParam(CONDITION_PARAM_MANAGAIN, it.abilities->manaGain);
+		}
+
+		if (it.abilities->manaGainPercent != 0) {
+			condition->setParam(CONDITION_PARAM_MANAGAINPERCENT, it.abilities->manaGainPercent);
 		}
 
 		if (it.abilities->manaTicks != 0) {
@@ -807,6 +815,14 @@ ReturnValue MoveEvent::EquipItem(MoveEvent* moveEvent, Player* player, Item* ite
 	if (needUpdateStats) {
 		player->sendStats();
 		player->sendSkills();
+	}
+
+	// experience rates
+	for (uint8_t e = static_cast<uint8_t>(ExperienceRateType::BASE);
+	     e <= static_cast<uint8_t>(ExperienceRateType::STAMINA); ++e) {
+		if (it.abilities->experienceRate[e] != 0) {
+			player->addExperienceRate(static_cast<ExperienceRateType>(e), it.abilities->experienceRate[e]);
+		}
 	}
 
 	return RETURNVALUE_NOERROR;
@@ -898,6 +914,14 @@ ReturnValue MoveEvent::DeEquipItem(MoveEvent*, Player* player, Item* item, slots
 	if (needUpdateStats) {
 		player->sendStats();
 		player->sendSkills();
+	}
+
+	// experience rates
+	for (uint8_t e = static_cast<uint8_t>(ExperienceRateType::BASE);
+	     e <= static_cast<uint8_t>(ExperienceRateType::STAMINA); ++e) {
+		if (it.abilities->experienceRate[e] != 0) {
+			player->addExperienceRate(static_cast<ExperienceRateType>(e), -it.abilities->experienceRate[e]);
+		}
 	}
 
 	return RETURNVALUE_NOERROR;

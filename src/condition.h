@@ -43,6 +43,9 @@ enum ConditionAttr_t
 	CONDITIONATTR_ISAGGRESSIVE,
 	CONDITIONATTR_DISABLEDEFENSE,
 	CONDITIONATTR_SPECIALSKILLS,
+	CONDITIONATTR_EXPERIENCERATE,
+	CONDITIONATTR_HEALTHGAINPERCENT,
+	CONDITIONATTR_MANAGAINPERCENT,
 
 	// reserved for serialization
 	CONDITIONATTR_END = 254,
@@ -160,9 +163,11 @@ private:
 	int32_t specialSkills[SPECIALSKILL_LAST + 1] = {};
 	int32_t stats[STAT_LAST + 1] = {};
 	int32_t statsPercent[STAT_LAST + 1] = {};
+	int32_t experienceRate[static_cast<size_t>(ExperienceRateType::STAMINA) + 1] = {};
 	int32_t currentSkill = 0;
 	int32_t currentSpecialSkill = 0;
 	int32_t currentStat = 0;
+	int32_t currentExperienceRate = 0;
 
 	bool disableDefense = false;
 
@@ -170,6 +175,7 @@ private:
 	void updateStats(Player* player);
 	void updatePercentSkills(Player* player);
 	void updateSkills(Player* player);
+	void updateExperienceRate(Player* player);
 };
 
 class ConditionRegeneration final : public ConditionGeneric
@@ -199,7 +205,9 @@ private:
 	uint32_t healthTicks = 1000;
 	uint32_t manaTicks = 1000;
 	uint32_t healthGain = 0;
+	uint32_t healthGainPercent = 0;
 	uint32_t manaGain = 0;
+	uint32_t manaGainPercent = 0;
 };
 
 class ConditionSoul final : public ConditionGeneric

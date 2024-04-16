@@ -29,7 +29,10 @@ MuteCountMap Player::muteCountMap;
 
 uint32_t Player::playerAutoID = 0x10000000;
 
-Player::Player(ProtocolGame_ptr p) : Creature(), lastPing(OTSYS_TIME()), lastPong(lastPing), client(std::move(p)) {}
+Player::Player(ProtocolGame_ptr p) : Creature(), lastPing(OTSYS_TIME()), lastPong(lastPing), client(std::move(p))
+{
+	experienceRate.fill(100);
+}
 
 Player::~Player()
 {
@@ -379,10 +382,10 @@ uint16_t Player::getClientIcons() const
 	if (tile && tile->hasFlag(TILESTATE_PROTECTIONZONE)) {
 		icons |= ICON_PIGEON;
 
-		// Don't show ICON_SWORDS if player is in protection zone.
+		/* Don't show ICON_SWORDS if player is in protection zone.
 		if (hasBitSet(ICON_SWORDS, icons)) {
-			icons &= ~ICON_SWORDS;
-		}
+		    icons &= ~ICON_SWORDS;
+		}*/
 	}
 
 	// Game client debugs with 10 or more icons
@@ -1712,8 +1715,8 @@ uint16_t Player::getBasisPointLevel(uint64_t count, uint64_t nextLevelCount)
 		return 0;
 	}
 
-	uint16_t result = ((count * 10000.) / nextLevelCount);
-	if (result > 10000) {
+	uint16_t result = ((count * 100.) / nextLevelCount);
+	if (result > 100) {
 		return 0;
 	}
 	return result;

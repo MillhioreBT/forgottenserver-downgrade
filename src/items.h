@@ -89,8 +89,10 @@ enum ItemParseAttributes_t
 	ITEM_PARSE_INVISIBLE,
 	ITEM_PARSE_SPEED,
 	ITEM_PARSE_HEALTHGAIN,
+	ITEM_PARSE_HEALTHGAINPERCENT,
 	ITEM_PARSE_HEALTHTICKS,
 	ITEM_PARSE_MANAGAIN,
+	ITEM_PARSE_MANAGAINPERCENT,
 	ITEM_PARSE_MANATICKS,
 	ITEM_PARSE_MANASHIELD,
 	ITEM_PARSE_SKILLSWORD,
@@ -213,13 +215,19 @@ enum ItemParseAttributes_t
 	ITEM_PARSE_BOOSTPERCENTPHYSICAL,
 	ITEM_PARSE_BOOSTPERCENTHEALING,
 	ITEM_PARSE_SUPPLY,
+	ITEM_PARSE_EXPERIENCERATE_BASE,
+	ITEM_PARSE_EXPERIENCERATE_LOW_LEVEL,
+	ITEM_PARSE_EXPERIENCERATE_BONUS,
+	ITEM_PARSE_EXPERIENCERATE_STAMINA,
 };
 
 struct Abilities
 {
 	uint32_t healthGain = 0;
+	uint32_t healthGainPercent = 0;
 	uint32_t healthTicks = 0;
 	uint32_t manaGain = 0;
+	uint32_t manaGainPercent = 0;
 	uint32_t manaTicks = 0;
 
 	uint32_t conditionImmunities = 0;
@@ -243,6 +251,9 @@ struct Abilities
 	std::array<int16_t, COMBAT_COUNT> absorbPercent = {0};
 
 	std::array<Reflect, COMBAT_COUNT> reflect;
+
+	// experience rates
+	std::array<int32_t, static_cast<size_t>(ExperienceRateType::STAMINA) + 1> experienceRate = {0};
 
 	int16_t boostPercent[COMBAT_COUNT] = {0};
 
@@ -296,14 +307,7 @@ public:
 		return *abilities;
 	}
 
-	std::string_view getPluralName() const
-	{
-		if (showCount == 0) {
-			return name;
-		}
-
-		return pluralName;
-	}
+	std::string_view getPluralName() const;
 
 	itemgroup_t group = ITEM_GROUP_NONE;
 	ItemTypes_t type = ITEM_TYPE_NONE;
@@ -400,6 +404,9 @@ public:
 	bool stopTime = false;
 	bool showCount = true;
 	bool supply = false;
+
+private:
+	static std::string pluralString;
 };
 
 class Items

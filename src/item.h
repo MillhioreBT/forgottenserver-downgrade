@@ -840,7 +840,7 @@ public:
 		if (hasAttribute(ITEM_ATTRIBUTE_PLURALNAME)) {
 			return getStrAttr(ITEM_ATTRIBUTE_PLURALNAME);
 		}
-		return items[id].pluralName;
+		return items[id].getPluralName();
 	}
 	std::string_view getArticle() const
 	{

@@ -377,6 +377,7 @@ void ConditionAttributes::addCondition(Creature* creature, const Condition* cond
 		memcpy(skillsPercent, conditionAttrs.skillsPercent, sizeof(skillsPercent));
 		memcpy(stats, conditionAttrs.stats, sizeof(stats));
 		memcpy(statsPercent, conditionAttrs.statsPercent, sizeof(statsPercent));
+		memcpy(experienceRate, conditionAttrs.experienceRate, sizeof(experienceRate));
 		disableDefense = conditionAttrs.disableDefense;
 
 		if (Player* player = creature->getPlayer()) {
@@ -396,6 +397,8 @@ bool ConditionAttributes::unserializeProp(ConditionAttr_t attr, PropStream& prop
 		return propStream.read<int32_t>(specialSkills[currentSpecialSkill++]);
 	} else if (attr == CONDITIONATTR_STATS) {
 		return propStream.read<int32_t>(stats[currentStat++]);
+	} else if (attr == CONDITIONATTR_EXPERIENCERATE) {
+		return propStream.read<int32_t>(experienceRate[currentExperienceRate++]);
 	} else if (attr == CONDITIONATTR_DISABLEDEFENSE) {
 		return propStream.read<bool>(disableDefense);
 	}
@@ -423,6 +426,12 @@ void ConditionAttributes::serialize(PropWriteStream& propWriteStream)
 		propWriteStream.write<uint8_t>(CONDITIONATTR_SPECIALSKILLS);
 		propWriteStream.write<int32_t>(specialSkills[i]);
 	}
+
+	for (uint8_t i = static_cast<size_t>(ExperienceRateType::BASE);
+	     i <= static_cast<size_t>(ExperienceRateType::STAMINA); ++i) {
+		propWriteStream.write<uint8_t>(CONDITIONATTR_SPECIALSKILLS);
+		propWriteStream.write<int32_t>(experienceRate[i]);
+	}
 }
 
 bool ConditionAttributes::startCondition(Creature* creature)
@@ -438,6 +447,7 @@ bool ConditionAttributes::startCondition(Creature* creature)
 		updateSkills(player);
 		updatePercentStats(player);
 		updateStats(player);
+		updateExperienceRate(player);
 	}
 
 	return true;
@@ -518,6 +528,16 @@ void ConditionAttributes::updateSkills(Player* player)
 	}
 }
 
+void ConditionAttributes::updateExperienceRate(Player* player)
+{
+	for (uint8_t i = static_cast<size_t>(ExperienceRateType::BASE);
+	     i <= static_cast<size_t>(ExperienceRateType::STAMINA); ++i) {
+		if (experienceRate[i] != 1.0) {
+			player->setExperienceRate(static_cast<ExperienceRateType>(i), experienceRate[i]);
+		}
+	}
+}
+
 bool ConditionAttributes::executeCondition(Creature* creature, int32_t interval)
 {
 	return ConditionGeneric::executeCondition(creature, interval);
@@ -559,6 +579,13 @@ void ConditionAttributes::endCondition(Creature* creature)
 		if (needUpdateStats) {
 			player->sendStats();
 			player->sendSkills();
+		}
+
+		for (uint8_t i = static_cast<size_t>(ExperienceRateType::BASE);
+		     i <= static_cast<size_t>(ExperienceRateType::STAMINA); ++i) {
+			if (experienceRate[i] != 1.0) {
+				player->setExperienceRate(static_cast<ExperienceRateType>(i), -experienceRate[i]);
+			}
 		}
 	}
 
@@ -716,6 +743,26 @@ bool ConditionAttributes::setParam(ConditionParam_t param, int32_t value)
 			return true;
 		}
 
+		case CONDITION_PARAM_EXPERIENCERATE_BASE: {
+			experienceRate[static_cast<size_t>(ExperienceRateType::BASE)] = value;
+			return true;
+		}
+
+		case CONDITION_PARAM_EXPERIENCERATE_LOW_LEVEL: {
+			experienceRate[static_cast<size_t>(ExperienceRateType::LOW_LEVEL)] = value;
+			return true;
+		}
+
+		case CONDITION_PARAM_EXPERIENCERATE_BONUS: {
+			experienceRate[static_cast<size_t>(ExperienceRateType::BONUS)] = value;
+			return true;
+		}
+
+		case CONDITION_PARAM_EXPERIENCERATE_STAMINA: {
+			experienceRate[static_cast<size_t>(ExperienceRateType::STAMINA)] = value;
+			return true;
+		}
+
 		case CONDITION_PARAM_DISABLE_DEFENSE: {
 			disableDefense = (value != 0);
 			return true;
@@ -815,6 +862,18 @@ int32_t ConditionAttributes::getParam(ConditionParam_t param) const
 		case CONDITION_PARAM_SPECIALSKILL_MANALEECHAMOUNT:
 			return specialSkills[SPECIALSKILL_MANALEECHAMOUNT];
 
+		case CONDITION_PARAM_EXPERIENCERATE_BASE:
+			return experienceRate[static_cast<size_t>(ExperienceRateType::BASE)];
+
+		case CONDITION_PARAM_EXPERIENCERATE_LOW_LEVEL:
+			return experienceRate[static_cast<size_t>(ExperienceRateType::LOW_LEVEL)];
+
+		case CONDITION_PARAM_EXPERIENCERATE_BONUS:
+			return experienceRate[static_cast<size_t>(ExperienceRateType::BONUS)];
+
+		case CONDITION_PARAM_EXPERIENCERATE_STAMINA:
+			return experienceRate[static_cast<size_t>(ExperienceRateType::STAMINA)];
+
 		default:
 			return ConditionGeneric::getParam(param);
 	}
@@ -832,6 +891,9 @@ void ConditionRegeneration::addCondition(Creature*, const Condition* condition)
 
 		healthGain = conditionRegen.healthGain;
 		manaGain = conditionRegen.manaGain;
+
+		healthGainPercent = conditionRegen.healthGainPercent;
+		manaGainPercent = conditionRegen.manaGainPercent;
 	}
 }
 
@@ -841,10 +903,14 @@ bool ConditionRegeneration::unserializeProp(ConditionAttr_t attr, PropStream& pr
 		return propStream.read<uint32_t>(healthTicks);
 	} else if (attr == CONDITIONATTR_HEALTHGAIN) {
 		return propStream.read<uint32_t>(healthGain);
+	} else if (attr == CONDITIONATTR_HEALTHGAINPERCENT) {
+		return propStream.read<uint32_t>(healthGainPercent);
 	} else if (attr == CONDITIONATTR_MANATICKS) {
 		return propStream.read<uint32_t>(manaTicks);
 	} else if (attr == CONDITIONATTR_MANAGAIN) {
 		return propStream.read<uint32_t>(manaGain);
+	} else if (attr == CONDITIONATTR_MANAGAINPERCENT) {
+		return propStream.read<uint32_t>(manaGainPercent);
 	}
 	return Condition::unserializeProp(attr, propStream);
 }
@@ -859,11 +925,17 @@ void ConditionRegeneration::serialize(PropWriteStream& propWriteStream)
 	propWriteStream.write<uint8_t>(CONDITIONATTR_HEALTHGAIN);
 	propWriteStream.write<uint32_t>(healthGain);
 
+	propWriteStream.write<uint8_t>(CONDITIONATTR_HEALTHGAINPERCENT);
+	propWriteStream.write<uint32_t>(healthGainPercent);
+
 	propWriteStream.write<uint8_t>(CONDITIONATTR_MANATICKS);
 	propWriteStream.write<uint32_t>(manaTicks);
 
 	propWriteStream.write<uint8_t>(CONDITIONATTR_MANAGAIN);
 	propWriteStream.write<uint32_t>(manaGain);
+
+	propWriteStream.write<uint8_t>(CONDITIONATTR_MANAGAINPERCENT);
+	propWriteStream.write<uint32_t>(manaGainPercent);
 }
 
 bool ConditionRegeneration::executeCondition(Creature* creature, int32_t interval)
@@ -878,13 +950,18 @@ bool ConditionRegeneration::executeCondition(Creature* creature, int32_t interva
 	if (internalHealthTicks >= healthTicks) {
 		internalHealthTicks = 0;
 
+		uint32_t healAmount = healthGain;
+		if (healthGainPercent != 0) {
+			auto percent = static_cast<float>(healthGainPercent - 100) / 100.0f;
+			healAmount += static_cast<int32_t>(creature->getMaxHealth() * percent);
+		}
+
 		int32_t realHealthGain = creature->getHealth();
-		creature->changeHealth(healthGain);
+		creature->changeHealth(healAmount);
 		realHealthGain = creature->getHealth() - realHealthGain;
 
 		if (isBuff && realHealthGain > 0) {
-			Player* player = creature->getPlayer();
-			if (player) {
+			if (auto player = creature->getPlayer()) {
 				std::string healString =
 				    std::to_string(realHealthGain) + (realHealthGain != 1 ? " hitpoints." : " hitpoint.");
 
@@ -912,9 +989,15 @@ bool ConditionRegeneration::executeCondition(Creature* creature, int32_t interva
 	if (internalManaTicks >= manaTicks) {
 		internalManaTicks = 0;
 
-		if (Player* player = creature->getPlayer()) {
+		if (auto player = creature->getPlayer()) {
+			uint32_t manaAmount = manaGain;
+			if (manaGainPercent != 0) {
+				auto percent = static_cast<float>(manaGainPercent - 100) / 100.0f;
+				manaAmount += static_cast<int32_t>(player->getMaxMana() * percent);
+			}
+
 			int32_t realManaGain = player->getMana();
-			player->changeMana(manaGain);
+			player->changeMana(manaAmount);
 			realManaGain = player->getMana() - realManaGain;
 
 			if (isBuff && realManaGain > 0) {
@@ -953,12 +1036,20 @@ bool ConditionRegeneration::setParam(ConditionParam_t param, int32_t value)
 			healthGain = value;
 			return true;
 
+		case CONDITION_PARAM_HEALTHGAINPERCENT:
+			healthGainPercent = value;
+			return true;
+
 		case CONDITION_PARAM_HEALTHTICKS:
 			healthTicks = value;
 			return true;
 
 		case CONDITION_PARAM_MANAGAIN:
 			manaGain = value;
+			return true;
+
+		case CONDITION_PARAM_MANAGAINPERCENT:
+			manaGainPercent = value;
 			return true;
 
 		case CONDITION_PARAM_MANATICKS:

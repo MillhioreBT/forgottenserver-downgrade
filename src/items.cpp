@@ -64,8 +64,10 @@ const std::unordered_map<std::string, ItemParseAttributes_t> ItemParseAttributes
     {"invisible", ITEM_PARSE_INVISIBLE},
     {"speed", ITEM_PARSE_SPEED},
     {"healthgain", ITEM_PARSE_HEALTHGAIN},
+    {"healthgainpercent", ITEM_PARSE_HEALTHGAINPERCENT},
     {"healthticks", ITEM_PARSE_HEALTHTICKS},
     {"managain", ITEM_PARSE_MANAGAIN},
+    {"managainpercent", ITEM_PARSE_MANAGAINPERCENT},
     {"manaticks", ITEM_PARSE_MANATICKS},
     {"manashield", ITEM_PARSE_MANASHIELD},
     {"skillsword", ITEM_PARSE_SKILLSWORD},
@@ -201,6 +203,10 @@ const std::unordered_map<std::string, ItemParseAttributes_t> ItemParseAttributes
     {"storeitem", ITEM_PARSE_STOREITEM},
     {"worth", ITEM_PARSE_WORTH},
     {"supply", ITEM_PARSE_SUPPLY},
+    {"experienceratebase", ITEM_PARSE_EXPERIENCERATE_BASE},
+    {"experienceratelowlevel", ITEM_PARSE_EXPERIENCERATE_LOW_LEVEL},
+    {"experienceratebonus", ITEM_PARSE_EXPERIENCERATE_BONUS},
+    {"experienceratestamina", ITEM_PARSE_EXPERIENCERATE_STAMINA},
 };
 
 const std::unordered_map<std::string, ItemTypes_t> ItemTypesMap = {{"key", ITEM_TYPE_KEY},
@@ -979,6 +985,12 @@ void Items::parseItemNode(const pugi::xml_node& itemNode, uint16_t id)
 					break;
 				}
 
+				case ITEM_PARSE_HEALTHGAINPERCENT: {
+					abilities.regeneration = true;
+					abilities.healthGainPercent = pugi::cast<uint32_t>(valueAttribute.value());
+					break;
+				}
+
 				case ITEM_PARSE_HEALTHTICKS: {
 					abilities.regeneration = true;
 					abilities.healthTicks = pugi::cast<uint32_t>(valueAttribute.value());
@@ -988,6 +1000,12 @@ void Items::parseItemNode(const pugi::xml_node& itemNode, uint16_t id)
 				case ITEM_PARSE_MANAGAIN: {
 					abilities.regeneration = true;
 					abilities.manaGain = pugi::cast<uint32_t>(valueAttribute.value());
+					break;
+				}
+
+				case ITEM_PARSE_MANAGAINPERCENT: {
+					abilities.regeneration = true;
+					abilities.manaGainPercent = pugi::cast<uint32_t>(valueAttribute.value());
 					break;
 				}
 
@@ -1847,6 +1865,30 @@ void Items::parseItemNode(const pugi::xml_node& itemNode, uint16_t id)
 					break;
 				}
 
+				case ITEM_PARSE_EXPERIENCERATE_BASE: {
+					int32_t rate = pugi::cast<int32_t>(valueAttribute.value());
+					abilities.experienceRate[static_cast<size_t>(ExperienceRateType::BASE)] = rate;
+					break;
+				}
+
+				case ITEM_PARSE_EXPERIENCERATE_LOW_LEVEL: {
+					int32_t rate = pugi::cast<int32_t>(valueAttribute.value());
+					abilities.experienceRate[static_cast<size_t>(ExperienceRateType::LOW_LEVEL)] = rate;
+					break;
+				}
+
+				case ITEM_PARSE_EXPERIENCERATE_BONUS: {
+					int32_t rate = pugi::cast<int32_t>(valueAttribute.value());
+					abilities.experienceRate[static_cast<size_t>(ExperienceRateType::BONUS)] = rate;
+					break;
+				}
+
+				case ITEM_PARSE_EXPERIENCERATE_STAMINA: {
+					int32_t rate = pugi::cast<int32_t>(valueAttribute.value());
+					abilities.experienceRate[static_cast<size_t>(ExperienceRateType::STAMINA)] = rate;
+					break;
+				}
+
 				default: {
 					// It should not ever get to here, only if you add a new key to the map and don't configure a case
 					// for it.
@@ -1920,4 +1962,26 @@ uint16_t Items::getItemIdByName(const std::string& name)
 	if (result == nameToItems.end()) return 0;
 
 	return result->second;
+}
+
+std::string ItemType::pluralString;
+
+std::string_view ItemType::getPluralName() const
+{
+	if (!pluralName.empty()) {
+		return pluralName;
+	}
+
+	if (showCount == 0) {
+		return name;
+	}
+
+	if (name.empty() || name.back() == 's') {
+		return name;
+	}
+
+	pluralString.reserve(name.size() + 1);
+	pluralString.assign(name);
+	pluralString.push_back('s');
+	return pluralString;
 }
