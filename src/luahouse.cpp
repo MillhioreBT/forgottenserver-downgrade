@@ -225,7 +225,7 @@ int luaHouseStartTrade(lua_State* L)
 		return 1;
 	}
 
-	if (!Position::areInRange<2, 2, 0>(tradePartner->getPosition(), player->getPosition())) {
+	if (!tradePartner->getPosition().isInRange(player->getPosition(), 2, 2, 0)) {
 		lua_pushinteger(L, RETURNVALUE_TRADEPLAYERFARAWAY);
 		return 1;
 	}

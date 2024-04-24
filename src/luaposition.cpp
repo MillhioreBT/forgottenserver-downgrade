@@ -36,57 +36,12 @@ int luaPositionCreate(lua_State* L)
 	return 1;
 }
 
-int luaPositionAdd(lua_State* L)
-{
-	// positionValue = position + positionEx
-	int32_t stackpos;
-	const Position& position = getPosition(L, 1, stackpos);
-
-	Position positionEx;
-	if (stackpos == 0) {
-		positionEx = getPosition(L, 2, stackpos);
-	} else {
-		positionEx = getPosition(L, 2);
-	}
-
-	pushPosition(L, position + positionEx, stackpos);
-	return 1;
-}
-
-int luaPositionSub(lua_State* L)
-{
-	// positionValue = position - positionEx
-	int32_t stackpos;
-	const Position& position = getPosition(L, 1, stackpos);
-
-	Position positionEx;
-	if (stackpos == 0) {
-		positionEx = getPosition(L, 2, stackpos);
-	} else {
-		positionEx = getPosition(L, 2);
-	}
-
-	pushPosition(L, position - positionEx, stackpos);
-	return 1;
-}
-
 int luaPositionCompare(lua_State* L)
 {
 	// position == positionEx
 	const Position& positionEx = getPosition(L, 2);
 	const Position& position = getPosition(L, 1);
 	pushBoolean(L, position == positionEx);
-	return 1;
-}
-
-int luaPositionGetDistance(lua_State* L)
-{
-	// position:getDistance(positionEx)
-	const Position& positionEx = getPosition(L, 2);
-	const Position& position = getPosition(L, 1);
-	lua_pushinteger(L, std::max<int32_t>(std::max<int32_t>(std::abs(Position::getDistanceX(position, positionEx)),
-	                                                       std::abs(Position::getDistanceY(position, positionEx))),
-	                                     std::abs(Position::getDistanceZ(position, positionEx))));
 	return 1;
 }
 
@@ -146,11 +101,8 @@ void LuaScriptInterface::registerPosition()
 {
 	// Position
 	registerClass("Position", "", luaPositionCreate);
-	registerMetaMethod("Position", "__add", luaPositionAdd);
-	registerMetaMethod("Position", "__sub", luaPositionSub);
 	registerMetaMethod("Position", "__eq", luaPositionCompare);
 
-	registerMethod("Position", "getDistance", luaPositionGetDistance);
 	registerMethod("Position", "isSightClear", luaPositionIsSightClear);
 
 	registerMethod("Position", "sendMagicEffect", luaPositionSendMagicEffect);

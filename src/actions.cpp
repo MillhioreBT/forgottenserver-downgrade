@@ -215,7 +215,7 @@ ReturnValue Actions::canUse(const Player* player, const Position& pos)
 			return playerPos.z > pos.z ? RETURNVALUE_FIRSTGOUPSTAIRS : RETURNVALUE_FIRSTGODOWNSTAIRS;
 		}
 
-		if (!Position::areInRange<1, 1>(playerPos, pos)) {
+		if (!playerPos.isInRange(pos, 1, 1)) {
 			return RETURNVALUE_TOOFARAWAY;
 		}
 	}
@@ -242,7 +242,7 @@ ReturnValue Actions::canUseFar(const Creature* creature, const Position& toPos, 
 		return creaturePos.z > toPos.z ? RETURNVALUE_FIRSTGOUPSTAIRS : RETURNVALUE_FIRSTGODOWNSTAIRS;
 	}
 
-	if (!Position::areInRange<Map::maxClientViewportX - 1, Map::maxClientViewportY - 1>(toPos, creaturePos)) {
+	if (!toPos.isInRange(creaturePos, Map::maxClientViewportX - 1, Map::maxClientViewportY - 1)) {
 		return RETURNVALUE_TOOFARAWAY;
 	}
 
