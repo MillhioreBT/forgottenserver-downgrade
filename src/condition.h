@@ -46,6 +46,7 @@ enum ConditionAttr_t
 	CONDITIONATTR_EXPERIENCERATE,
 	CONDITIONATTR_HEALTHGAINPERCENT,
 	CONDITIONATTR_MANAGAINPERCENT,
+	CONDITIONATTR_CONSTANT,
 
 	// reserved for serialization
 	CONDITIONATTR_END = 254,
@@ -104,6 +105,9 @@ public:
 
 	bool isPersistent() const;
 
+	bool isConstant() const { return constant; }
+	void setConstant(bool constant) { this->constant = constant; }
+
 protected:
 	virtual bool updateCondition(const Condition* addCondition);
 
@@ -113,6 +117,7 @@ protected:
 	ConditionType_t conditionType;
 	bool isBuff;
 	bool aggressive;
+	bool constant = false;
 
 private:
 	ConditionId_t id;

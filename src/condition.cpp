@@ -119,6 +119,16 @@ bool Condition::unserializeProp(ConditionAttr_t attr, PropStream& propStream)
 			return true;
 		}
 
+		case CONDITIONATTR_CONSTANT: {
+			uint8_t value;
+			if (!propStream.read<uint8_t>(value)) {
+				return false;
+			}
+
+			constant = (value != 0);
+			return true;
+		}
+
 		case CONDITIONATTR_END:
 			return true;
 
@@ -146,6 +156,9 @@ void Condition::serialize(PropWriteStream& propWriteStream)
 
 	propWriteStream.write<uint8_t>(CONDITIONATTR_ISAGGRESSIVE);
 	propWriteStream.write<uint8_t>(aggressive);
+
+	propWriteStream.write<uint8_t>(CONDITIONATTR_CONSTANT);
+	propWriteStream.write<uint8_t>(constant ? 1 : 0);
 }
 
 void Condition::setTicks(int32_t newTicks)
