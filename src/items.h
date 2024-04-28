@@ -401,6 +401,7 @@ public:
 	bool isHangable = false;
 	bool allowDistRead = false;
 	bool lookThrough = false;
+	bool isAnimation = false;
 	bool stopTime = false;
 	bool showCount = true;
 	bool supply = false;

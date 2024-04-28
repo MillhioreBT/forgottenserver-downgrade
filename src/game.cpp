@@ -3195,7 +3195,7 @@ void Game::playerLookAt(uint32_t playerId, const Position& pos, uint8_t stackPos
 
 	int32_t lookDistance = -1;
 	if (thing != player) {
-		lookDistance = std::max(playerPos.getDistanceX(thingPos), thingPos.getDistanceY(playerPos));
+		lookDistance = std::max(playerPos.getDistanceX(thingPos), playerPos.getDistanceY(thingPos));
 		if (playerPos.z != thingPos.z) {
 			lookDistance += 15;
 		}

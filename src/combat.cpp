@@ -22,7 +22,7 @@ std::vector<Tile*> getList(const MatrixArea& area, const Position& targetPos, co
 
 	std::vector<Tile*> vec;
 
-	auto center = area.getCenter();
+	auto& center = area.getCenter();
 
 	Position tmpPos(targetPos.x - center.first, targetPos.y - center.second, targetPos.z);
 	for (uint32_t row = 0; row < area.getRows(); ++row, ++tmpPos.y) {
@@ -437,7 +437,7 @@ bool Combat::setParam(CombatParam_t param, uint32_t value)
 	return false;
 }
 
-int32_t Combat::getParam(CombatParam_t param)
+int32_t Combat::getParam(CombatParam_t param) const
 {
 	switch (param) {
 		case COMBAT_PARAM_TYPE:
@@ -1222,8 +1222,8 @@ void TargetCallback::onTargetCombat(Creature* creature, Creature* target) const
 
 const MatrixArea& AreaCombat::getArea(const Position& centerPos, const Position& targetPos) const
 {
-	int32_t dx = centerPos.getOffsetX(targetPos);
-	int32_t dy = centerPos.getOffsetY(targetPos);
+	int32_t dx = targetPos.getOffsetX(centerPos);
+	int32_t dy = targetPos.getOffsetY(centerPos);
 
 	Direction dir;
 	if (dx < 0) {

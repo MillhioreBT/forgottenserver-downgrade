@@ -372,6 +372,7 @@ void ProtocolGame::onRecvFirstMessage(NetworkMessage& msg)
 	}
 
 	if (isOTCv8) {
+		sendOTCv8Features();
 		NetworkMessage opcodeMessage;
 		opcodeMessage.addByte(0x32);
 		opcodeMessage.addByte(0x00);
@@ -2331,7 +2332,10 @@ void ProtocolGame::sendOutfitWindow()
 		protocolOutfits.emplace_back("Gamemaster", 75, 0);
 	}
 
-	const size_t maxProtocolOutfits = static_cast<size_t>(g_config[ConfigKeysInteger::MAX_PROTOCOL_OUTFITS]);
+	size_t maxProtocolOutfits = static_cast<size_t>(g_config[ConfigKeysInteger::MAX_PROTOCOL_OUTFITS]);
+	if (isOTCv8) {
+		maxProtocolOutfits = std::numeric_limits<uint8_t>::max();
+	}
 
 	for (const Outfit* outfit : outfits) {
 		uint8_t addons;
@@ -2470,11 +2474,19 @@ void ProtocolGame::AddPlayerStats(NetworkMessage& msg)
 	    static_cast<uint16_t>(std::min<uint32_t>(player->getMaxMana(), std::numeric_limits<uint16_t>::max())));
 
 	msg.addByte(static_cast<uint8_t>(std::min<uint32_t>(player->getMagicLevel(), std::numeric_limits<uint8_t>::max())));
+	if (isOTCv8) {
+		msg.addByte(
+		    static_cast<uint8_t>(std::min<uint32_t>(player->getBaseMagicLevel(), std::numeric_limits<uint8_t>::max())));
+	}
 	msg.addByte(static_cast<uint8_t>(player->getMagicLevelPercent()));
 
 	msg.addByte(player->getSoul());
 
 	msg.add<uint16_t>(player->getStaminaMinutes());
+
+	if (isOTCv8) {
+		msg.add<uint16_t>(player->getBaseSpeed() / 2);
+	}
 
 	/*msg.add<uint16_t>(player->getBaseSpeed() / 2);
 
@@ -2492,17 +2504,30 @@ void ProtocolGame::AddPlayerSkills(NetworkMessage& msg)
 {
 	msg.addByte(0xA1);
 
-	for (uint8_t i = SKILL_FIRST; i <= SKILL_LAST; ++i) {
-		msg.addByte(
-		    std::min<uint8_t>(static_cast<uint8_t>(player->getSkillLevel(i)), std::numeric_limits<uint8_t>::max()));
-		msg.addByte(static_cast<uint8_t>(player->getSkillPercent(i)));
+	if (!isOTCv8) {
+		for (uint8_t i = SKILL_FIRST; i <= SKILL_LAST; ++i) {
+			msg.addByte(
+			    std::min<uint8_t>(static_cast<uint8_t>(player->getSkillLevel(i)), std::numeric_limits<uint8_t>::max()));
+			msg.addByte(static_cast<uint8_t>(player->getSkillPercent(i)));
+		}
+	} else {
+		for (uint8_t i = SKILL_FIRST; i <= SKILL_LAST; ++i) {
+			msg.add<uint16_t>(std::min<uint16_t>(player->getSkillLevel(i), std::numeric_limits<uint16_t>::max()));
+			msg.add<uint16_t>(player->getBaseSkill(i));
+			msg.addByte(static_cast<uint8_t>(player->getSkillPercent(i)));
+		}
+
+		for (uint8_t i = SPECIALSKILL_FIRST; i <= SPECIALSKILL_LAST; ++i) {
+			msg.add<uint16_t>(static_cast<uint16_t>(std::min<int32_t>(100, player->varSpecialSkills[i])));
+			msg.add<uint16_t>(0);
+		}
 	}
 }
 
 void ProtocolGame::AddOutfit(NetworkMessage& msg, const Outfit_t& outfit)
 {
 	uint16_t lookType = outfit.lookType;
-	if (isOTCv8 && lookType >= 367) {
+	if (!isOTCv8 && lookType >= 367) {
 		lookType = 128;
 	}
 
@@ -2675,4 +2700,23 @@ void ProtocolGame::parseExtendedOpcode(NetworkMessage& msg)
 	g_dispatcher.addTask([=, playerID = player->getID(), buffer = std::string{buffer}]() {
 		g_game.parsePlayerExtendedOpcode(playerID, opcode, buffer);
 	});
+}
+
+void ProtocolGame::sendOTCv8Features()
+{
+	std::vector<GameFeature> features = {GameFeature::ExtendedOpcode,   GameFeature::PlayerMounts,
+	                                     GameFeature::SpritesU32,       GameFeature::SpritesAlphaChannel,
+	                                     GameFeature::IdleAnimations,   GameFeature::EnhancedAnimations,
+	                                     GameFeature::AdditionalSkills, GameFeature::DoubleSkills,
+	                                     GameFeature::SkillsBase,       GameFeature::BaseSkillU16};
+
+	auto msg = getOutputBuffer(1024);
+	msg->addByte(0x43);
+	msg->add<uint16_t>(features.size());
+	for (const GameFeature& feature : features) {
+		msg->addByte(static_cast<uint8_t>(feature));
+		msg->addByte(0x01);
+	}
+
+	send(std::move(getCurrentBuffer()));
 }

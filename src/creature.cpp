@@ -338,8 +338,8 @@ void Creature::updateTileCache(const Tile* tile, const Position& pos)
 {
 	const Position& myPos = getPosition();
 	if (pos.z == myPos.z) {
-		int32_t dx = myPos.getOffsetX(pos);
-		int32_t dy = myPos.getOffsetY(pos);
+		int32_t dx = pos.getOffsetX(myPos);
+		int32_t dy = pos.getOffsetY(myPos);
 		updateTileCache(tile, dx, dy);
 	}
 }
@@ -359,8 +359,8 @@ int32_t Creature::getWalkCache(const Position& pos) const
 		return 1;
 	}
 
-	if (int32_t dx = myPos.getOffsetX(pos); std::abs(dx) <= maxWalkCacheWidth) {
-		if (int32_t dy = myPos.getOffsetY(pos); std::abs(dy) <= maxWalkCacheHeight) {
+	if (int32_t dx = pos.getOffsetX(myPos); std::abs(dx) <= maxWalkCacheWidth) {
+		if (int32_t dy = pos.getOffsetY(myPos); std::abs(dy) <= maxWalkCacheHeight) {
 			if (localMapCache[maxWalkCacheHeight + dy][maxWalkCacheWidth + dx]) {
 				return 1;
 			}
@@ -476,7 +476,7 @@ void Creature::onCreatureMove(Creature* creature, const Tile* newTile, const Pos
 			if (oldPos.z != newPos.z) {
 				// floor change extra cost
 				lastStepCost = 2;
-			} else if (newPos.getDistanceX(oldPos) >= 1 && oldPos.getDistanceY(newPos) >= 1) {
+			} else if (newPos.getDistanceX(oldPos) >= 1 && newPos.getDistanceY(oldPos) >= 1) {
 				// diagonal extra cost
 				lastStepCost = 3;
 				if (getPlayer()) {
@@ -492,7 +492,7 @@ void Creature::onCreatureMove(Creature* creature, const Tile* newTile, const Pos
 			std::forward_list<Creature*> despawnList;
 			for (Creature* summon : summons) {
 				const Position& pos = summon->getPosition();
-				if (newPos.getDistanceZ(pos) > 2 || std::max(newPos.getDistanceX(pos), pos.getDistanceY(newPos)) > 30) {
+				if (newPos.getDistanceZ(pos) > 2 || std::max(newPos.getDistanceX(pos), newPos.getDistanceY(pos)) > 30) {
 					despawnList.push_front(summon);
 				}
 			}
@@ -1565,7 +1565,7 @@ bool FrozenPathingConditionCall::isInRange(const Position& startPos, const Posit
 			return false;
 		}
 	} else {
-		int32_t dx = targetPos.getOffsetX(startPos);
+		int32_t dx = startPos.getOffsetX(targetPos);
 
 		int32_t dxMax = (dx >= 0 ? fpp.maxTargetDist : 0);
 		if (testPos.x > targetPos.x + dxMax) {
@@ -1577,7 +1577,7 @@ bool FrozenPathingConditionCall::isInRange(const Position& startPos, const Posit
 			return false;
 		}
 
-		int32_t dy = targetPos.getOffsetY(startPos);
+		int32_t dy = startPos.getOffsetY(targetPos);
 
 		int32_t dyMax = (dy >= 0 ? fpp.maxTargetDist : 0);
 		if (testPos.y > targetPos.y + dyMax) {
@@ -1603,7 +1603,7 @@ bool FrozenPathingConditionCall::operator()(const Position& startPos, const Posi
 		return false;
 	}
 
-	int32_t testDist = std::max(targetPos.getDistanceX(testPos), testPos.getDistanceY(targetPos));
+	int32_t testDist = std::max(targetPos.getDistanceX(testPos), targetPos.getDistanceY(testPos));
 	if (fpp.maxTargetDist == 1) {
 		if (testDist < fpp.minTargetDist || testDist > fpp.maxTargetDist) {
 			return false;

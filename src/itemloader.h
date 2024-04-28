@@ -95,6 +95,7 @@ enum itemattrib_t
 	ITEM_ATTR_WRITEABLE3, // deprecated
 
 	ITEM_ATTR_WAREID,
+	ITEM_ATTR_CLASSIFICATION,
 
 	ITEM_ATTR_LAST
 };

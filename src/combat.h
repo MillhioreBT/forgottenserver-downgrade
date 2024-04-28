@@ -115,7 +115,7 @@ public:
 	bool loadCallBack(CallBackParam key, LuaScriptInterface* scriptInterface);
 
 	bool setParam(CombatParam_t param, uint32_t value);
-	int32_t getParam(CombatParam_t param);
+	int32_t getParam(CombatParam_t param) const;
 
 	void setArea(AreaCombat* area);
 	bool hasArea() const { return area != nullptr; }

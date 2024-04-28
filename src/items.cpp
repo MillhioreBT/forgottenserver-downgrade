@@ -489,6 +489,13 @@ bool Items::loadFromOtb(const std::string& file)
 					break;
 				}
 
+				case ITEM_ATTR_CLASSIFICATION: {
+					if (!stream.skip(1)) {
+						return false;
+					}
+					break;
+				}
+
 				default: {
 					// skip unknown attributes
 					if (!stream.skip(datalen)) {
@@ -552,6 +559,7 @@ bool Items::loadFromOtb(const std::string& file)
 		iType.rotatable = hasBitSet(FLAG_ROTATABLE, flags);
 		iType.canReadText = hasBitSet(FLAG_READABLE, flags);
 		iType.lookThrough = hasBitSet(FLAG_LOOKTHROUGH, flags);
+		iType.isAnimation = hasBitSet(FLAG_ANIMATION, flags);
 		// iType.walkStack = !hasBitSet(FLAG_FULLTILE, flags);
 		iType.forceUse = hasBitSet(FLAG_FORCEUSE, flags);
 
