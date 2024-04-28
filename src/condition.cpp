@@ -129,6 +129,10 @@ bool Condition::unserializeProp(ConditionAttr_t attr, PropStream& propStream)
 			return true;
 		}
 
+		case CONDITIONATTR_ENDTIME: {
+			return propStream.read<int64_t>(endTime);
+		}
+
 		case CONDITIONATTR_END:
 			return true;
 
@@ -158,13 +162,26 @@ void Condition::serialize(PropWriteStream& propWriteStream)
 	propWriteStream.write<uint8_t>(aggressive);
 
 	propWriteStream.write<uint8_t>(CONDITIONATTR_CONSTANT);
-	propWriteStream.write<uint8_t>(constant ? 1 : 0);
+	propWriteStream.write<uint8_t>(constant);
+
+	if (constant) {
+		propWriteStream.write<uint8_t>(CONDITIONATTR_ENDTIME);
+		propWriteStream.write<int64_t>(endTime);
+	}
+}
+
+void Condition::setEndTime(int64_t newEndTime)
+{
+	if (endTime == 0) {
+		endTime = newEndTime;
+	}
 }
 
 void Condition::setTicks(int32_t newTicks)
 {
 	ticks = newTicks;
-	endTime = ticks + OTSYS_TIME();
+
+	setEndTime(ticks + OTSYS_TIME());
 }
 
 bool Condition::executeCondition(Creature*, int32_t interval)
@@ -235,7 +252,7 @@ Condition* Condition::createCondition(ConditionId_t id, ConditionType_t type, in
 	}
 }
 
-Condition* Condition::createCondition(PropStream& propStream)
+Condition_ptr Condition::createCondition(PropStream& propStream)
 {
 	uint8_t attr;
 	if (!propStream.read<uint8_t>(attr) || attr != CONDITIONATTR_TYPE) {
@@ -292,14 +309,44 @@ Condition* Condition::createCondition(PropStream& propStream)
 		return nullptr;
 	}
 
-	return createCondition(static_cast<ConditionId_t>(id), static_cast<ConditionType_t>(type), ticks, 0, buff != 0,
-	                       subId, aggressive);
+	if (!propStream.read<uint8_t>(attr) || attr != CONDITIONATTR_CONSTANT) {
+		return nullptr;
+	}
+
+	uint8_t constant;
+	if (!propStream.read<uint8_t>(constant)) {
+		return nullptr;
+	}
+
+	auto condition = Condition_ptr(createCondition(static_cast<ConditionId_t>(id), static_cast<ConditionType_t>(type),
+	                                               ticks, 0, buff != 0, subId, aggressive));
+
+	if (!condition) {
+		return nullptr;
+	}
+
+	condition->setConstant(constant != 0);
+
+	if (condition->isConstant()) {
+		if (!propStream.read<uint8_t>(attr) || attr != CONDITIONATTR_ENDTIME) {
+			return nullptr;
+		}
+
+		int64_t endTime;
+		if (!propStream.read<int64_t>(endTime)) {
+			return nullptr;
+		}
+
+		condition->setEndTime(endTime);
+	}
+
+	return condition;
 }
 
 bool Condition::startCondition(Creature*)
 {
 	if (ticks > 0) {
-		endTime = ticks + OTSYS_TIME();
+		setEndTime(ticks + OTSYS_TIME());
 	}
 	return true;
 }
@@ -489,7 +536,7 @@ void ConditionAttributes::updatePercentStats(Player* player)
 	}
 }
 
-void ConditionAttributes::updateStats(Player* player)
+void ConditionAttributes::updateStats(Player* player) const
 {
 	bool needUpdateStats = false;
 
@@ -518,7 +565,7 @@ void ConditionAttributes::updatePercentSkills(Player* player)
 	}
 }
 
-void ConditionAttributes::updateSkills(Player* player)
+void ConditionAttributes::updateSkills(Player* player) const
 {
 	bool needUpdateSkills = false;
 
@@ -541,7 +588,7 @@ void ConditionAttributes::updateSkills(Player* player)
 	}
 }
 
-void ConditionAttributes::updateExperienceRate(Player* player)
+void ConditionAttributes::updateExperienceRate(Player* player) const
 {
 	for (uint8_t i = static_cast<size_t>(ExperienceRateType::BASE);
 	     i <= static_cast<size_t>(ExperienceRateType::STAMINA); ++i) {

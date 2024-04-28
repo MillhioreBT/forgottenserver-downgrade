@@ -47,6 +47,7 @@ enum ConditionAttr_t
 	CONDITIONATTR_HEALTHGAINPERCENT,
 	CONDITIONATTR_MANAGAINPERCENT,
 	CONDITIONATTR_CONSTANT,
+	CONDITIONATTR_ENDTIME, // only use if the condition is constant
 
 	// reserved for serialization
 	CONDITIONATTR_END = 254,
@@ -58,6 +59,9 @@ struct IntervalInfo
 	int32_t value;
 	int32_t interval;
 };
+
+class Condition;
+using Condition_ptr = std::unique_ptr<Condition>;
 
 class Condition
 {
@@ -87,13 +91,14 @@ public:
 
 	ConditionType_t getType() const { return conditionType; }
 	int64_t getEndTime() const { return endTime; }
+	void setEndTime(int64_t newEndTime);
 	int32_t getTicks() const { return ticks; }
 	void setTicks(int32_t newTicks);
 	bool isAggressive() const { return aggressive; }
 
 	static Condition* createCondition(ConditionId_t id, ConditionType_t type, int32_t ticks, int32_t param = 0,
 	                                  bool buff = false, uint32_t subId = 0, bool aggressive = false);
-	static Condition* createCondition(PropStream& propStream);
+	static Condition_ptr createCondition(PropStream& propStream);
 
 	virtual bool setParam(ConditionParam_t param, int32_t value);
 	virtual int32_t getParam(ConditionParam_t param) const;
@@ -177,10 +182,10 @@ private:
 	bool disableDefense = false;
 
 	void updatePercentStats(Player* player);
-	void updateStats(Player* player);
+	void updateStats(Player* player) const;
 	void updatePercentSkills(Player* player);
-	void updateSkills(Player* player);
-	void updateExperienceRate(Player* player);
+	void updateSkills(Player* player) const;
+	void updateExperienceRate(Player* player) const;
 };
 
 class ConditionRegeneration final : public ConditionGeneric
