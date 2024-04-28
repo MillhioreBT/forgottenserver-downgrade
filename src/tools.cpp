@@ -395,7 +395,7 @@ Direction getDirectionTo(const Position& from, const Position& to, bool extended
 
 	Direction dir;
 
-	int32_t x_offset = to.getOffsetX(from);
+	int32_t x_offset = from.getOffsetX(to);
 	if (x_offset < 0) {
 		dir = DIRECTION_EAST;
 		x_offset = std::abs(x_offset);
@@ -403,7 +403,7 @@ Direction getDirectionTo(const Position& from, const Position& to, bool extended
 		dir = DIRECTION_WEST;
 	}
 
-	int32_t y_offset = to.getOffsetY(from);
+	int32_t y_offset = from.getOffsetY(to);
 	if (y_offset >= 0) {
 		if (y_offset > x_offset) {
 			dir = DIRECTION_NORTH;
