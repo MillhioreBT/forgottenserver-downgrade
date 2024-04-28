@@ -1,58 +1,69 @@
+local fmt = string.format
+
 local event = Event()
 
-event.onLook = function(self, thing, position, distance, description)
-	local description = "You see " .. thing:getDescription(distance)
-	if self:getGroup():getAccess() then
-		if thing:isItem() then
-			description = string.format("%s\nItem ID: %d", description, thing:getId())
+event.onLook = function(player, thing, position, distance, description)
+	description = "You see " .. thing:getDescription(distance)
+	if player:getGroup():getAccess() then
+		local item = thing:getItem()
+		if item then
+			description = fmt("%s\nItem ID: %d", description, item:getId())
 
-			local actionId = thing:getActionId()
-			if actionId ~= 0 then
-				description = string.format("%s, Action ID: %d", description, actionId)
-			end
+			local actionId = item:getActionId()
+			if actionId ~= 0 then description = fmt("%s, Action ID: %d", description, actionId) end
 
-			local uniqueId = thing:getAttribute(ITEM_ATTRIBUTE_UNIQUEID)
+			local uniqueId = item:getAttribute(ITEM_ATTRIBUTE_UNIQUEID)
 			if uniqueId > 0 and uniqueId < 65536 then
-				description = string.format("%s, Unique ID: %d", description, uniqueId)
+				description = fmt("%s, Unique ID: %d", description, uniqueId)
 			end
 
-			local itemType = thing:getType()
+			local itemType = item:getType()
 
 			local transformEquipId = itemType:getTransformEquipId()
 			local transformDeEquipId = itemType:getTransformDeEquipId()
 			if transformEquipId ~= 0 then
-				description = string.format("%s\nTransforms to: %d (onEquip)", description,
-				                            transformEquipId)
+				description = fmt("%s\nTransforms to: %d (onEquip)", description, transformEquipId)
 			elseif transformDeEquipId ~= 0 then
-				description = string.format("%s\nTransforms to: %d (onDeEquip)",
-				                            description, transformDeEquipId)
+				description =
+					fmt("%s\nTransforms to: %d (onDeEquip)", description, transformDeEquipId)
 			end
 
 			local decayId = itemType:getDecayId()
-			if decayId ~= -1 then
-				description = string.format("%s\nDecays to: %d", description, decayId)
-			end
-		elseif thing:isCreature() then
-			local str = "%s\nHealth: %d / %d"
-			if thing:isPlayer() and thing:getMaxMana() > 0 then
-				str = string.format("%s, Mana: %d / %d", str, thing:getMana(),
-				                    thing:getMaxMana())
-			elseif thing:isMonster() then
-				local raceId = thing:getType():raceId()
-				if raceId ~= 0 then str = string.format("%s\nRaceId: %d", str, raceId) end
-			end
-			description = string.format(str, description, thing:getHealth(),
-			                            thing:getMaxHealth()) .. "."
-		end
+			if decayId ~= -1 then description = fmt("%s\nDecays to: %d", description, decayId) end
+		else
+			local thingCreature = thing:getCreature()
+			local thingPlayer = thing:getPlayer()
+			local thingMonster = thing:getMonster()
+			if thingCreature then
+				local str = "%s\nHealth: %d / %d"
 
-		local position = thing:getPosition()
-		description = string.format("%s\nPosition: %d, %d, %d", description,
-		                            position.x, position.y, position.z)
+				if thingPlayer then
+					local thinPlayerMana = thingPlayer:getMana()
+					if thinPlayerMana > 0 then
+						str = fmt("%s, Mana: %d / %d", str, thinPlayerMana, thingPlayer:getMaxMana())
+					end
+				elseif thingMonster then
+					local raceId = thingMonster:getType():raceId()
+					if raceId ~= 0 then str = fmt("%s\nRaceId: %d", str, raceId) end
+				end
 
-		if thing:isCreature() then
-			if thing:isPlayer() then
-				description = string.format("%s\nIP: %s.", description,
-				                            Game.convertIpToString(thing:getIp()))
+				description = fmt(str, description, thingCreature:getHealth(),
+				                  thingCreature:getMaxHealth()) .. "."
+			end
+
+			local thingPosition = thing:getPosition()
+			if thingPosition then
+				description = fmt("%s\nPosition: %d, %d, %d", description, thingPosition.x,
+				                  thingPosition.y, thingPosition.z)
+			end
+
+			if thingPlayer then
+				description = fmt("%s\nIP: %s.", description,
+				                  Game.convertIpToString(thingPlayer:getIp()))
+				if thingPlayer:getGroup():getAccess() then
+					description = fmt("%s\nVocation: %s.", description,
+					                  thingPlayer:getVocation():getName())
+				end
 			end
 		end
 	end

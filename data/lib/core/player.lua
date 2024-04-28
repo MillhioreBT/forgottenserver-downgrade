@@ -78,7 +78,7 @@ end
 function Player.isUsingOtClient(self) return self:getClient().os >= CLIENTOS_OTCLIENT_LINUX end
 
 function Player.sendExtendedOpcode(self, opcode, buffer)
-	if not self:isUsingOtClient() then return false end
+	if not self:isUsingOtcV8() then return false end
 
 	local networkMessage<close> = NetworkMessage()
 	networkMessage:addByte(0x32)
@@ -296,3 +296,52 @@ function Player.getExhaustion(self, key)
 end
 
 function Player.hasExhaustion(self, key) return self:getExhaustion(key) > 0 end
+
+---@param type ExperienceRateType
+---@param value integer
+function Player:addExperienceRate(type, value)
+	return self:setExperienceRate(type, self:getExperienceRate(type) + value)
+end
+
+do
+	if not nextUseStaminaTime then nextUseStaminaTime = {} end
+
+	local function useStamina(player)
+		local staminaMinutes = player:getStamina()
+		if staminaMinutes == 0 then return end
+
+		local playerId = player:getId()
+		if not nextUseStaminaTime[playerId] then nextUseStaminaTime[playerId] = 0 end
+
+		local currentTime = os.time()
+		local timePassed = currentTime - nextUseStaminaTime[playerId]
+		if timePassed <= 0 then return end
+
+		if timePassed > 60 then
+			if staminaMinutes > 2 then
+				staminaMinutes = staminaMinutes - 2
+			else
+				staminaMinutes = 0
+			end
+			nextUseStaminaTime[playerId] = currentTime + 120
+		else
+			staminaMinutes = staminaMinutes - 1
+			nextUseStaminaTime[playerId] = currentTime + 60
+		end
+		player:setStamina(math.floor(staminaMinutes))
+	end
+
+	function Player:updateStamina()
+		if not configManager.getBoolean(configKeys.STAMINA_SYSTEM) then return false end
+
+		useStamina(self)
+
+		local staminaMinutes = self:getStamina()
+		if staminaMinutes > 2400 and self:isPremium() then
+			self:addExperienceRate(ExperienceRateType.STAMINA, 50)
+		elseif staminaMinutes <= 840 then
+			self:addExperienceRate(ExperienceRateType.STAMINA, -50)
+		end
+		return true
+	end
+end

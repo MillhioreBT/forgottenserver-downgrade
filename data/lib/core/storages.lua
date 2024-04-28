@@ -17,3 +17,37 @@ PlayerStorageKeys = {
 }
 
 GlobalStorageKeys = {}
+
+-- Check duplicates player storage keys
+do
+	local duplicates = {}
+	for name, id in pairs(PlayerStorageKeys) do
+		if duplicates[id] then error("Duplicate keyStorage: " .. id) end
+		duplicates[id] = name
+	end
+
+	local __index = function(self, key)
+		local keyStorage = PlayerStorageKeys[key]
+		if not keyStorage then debugPrint("Invalid keyStorage: " .. key) end
+		return keyStorage
+	end
+
+	setmetatable(PlayerStorageKeys, {__index = __index})
+end
+
+-- Check duplicates global storage keys
+do
+	local duplicates = {}
+	for name, id in pairs(GlobalStorageKeys) do
+		if duplicates[id] then error("Duplicate keyStorage: " .. id) end
+		duplicates[id] = name
+	end
+
+	local __index = function(self, key)
+		local keyStorage = GlobalStorageKeys[key]
+		if not keyStorage then debugPrint("Invalid keyStorage: " .. key) end
+		return keyStorage
+	end
+
+	setmetatable(GlobalStorageKeys, {__index = __index})
+end

@@ -138,6 +138,10 @@ do
 
 	function StringStream() return setmetatable({}, StreamMeta) end
 
+	---@param it ItemType
+	---@param item Item
+	---@param subType integer
+	---@param addArticle boolean
 	local function internalItemGetNameDescription(it, item, subType, addArticle)
 		subType = subType or (item and item:getSubType() or -1)
 		local ss = StringStream()
@@ -278,6 +282,8 @@ do
 
 				-- melee weapons and missiles
 				-- atk x physical +y% element
+			elseif itemType:isWand() then
+				descriptions[#descriptions + 1] = fmt("Magic Atk:%d", attack)
 			elseif table.contains(showAtkWeaponTypes, weaponType) then
 				local atkString = fmt("Atk:%d", attack)
 				local elementDmg = itemType:getElementDamage()
@@ -349,15 +355,16 @@ do
 			-- display the buffs
 			for _, statData in pairs(stats) do
 				local displayValues = {}
-				if statData.flat then displayValues[#displayValues + 1] = statData.flat end
+				if statData.flat then displayValues[#displayValues + 1] = fmt("%+d", statData.flat) end
 
-				if statData.percent then displayValues[#displayValues + 1] = statData.percent end
+				if statData.percent then
+					displayValues[#displayValues + 1] = fmt("%+d%%", statData.percent - 100)
+				end
 
 				-- desired format examples:
 				-- +5%
 				-- +20 and 5%
-				if #displayValues > 0 then
-					displayValues[1] = fmt("%+d", displayValues[1])
+				if #displayValues ~= 0 then
 					descriptions[#descriptions + 1] = fmt("%s %s", statData.name, concat(displayValues, " and "))
 				end
 			end
@@ -376,7 +383,17 @@ do
 		do
 			for element, value in pairs(abilities.specialMagicLevel) do
 				if value ~= 0 then
-					descriptions[#descriptions + 1] = fmt("%s magic level %+d", getCombatName(2^(element-1)), value)
+					descriptions[#descriptions + 1] = fmt("%s magic level %+d", getCombatName(2 ^ (element - 1)),
+					                                      value)
+				end
+			end
+		end
+
+		-- experience rates
+		do
+			for type, rate in ipairs(abilities.experienceRate) do
+				if rate ~= 0 then
+					descriptions[#descriptions + 1] = fmt("xp rate %s %+d%%", getExperienceRateName(type), rate)
 				end
 			end
 		end
@@ -401,20 +418,63 @@ do
 
 		-- protections
 		do
-			local protections = {}
-			for element, value in pairs(abilities.absorbPercent) do
-				if value ~= 0 then
-					protections[#protections + 1] = fmt("%s %+d%%", getCombatName(2 ^ (element - 1)), value)
+			local absorbPercent = abilities.absorbPercent
+			local protectionPhysical = absorbPercent[1] --[[@as integer?]]
+			for elem = 2, #absorbPercent do
+				local val = absorbPercent[elem]
+				if protectionPhysical ~= val then
+					protectionPhysical = nil
+					break
 				end
 			end
 
-			if #protections > 0 then
-				descriptions[#descriptions + 1] = fmt("protection %s", concat(protections, ", "))
+			if protectionPhysical and protectionPhysical ~= 0 then
+				descriptions[#descriptions + 1] = fmt("protection all %+d%%", protectionPhysical)
+			else
+				local protections = {}
+				for element, value in pairs(abilities.absorbPercent) do
+					if value ~= 0 then
+						protections[#protections + 1] = fmt("%s %+d%%", getCombatName(2 ^ (element - 1)), value)
+					end
+				end
+
+				if #protections > 0 then
+					descriptions[#descriptions + 1] = fmt("protection %s", concat(protections, ", "))
+				end
 			end
 		end
 
 		-- damage reflection
 		-- to do
+		do
+			local reflectPercent = abilities.reflectPercent
+			local reflectChance = abilities.reflectChance
+		end
+
+		-- boost percent
+		do
+			local all = abilities.boostPercent[1] --[[@as integer?]]
+			for elem = 2, #abilities.boostPercent do
+				local val = abilities.boostPercent[elem]
+				if all ~= val then
+					all = nil
+					break
+				end
+			end
+
+			if all and all ~= 0 then
+				descriptions[#descriptions + 1] = fmt("boost all %+d%%", all)
+			else
+				local boosts = {}
+				for element, value in pairs(abilities.boostPercent) do
+					if value ~= 0 then
+						boosts[#boosts + 1] = fmt("%s %+d%%", getCombatName(2 ^ (element - 1)), value)
+					end
+				end
+
+				if #boosts > 0 then descriptions[#descriptions + 1] = fmt("boost %s", concat(boosts, ", ")) end
+			end
+		end
 
 		-- magic shield (classic)
 		if abilities.manaShield then descriptions[#descriptions + 1] = "magic shield" end
@@ -423,8 +483,35 @@ do
 		-- to do
 
 		-- regeneration
-		if abilities.manaGain > 0 or abilities.healthGain > 0 or abilities.regeneration then
-			descriptions[#descriptions + 1] = "faster regeneration"
+		if abilities.regeneration then
+			local displayHealth = {}
+			local displayMana = {}
+
+			if abilities.healthGain ~= 0 then
+				displayHealth[#displayHealth + 1] = fmt("%+d", abilities.healthGain)
+			end
+
+			if abilities.healthGainPercent ~= 0 then
+				displayHealth[#displayHealth + 1] = fmt("%+d%%", abilities.healthGainPercent - 100)
+			end
+
+			if abilities.manaGain ~= 0 then displayMana[#displayMana + 1] = fmt("%+d", abilities.manaGain) end
+
+			if abilities.manaGainPercent ~= 0 then
+				displayMana[#displayMana + 1] = fmt("%+d%%", abilities.manaGainPercent - 100)
+			end
+
+			local displayValues = {}
+			if #displayHealth ~= 0 then
+				displayValues[#displayValues + 1] = fmt("hp %s", concat(displayHealth, ", "))
+			end
+			if #displayMana ~= 0 then
+				displayValues[#displayValues + 1] = fmt("mp %s", concat(displayMana, ", "))
+			end
+
+			if #displayValues ~= 0 then
+				descriptions[#descriptions + 1] = fmt("regeneration %s", concat(displayValues, " and "))
+			end
 		end
 
 		-- invisibility

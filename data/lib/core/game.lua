@@ -44,12 +44,6 @@ function Game.getSkillType(weaponType)
 	return SKILL_FIST
 end
 
-if not globalStorageTable then globalStorageTable = {} end
-
-function Game.getStorageValue(key) return globalStorageTable[key] or -1 end
-
-function Game.setStorageValue(key, value) globalStorageTable[key] = value end
-
 do
 	local cdShort = {"d", "h", "m", "s"}
 	local cdLong = {" day", " hour", " minute", " second"}

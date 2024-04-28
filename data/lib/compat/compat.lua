@@ -1839,6 +1839,17 @@ do
 	function getStatName(stat) return stats[stat] or "unknown" end
 end
 
+do
+	local rates = {
+		[ExperienceRateType.BASE] = "base",
+		[ExperienceRateType.LOW_LEVEL] = "low level",
+		[ExperienceRateType.BONUS] = "bonus",
+		[ExperienceRateType.STAMINA] = "stamina"
+	}
+
+	function getExperienceRateName(rate) return rates[rate] or "unknown" end
+end
+
 function indexToCombatType(idx) return 1 << idx end
 
 function showpos(v) return v > 0 and "+" or "-" end
@@ -1873,4 +1884,17 @@ do
 	---@param obj any
 	---@param class table
 	function isClass(obj, class) return getmetatable(obj) == class end
+
+	---@param cylinder Thing
+	---@return Player?
+	function getPlayerFromCylinder(cylinder)
+		if isClass(cylinder, Player) then
+			---@cast cylinder Player
+			return cylinder
+		elseif isClass(cylinder, Item) or isClass(cylinder, Container) then
+			---@cast cylinder Item
+			local topParent = cylinder:getTopParent()
+			if topParent then return topParent:getPlayer() end
+		end
+	end
 end

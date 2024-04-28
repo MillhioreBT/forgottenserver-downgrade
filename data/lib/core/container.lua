@@ -1,15 +1,18 @@
-function Container.isContainer(self) return true end
+function Container:isContainer() return true end
 
-function Container.createLootItem(self, item)
+function Container:createLootItem(lootItem)
 	if self:getEmptySlots() == 0 then return true end
 
 	local itemCount = 0
 	local randvalue = getLootRandom()
-	local itemType = ItemType(item.itemId)
+	local itemType = ItemType(lootItem.itemId)
 
-	if randvalue < item.chance then
+	if randvalue < lootItem.chance then
 		if itemType:isStackable() then
-			itemCount = math.floor(randvalue % item.maxCount) + 1
+			local max = math.floor(randvalue % lootItem.maxCount) + 1
+			local min = lootItem.minCount ~= 0 and math.floor(randvalue % lootItem.minCount) + 1 or max
+			if min > max then min, max = max, min end
+			itemCount = math.random(min, max)
 		else
 			itemCount = 1
 		end
@@ -19,33 +22,31 @@ function Container.createLootItem(self, item)
 		local count = math.min(itemType:getStackSize(), itemCount)
 
 		local subType = count
-		if itemType:isFluidContainer() then subType = math.max(0, item.subType) end
+		if itemType:isFluidContainer() then subType = math.max(0, lootItem.subType) end
 
-		local tmpItem = Game.createItem(item.itemId, subType)
+		local tmpItem = Game.createItem(lootItem.itemId, subType)
 		if not tmpItem then return false end
 
 		local tmpContainer = tmpItem:getContainer()
 		if tmpContainer then
-			for i = 1, #item.childLoot do
-				if not tmpContainer:createLootItem(item.childLoot[i]) then
+			for i = 1, #lootItem.childLoot do
+				if not tmpContainer:createLootItem(lootItem.childLoot[i]) then
 					tmpContainer:remove()
 					return false
 				end
 			end
 
-			if #item.childLoot > 0 and tmpContainer:getSize() == 0 then
+			if #lootItem.childLoot > 0 and tmpContainer:getSize() == 0 then
 				tmpItem:remove()
 				return true
 			end
 		end
 
-		if item.subType ~= -1 then
-			tmpItem:setAttribute(ITEM_ATTRIBUTE_CHARGES, item.subType)
-		end
+		if lootItem.subType ~= -1 then tmpItem:setAttribute(ITEM_ATTRIBUTE_CHARGES, lootItem.subType) end
 
-		if item.actionId ~= -1 then tmpItem:setActionId(item.actionId) end
+		if lootItem.actionId ~= -1 then tmpItem:setActionId(lootItem.actionId) end
 
-		if item.text and item.text ~= "" then tmpItem:setText(item.text) end
+		if lootItem.text and lootItem.text ~= "" then tmpItem:setText(lootItem.text) end
 
 		local ret = self:addItemEx(tmpItem)
 		if ret ~= RETURNVALUE_NOERROR then tmpItem:remove() end
@@ -59,9 +60,8 @@ function Container:getContentDescription()
 	local items = self:getItems()
 	if items and #items > 0 then
 		local loot = {}
-		for _, item in ipairs(items) do
-			loot[#loot + 1] = string.format("%s", item:getNameDescription(
-				                                item:getSubType(), true))
+		for _, lootItem in ipairs(items) do
+			loot[#loot + 1] = lootItem:getNameDescription(lootItem:getSubType(), true)
 		end
 
 		return table.concat(loot, ", ")

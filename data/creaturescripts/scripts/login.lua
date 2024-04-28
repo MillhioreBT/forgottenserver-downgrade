@@ -15,7 +15,7 @@ function onLogin(player)
 	local promotion = vocation:getPromotion()
 	if player:isPremium() then
 		local value = player:getStorageValue(PlayerStorageKeys.promotion)
-		if value == 1 then player:setVocation(promotion) end
+		if value and value == 1 then player:setVocation(promotion) end
 	elseif not promotion then
 		player:setVocation(vocation:getDemotion())
 	end
@@ -23,5 +23,8 @@ function onLogin(player)
 	-- Events
 	player:registerEvent("PlayerDeath")
 	player:registerEvent("DropLoot")
+
+	-- Update Experience Rate Stamina
+	player:updateStamina()
 	return true
 end
