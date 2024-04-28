@@ -5247,6 +5247,8 @@ bool Game::reload(ReloadTypes_t reloadType)
 			return Item::items.reload();
 		case RELOAD_TYPE_MONSTERS:
 			return g_monsters.reload();
+		case RELOAD_TYPE_MOUNTS:
+			return mounts.reload();
 		case RELOAD_TYPE_MOVEMENTS:
 			return g_moveEvents->reload();
 		case RELOAD_TYPE_NPCS: {
@@ -5321,6 +5323,7 @@ bool Game::reload(ReloadTypes_t reloadType)
 			g_weapons->reload();
 			g_weapons->clear(true);
 			g_weapons->loadDefaults();
+			mounts.reload();
 			g_globalEvents->reload();
 			g_events->load();
 			g_chat->load();
