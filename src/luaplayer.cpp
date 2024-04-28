@@ -2178,7 +2178,7 @@ int luaPlayerGetExperienceRate(lua_State* L)
 	}
 
 	auto type = getInteger<uint8_t>(L, 2);
-	if (type < 0 || type > static_cast<uint8_t>(ExperienceRateType::STAMINA)) {
+	if (type > static_cast<uint8_t>(ExperienceRateType::STAMINA)) {
 		lua_pushnil(L);
 		return 1;
 	}
@@ -2197,7 +2197,7 @@ int luaPlayerSetExperienceRate(lua_State* L)
 	}
 
 	auto type = getInteger<uint8_t>(L, 2);
-	if (type < 0 || type > static_cast<uint8_t>(ExperienceRateType::STAMINA)) {
+	if (type > static_cast<uint8_t>(ExperienceRateType::STAMINA)) {
 		lua_pushnil(L);
 		return 1;
 	}
