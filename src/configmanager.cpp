@@ -149,6 +149,25 @@ ExperienceStages loadXMLStages()
 	return stages;
 }
 
+OTCFeatures loadLuaOTCFeatures(lua_State* L)
+{
+	OTCFeatures features;
+
+	lua_getglobal(L, "OTCFeatures");
+	if (!lua_istable(L, -1)) {
+		return {};
+	}
+
+	lua_pushnil(L);
+	while (lua_next(L, -2) != 0) {
+		const auto feature = static_cast<uint8_t>(lua_tointeger(L, -1));
+		features.push_back(feature);
+		lua_pop(L, 1);
+	}
+	lua_pop(L, 1);
+	return features;
+}
+
 } // namespace
 
 bool ConfigManager::load()
@@ -316,6 +335,8 @@ bool ConfigManager::load()
 	}
 	expStages.shrink_to_fit();
 
+	otcFeatures = loadLuaOTCFeatures(L);
+
 	loaded = true;
 	lua_close(L);
 
@@ -401,3 +422,5 @@ bool ConfigManager::setInteger(ConfigKeysInteger what, const int64_t value)
 	integers[what] = value;
 	return true;
 }
+
+OTCFeatures ConfigManager::getOTCFeatures() const { return otcFeatures; }

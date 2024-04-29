@@ -5,6 +5,7 @@
 #define FS_CONFIGMANAGER_H
 
 using ExperienceStages = std::vector<std::tuple<uint32_t, uint32_t, float>>;
+using OTCFeatures = std::vector<uint8_t>;
 
 enum class ConfigKeysBoolean
 {
@@ -154,6 +155,7 @@ public:
 	std::string_view getString(ConfigKeysString what) const;
 	int64_t getInteger(ConfigKeysInteger what) const;
 	float getExperienceStage(const uint32_t level) const;
+	OTCFeatures getOTCFeatures() const;
 
 	bool setBoolean(ConfigKeysBoolean what, const bool value);
 	bool setString(ConfigKeysString what, std::string_view value);
@@ -169,6 +171,7 @@ private:
 	ConfigValues<int64_t, ConfigKeysInteger> integers;
 
 	ExperienceStages expStages = {};
+	OTCFeatures otcFeatures = {};
 
 	bool loaded = false;
 };
