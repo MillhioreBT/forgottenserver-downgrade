@@ -16,7 +16,6 @@
 #include "scheduler.h"
 #include "weapons.h"
 
-extern ConfigManager g_config;
 extern Game g_game;
 extern Chat* g_chat;
 extern Vocations g_vocations;
@@ -665,13 +664,13 @@ bool Player::canWalkthrough(const Creature* creature) const
 	}
 
 	const Player* player = creature->getPlayer();
-	if (!player || !g_config[ConfigKeysBoolean::ALLOW_WALKTHROUGH]) {
+	if (!player || !getBoolean(ConfigManager::ALLOW_WALKTHROUGH)) {
 		return false;
 	}
 
 	const Tile* playerTile = player->getTile();
 	if (!playerTile || (!playerTile->hasFlag(TILESTATE_PROTECTIONZONE) &&
-	                    player->getLevel() > g_config[ConfigKeysInteger::PROTECTION_LEVEL])) {
+	                    player->getLevel() > getInteger(ConfigManager::PROTECTION_LEVEL))) {
 		return false;
 	}
 
@@ -702,13 +701,13 @@ bool Player::canWalkthroughEx(const Creature* creature) const
 	}
 
 	const Player* player = creature->getPlayer();
-	if (!player || !g_config[ConfigKeysBoolean::ALLOW_WALKTHROUGH]) {
+	if (!player || !getBoolean(ConfigManager::ALLOW_WALKTHROUGH)) {
 		return false;
 	}
 
 	const Tile* playerTile = player->getTile();
 	return playerTile && (playerTile->hasFlag(TILESTATE_PROTECTIONZONE) ||
-	                      player->getLevel() <= g_config[ConfigKeysInteger::PROTECTION_LEVEL]);
+	                      player->getLevel() <= getInteger(ConfigManager::PROTECTION_LEVEL));
 }
 
 void Player::onReceiveMail() const
@@ -1199,7 +1198,7 @@ void Player::onCreatureMove(Creature* creature, const Tile* newTile, const Posit
 	}
 
 	if (teleport || oldPos.z != newPos.z) {
-		const int64_t ticks = g_config[ConfigKeysInteger::STAIRHOP_DELAY];
+		const int64_t ticks = getInteger(ConfigManager::STAIRHOP_DELAY);
 		if (ticks > 0) {
 			if (auto condition = Condition::createCondition(CONDITIONID_DEFAULT, CONDITION_PACIFIED, ticks, 0)) {
 				addCondition(condition);
@@ -1365,7 +1364,7 @@ void Player::onThink(uint32_t interval)
 
 	if (!getTile()->hasFlag(TILESTATE_NOLOGOUT) && !isAccessPlayer()) {
 		idleTime += interval;
-		const int32_t kickAfterMinutes = g_config[ConfigKeysInteger::KICK_AFTER_MINUTES];
+		const int32_t kickAfterMinutes = getInteger(ConfigManager::KICK_AFTER_MINUTES);
 		if (idleTime > (kickAfterMinutes * 60000) + 60000) {
 			kickPlayer(true);
 		} else if (client && idleTime == 60000 * kickAfterMinutes) {
@@ -1399,7 +1398,7 @@ uint32_t Player::isMuted() const
 
 void Player::addMessageBuffer()
 {
-	if (MessageBufferCount > 0 && g_config[ConfigKeysInteger::MAX_MESSAGEBUFFER] != 0 &&
+	if (MessageBufferCount > 0 && getInteger(ConfigManager::MAX_MESSAGEBUFFER) != 0 &&
 	    !hasFlag(PlayerFlag_CannotBeMuted)) {
 		--MessageBufferCount;
 	}
@@ -1411,7 +1410,7 @@ void Player::removeMessageBuffer()
 		return;
 	}
 
-	const int64_t maxMessageBuffer = g_config[ConfigKeysInteger::MAX_MESSAGEBUFFER];
+	const int64_t maxMessageBuffer = getInteger(ConfigManager::MAX_MESSAGEBUFFER);
 	if (maxMessageBuffer != 0 && MessageBufferCount <= maxMessageBuffer + 1) {
 		if (++MessageBufferCount > maxMessageBuffer) {
 			uint32_t muteCount = 1;
@@ -1607,7 +1606,7 @@ void Player::addExperience(Creature* source, uint64_t exp, bool sendText /* = fa
 		g_game.changeSpeed(this, 0);
 		g_game.addCreatureHealth(this);
 
-		const uint64_t protectionLevel = g_config[ConfigKeysInteger::PROTECTION_LEVEL];
+		const uint64_t protectionLevel = getInteger(ConfigManager::PROTECTION_LEVEL);
 		if (prevLevel < protectionLevel && level >= protectionLevel) {
 			g_game.updateCreatureWalkthrough(this);
 		}
@@ -1688,7 +1687,7 @@ void Player::removeExperience(uint64_t exp, bool sendText /* = false*/)
 		g_game.changeSpeed(this, 0);
 		g_game.addCreatureHealth(this);
 
-		const uint64_t protectionLevel = g_config[ConfigKeysInteger::PROTECTION_LEVEL];
+		const uint64_t protectionLevel = getInteger(ConfigManager::PROTECTION_LEVEL);
 		if (oldLevel >= protectionLevel && level < protectionLevel) {
 			g_game.updateCreatureWalkthrough(this);
 		}
@@ -2074,13 +2073,13 @@ void Player::addInFightTicks(bool pzlock /*= false*/)
 	}
 
 	auto condition =
-	    Condition::createCondition(CONDITIONID_DEFAULT, CONDITION_INFIGHT, g_config[ConfigKeysInteger::PZ_LOCKED], 0);
+	    Condition::createCondition(CONDITIONID_DEFAULT, CONDITION_INFIGHT, getInteger(ConfigManager::PZ_LOCKED), 0);
 	addCondition(condition);
 }
 
 bool Player::isAccountManager() const
 {
-	return g_config[ConfigKeysBoolean::ACCOUNT_MANAGER] && guid == ACCOUNT_MANAGER_PLAYER_ID;
+	return getBoolean(ConfigManager::ACCOUNT_MANAGER) && guid == ACCOUNT_MANAGER_PLAYER_ID;
 }
 
 void Player::removeList()
@@ -2236,7 +2235,7 @@ ReturnValue Player::queryAdd(int32_t index, const Thing& thing, uint32_t count, 
 	} else if (slotPosition & SLOTP_TWO_HAND) {
 		ret = RETURNVALUE_PUTTHISOBJECTINBOTHHANDS;
 	} else if ((slotPosition & SLOTP_RIGHT) || (slotPosition & SLOTP_LEFT)) {
-		if (!g_config[ConfigKeysBoolean::CLASSIC_EQUIPMENT_SLOTS]) {
+		if (!getBoolean(ConfigManager::CLASSIC_EQUIPMENT_SLOTS)) {
 			ret = RETURNVALUE_CANNOTBEDRESSED;
 		} else {
 			ret = RETURNVALUE_PUTTHISOBJECTINYOURHAND;
@@ -2274,7 +2273,7 @@ ReturnValue Player::queryAdd(int32_t index, const Thing& thing, uint32_t count, 
 
 		case CONST_SLOT_RIGHT: {
 			if (slotPosition & SLOTP_RIGHT) {
-				if (!g_config[ConfigKeysBoolean::CLASSIC_EQUIPMENT_SLOTS]) {
+				if (!getBoolean(ConfigManager::CLASSIC_EQUIPMENT_SLOTS)) {
 					if (item->getWeaponType() != WEAPON_SHIELD) {
 						ret = RETURNVALUE_CANNOTBEDRESSED;
 					} else {
@@ -2320,7 +2319,7 @@ ReturnValue Player::queryAdd(int32_t index, const Thing& thing, uint32_t count, 
 
 		case CONST_SLOT_LEFT: {
 			if (slotPosition & SLOTP_LEFT) {
-				if (!g_config[ConfigKeysBoolean::CLASSIC_EQUIPMENT_SLOTS]) {
+				if (!getBoolean(ConfigManager::CLASSIC_EQUIPMENT_SLOTS)) {
 					WeaponType_t type = item->getWeaponType();
 					if (type == WEAPON_NONE || type == WEAPON_SHIELD) {
 						ret = RETURNVALUE_CANNOTBEDRESSED;
@@ -2380,7 +2379,7 @@ ReturnValue Player::queryAdd(int32_t index, const Thing& thing, uint32_t count, 
 		}
 
 		case CONST_SLOT_AMMO: {
-			if ((slotPosition & SLOTP_AMMO) || g_config[ConfigKeysBoolean::CLASSIC_EQUIPMENT_SLOTS]) {
+			if ((slotPosition & SLOTP_AMMO) || getBoolean(ConfigManager::CLASSIC_EQUIPMENT_SLOTS)) {
 				ret = RETURNVALUE_NOERROR;
 			}
 			break;
@@ -3132,7 +3131,7 @@ void Player::doAttacking(uint32_t)
 		Item* tool = getWeapon();
 		const Weapon* weapon = g_weapons->getWeapon(tool);
 		uint32_t delay = getAttackSpeed();
-		const bool& classicSpeed = g_config[ConfigKeysBoolean::CLASSIC_ATTACK_SPEED];
+		bool classicSpeed = getBoolean(ConfigManager::CLASSIC_ATTACK_SPEED);
 
 		if (weapon) {
 			if (!weapon->interruptSwing()) {
@@ -3163,11 +3162,11 @@ void Player::doAttacking(uint32_t)
 
 uint64_t Player::getGainedExperience(Creature* attacker) const
 {
-	if (g_config[ConfigKeysBoolean::EXPERIENCE_FROM_PLAYERS]) {
+	if (getBoolean(ConfigManager::EXPERIENCE_FROM_PLAYERS)) {
 		Player* attackerPlayer = attacker->getPlayer();
 		if (attackerPlayer && attackerPlayer != this && skillLoss &&
 		    std::abs(static_cast<int64_t>(attackerPlayer->getLevel() - level)) <=
-		        g_config[ConfigKeysInteger::EXP_FROM_PLAYERS_LEVEL_RANGE]) {
+		        getInteger(ConfigManager::EXP_FROM_PLAYERS_LEVEL_RANGE)) {
 			return std::max<uint64_t>(0, std::floor(getLostExperience() * getDamageRatio(attacker) * 0.75));
 		}
 	}
@@ -3484,7 +3483,7 @@ bool Player::onKilledCreature(Creature* target, bool lastHit /* = true*/)
 			if (lastHit && hasCondition(CONDITION_INFIGHT)) {
 				pzLocked = true;
 				auto condition = Condition::createCondition(CONDITIONID_DEFAULT, CONDITION_INFIGHT,
-				                                            g_config[ConfigKeysInteger::WHITE_SKULL_TIME] * 1000, 0);
+				                                            getInteger(ConfigManager::WHITE_SKULL_TIME) * 1000, 0);
 				addCondition(condition);
 			}
 		}
@@ -3767,15 +3766,14 @@ void Player::addUnjustifiedDead(const Player* attacked)
 
 	sendTextMessage(MESSAGE_EVENT_ADVANCE, "Warning! The murder of " + attacked->getName() + " was not justified.");
 
-	skullTicks += g_config[ConfigKeysInteger::FRAG_TIME];
+	skullTicks += getInteger(ConfigManager::FRAG_TIME);
 
 	if (getSkull() != SKULL_BLACK) {
-		if (g_config[ConfigKeysInteger::KILLS_TO_BLACK] != 0 &&
-		    skullTicks > (g_config[ConfigKeysInteger::KILLS_TO_BLACK] - 1) * g_config[ConfigKeysInteger::FRAG_TIME]) {
+		if (getInteger(ConfigManager::KILLS_TO_BLACK) != 0 &&
+		    skullTicks > (getInteger(ConfigManager::KILLS_TO_BLACK) - 1) * getInteger(ConfigManager::FRAG_TIME)) {
 			setSkull(SKULL_BLACK);
-		} else if (getSkull() != SKULL_RED && g_config[ConfigKeysInteger::KILLS_TO_RED] != 0 &&
-		           skullTicks >
-		               (g_config[ConfigKeysInteger::KILLS_TO_RED] - 1) * g_config[ConfigKeysInteger::FRAG_TIME]) {
+		} else if (getSkull() != SKULL_RED && getInteger(ConfigManager::KILLS_TO_RED) != 0 &&
+		           skullTicks > (getInteger(ConfigManager::KILLS_TO_RED) - 1) * getInteger(ConfigManager::FRAG_TIME)) {
 			setSkull(SKULL_RED);
 		}
 	}
@@ -3803,7 +3801,7 @@ bool Player::isPromoted() const
 
 double Player::getLostPercent() const
 {
-	int64_t deathLosePercent = g_config[ConfigKeysInteger::DEATH_LOSE_PERCENT];
+	int64_t deathLosePercent = getInteger(ConfigManager::DEATH_LOSE_PERCENT);
 	if (deathLosePercent != -1) {
 		if (isPromoted()) {
 			deathLosePercent -= 3;
@@ -3878,7 +3876,7 @@ bool Player::isInWarList(uint32_t guildId) const
 
 bool Player::isPremium() const
 {
-	if (g_config[ConfigKeysBoolean::FREE_PREMIUM] || hasFlag(PlayerFlag_IsAlwaysPremium)) {
+	if (getBoolean(ConfigManager::FREE_PREMIUM) || hasFlag(PlayerFlag_IsAlwaysPremium)) {
 		return true;
 	}
 
@@ -4364,7 +4362,7 @@ size_t Player::getMaxVIPEntries() const
 		return group->maxVipEntries;
 	}
 
-	return g_config[isPremium() ? ConfigKeysInteger::VIP_PREMIUM_LIMIT : ConfigKeysInteger::VIP_FREE_LIMIT];
+	return getInteger(isPremium() ? ConfigManager::VIP_PREMIUM_LIMIT : ConfigManager::VIP_FREE_LIMIT);
 }
 
 size_t Player::getMaxDepotItems() const
@@ -4373,7 +4371,7 @@ size_t Player::getMaxDepotItems() const
 		return group->maxDepotItems;
 	}
 
-	return g_config[isPremium() ? ConfigKeysInteger::DEPOT_PREMIUM_LIMIT : ConfigKeysInteger::DEPOT_FREE_LIMIT];
+	return getInteger(isPremium() ? ConfigManager::DEPOT_PREMIUM_LIMIT : ConfigManager::DEPOT_FREE_LIMIT);
 }
 
 std::forward_list<Condition*> Player::getMuteConditions() const

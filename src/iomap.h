@@ -10,8 +10,6 @@
 #include "map.h"
 #include "spawn.h"
 
-extern ConfigManager g_config;
-
 enum OTBM_AttrTypes_t
 {
 	OTBM_ATTR_DESCRIPTION = 1,
@@ -108,7 +106,7 @@ public:
 		if (map->spawnfile.empty()) {
 			// OTBM file doesn't tell us about the spawnfile,
 			// lets guess it is mapname-spawn.xml.
-			map->spawnfile = g_config[ConfigKeysString::MAP_NAME];
+			map->spawnfile = getString(ConfigManager::MAP_NAME);
 			map->spawnfile += "-spawn.xml";
 		}
 
@@ -124,7 +122,7 @@ public:
 		if (map->housefile.empty()) {
 			// OTBM file doesn't tell us about the housefile,
 			// lets guess it is mapname-house.xml.
-			map->housefile = g_config[ConfigKeysString::MAP_NAME];
+			map->housefile = getString(ConfigManager::MAP_NAME);
 			map->housefile += "-house.xml";
 		}
 

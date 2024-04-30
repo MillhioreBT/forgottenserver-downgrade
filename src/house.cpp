@@ -11,7 +11,6 @@
 #include "iologindata.h"
 #include "pugicast.h"
 
-extern ConfigManager g_config;
 extern Game g_game;
 
 House::House(uint32_t houseId) : id(houseId) {}
@@ -71,7 +70,7 @@ void House::setOwner(uint32_t guid, bool updateDatabase /* = true*/, Player* pla
 		}
 	} else {
 		auto strRentPeriod =
-		    boost::algorithm::to_lower_copy<std::string>(std::string{g_config[ConfigKeysString::HOUSE_RENT_PERIOD]});
+		    boost::algorithm::to_lower_copy<std::string>(std::string{getString(ConfigManager::HOUSE_RENT_PERIOD)});
 		time_t currentTime = time(nullptr);
 		if (strRentPeriod == "yearly") {
 			currentTime += 24 * 60 * 60 * 365;
@@ -106,7 +105,7 @@ AccessHouseLevel_t House::getHouseAccessLevel(const Player* player) const
 		return HOUSE_OWNER;
 	}
 
-	if (g_config[ConfigKeysBoolean::HOUSE_OWNED_BY_ACCOUNT]) {
+	if (getBoolean(ConfigManager::HOUSE_OWNED_BY_ACCOUNT)) {
 		if (ownerAccountId == player->getAccount()) {
 			return HOUSE_OWNER;
 		}
@@ -252,7 +251,7 @@ std::optional<std::string_view> House::getAccessList(uint32_t listId) const
 	return door->getAccessList();
 }
 
-bool House::isInvited(const Player* player) { return getHouseAccessLevel(player) != HOUSE_NOT_INVITED; }
+bool House::isInvited(const Player* player) const { return getHouseAccessLevel(player) != HOUSE_NOT_INVITED; }
 
 void House::addDoor(Door* door)
 {
@@ -451,7 +450,7 @@ void AccessList::addGuild(std::string_view name)
 {
 	const Guild* guild = getGuildByName(name);
 	if (guild) {
-		for (auto rank : guild->getRanks()) {
+		for (GuildRank_ptr rank : guild->getRanks()) {
 			guildRankList.insert(rank->id);
 		}
 	}

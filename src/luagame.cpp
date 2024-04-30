@@ -14,7 +14,6 @@
 
 extern Events* g_events;
 extern Vocations g_vocations;
-extern ConfigManager g_config;
 extern Game g_game;
 extern Monsters g_monsters;
 extern Scripts* g_scripts;
@@ -85,7 +84,7 @@ int luaGameGetExperienceStage(lua_State* L)
 {
 	// Game.getExperienceStage(level)
 	uint32_t level = getInteger<uint32_t>(L, 1);
-	lua_pushnumber(L, g_config.getExperienceStage(level));
+	lua_pushnumber(L, ConfigManager::getExperienceStage(level));
 	return 1;
 }
 

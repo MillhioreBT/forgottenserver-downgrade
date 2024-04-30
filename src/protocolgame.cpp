@@ -14,7 +14,6 @@
 #include "player.h"
 #include "scheduler.h"
 
-extern ConfigManager g_config;
 extern CreatureEvents* g_creatureEvents;
 extern Chat* g_chat;
 
@@ -86,7 +85,7 @@ std::size_t clientLogin(const Player& player)
 	cleanupList(priorityWaitList);
 	cleanupList(waitList);
 
-	const uint32_t maxPlayers = static_cast<uint32_t>(g_config[ConfigKeysInteger::MAX_PLAYERS]);
+	const uint32_t maxPlayers = static_cast<uint32_t>(getInteger(ConfigManager::MAX_PLAYERS));
 	if (maxPlayers == 0 || (priorityWaitList.empty() && waitList.empty() && g_game.getPlayersOnline() < maxPlayers)) {
 		return 0;
 	}
@@ -135,8 +134,8 @@ void ProtocolGame::login(uint32_t characterId, uint32_t accountId, OperatingSyst
 	// dispatcher thread
 	Player* foundPlayer = g_game.getPlayerByGUID(characterId);
 	const bool isAccountManager =
-	    g_config[ConfigKeysBoolean::ACCOUNT_MANAGER] && characterId == ACCOUNT_MANAGER_PLAYER_ID;
-	if (!foundPlayer || g_config[ConfigKeysBoolean::ALLOW_CLONES] || isAccountManager) {
+	    getBoolean(ConfigManager::ACCOUNT_MANAGER) && characterId == ACCOUNT_MANAGER_PLAYER_ID;
+	if (!foundPlayer || getBoolean(ConfigManager::ALLOW_CLONES) || isAccountManager) {
 		player = new Player(getThis());
 		player->setGUID(characterId);
 
@@ -163,7 +162,7 @@ void ProtocolGame::login(uint32_t characterId, uint32_t accountId, OperatingSyst
 			return;
 		}
 
-		if (g_config[ConfigKeysBoolean::ONE_PLAYER_ON_ACCOUNT] && !isAccountManager &&
+		if (getBoolean(ConfigManager::ONE_PLAYER_ON_ACCOUNT) && !isAccountManager &&
 		    player->getAccountType() < ACCOUNT_TYPE_GAMEMASTER && g_game.getPlayerByAccount(player->getAccount())) {
 			disconnectClient("You may only login with one character\nof your account at the same time.");
 			return;
@@ -227,7 +226,7 @@ void ProtocolGame::login(uint32_t characterId, uint32_t accountId, OperatingSyst
 		player->lastLoginSaved = std::max<time_t>(time(nullptr), player->lastLoginSaved + 1);
 		acceptPackets = true;
 	} else {
-		if (eventConnect != 0 || !g_config[ConfigKeysBoolean::REPLACE_KICK_ON_LOGIN]) {
+		if (eventConnect != 0 || !getBoolean(ConfigManager::REPLACE_KICK_ON_LOGIN)) {
 			// Already trying to connect
 			disconnectClient("You are already logged in.");
 			return;
@@ -347,7 +346,7 @@ void ProtocolGame::onRecvFirstMessage(NetworkMessage& msg)
 	auto characterName = msg.getString();
 	auto password = msg.getString();
 
-	const auto accountManager = g_config[ConfigKeysBoolean::ACCOUNT_MANAGER];
+	bool accountManager = getBoolean(ConfigManager::ACCOUNT_MANAGER);
 	if (accountManager && accountName.empty() && password.empty()) {
 		accountName = ACCOUNT_MANAGER_ACCOUNT_NAME;
 		password = ACCOUNT_MANAGER_ACCOUNT_PASSWORD;
@@ -2332,7 +2331,7 @@ void ProtocolGame::sendOutfitWindow()
 		protocolOutfits.emplace_back("Gamemaster", 75, 0);
 	}
 
-	size_t maxProtocolOutfits = static_cast<size_t>(g_config[ConfigKeysInteger::MAX_PROTOCOL_OUTFITS]);
+	size_t maxProtocolOutfits = static_cast<size_t>(getInteger(ConfigManager::MAX_PROTOCOL_OUTFITS));
 	if (isOTCv8) {
 		maxProtocolOutfits = std::numeric_limits<uint8_t>::max();
 	}
@@ -2704,7 +2703,7 @@ void ProtocolGame::parseExtendedOpcode(NetworkMessage& msg)
 
 void ProtocolGame::sendOTCv8Features()
 {
-	const auto& features = g_config.getOTCFeatures();
+	const auto& features = ConfigManager::getOTCFeatures();
 
 	auto msg = getOutputBuffer(1024);
 	msg->addByte(0x43);

@@ -9,8 +9,6 @@
 
 #include <mysql/errmsg.h>
 
-extern ConfigManager g_config;
-
 static bool connectToDatabase(MYSQL*& handle, const bool retryIfError)
 {
 	bool isFirstAttemptToConnect = true;
@@ -30,10 +28,10 @@ retry:
 		goto error;
 	}
 	// connects to database
-	if (!mysql_real_connect(handle, g_config[ConfigKeysString::MYSQL_HOST].data(),
-	                        g_config[ConfigKeysString::MYSQL_USER].data(),
-	                        g_config[ConfigKeysString::MYSQL_PASS].data(), g_config[ConfigKeysString::MYSQL_DB].data(),
-	                        g_config[ConfigKeysInteger::SQL_PORT], g_config[ConfigKeysString::MYSQL_SOCK].data(), 0)) {
+	if (!mysql_real_connect(handle, getString(ConfigManager::MYSQL_HOST).data(),
+	                        getString(ConfigManager::MYSQL_USER).data(), getString(ConfigManager::MYSQL_PASS).data(),
+	                        getString(ConfigManager::MYSQL_DB).data(), getInteger(ConfigManager::SQL_PORT),
+	                        getString(ConfigManager::MYSQL_SOCK).data(), 0)) {
 		std::cout << std::endl << "MySQL Error Message: " << mysql_error(handle) << std::endl;
 		goto error;
 	}

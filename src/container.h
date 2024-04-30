@@ -116,11 +116,11 @@ private:
 	uint32_t totalWeight = 0;
 	uint32_t serializationCount = 0;
 
-	void onAddContainerItem(Item* item);
-	void onUpdateContainerItem(uint32_t index, Item* oldItem, Item* newItem);
-	void onRemoveContainerItem(uint32_t index, Item* item);
+	void onAddContainerItem(Item* item) const;
+	void onUpdateContainerItem(uint32_t index, Item* oldItem, Item* newItem) const;
+	void onRemoveContainerItem(uint32_t index, Item* item) const;
 
-	Container* getParentContainer();
+	Container* getParentContainer() const;
 	void updateItemWeight(int32_t diff);
 
 	friend class ContainerIterator;

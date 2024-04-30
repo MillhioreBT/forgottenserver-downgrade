@@ -10,7 +10,6 @@
 #include "outputmessage.h"
 #include "scheduler.h"
 
-extern ConfigManager g_config;
 Ban g_bans;
 
 ServiceManager::~ServiceManager() { stop(); }
@@ -142,11 +141,11 @@ void ServicePort::open(uint16_t port)
 	pendingStart = false;
 
 	try {
-		if (g_config[ConfigKeysBoolean::BIND_ONLY_GLOBAL_ADDRESS]) {
+		if (getBoolean(ConfigManager::BIND_ONLY_GLOBAL_ADDRESS)) {
 			acceptor.reset(new boost::asio::ip::tcp::acceptor(
 			    io_service,
 			    boost::asio::ip::tcp::endpoint(boost::asio::ip::address(boost::asio::ip::address_v4::from_string(
-			                                       std::string{g_config[ConfigKeysString::IP]})),
+			                                       std::string{getString(ConfigManager::IP)})),
 			                                   serverPort)));
 		} else {
 			acceptor.reset(new boost::asio::ip::tcp::acceptor(

@@ -10,7 +10,6 @@
 #include <fmt/color.h>
 
 extern LuaEnvironment g_luaEnvironment;
-extern ConfigManager g_config;
 
 Scripts::Scripts() : scriptInterface("Scripts Interface") { scriptInterface.initState(); }
 
@@ -26,7 +25,7 @@ bool Scripts::loadScripts(const std::string& folderName, bool isLib, bool reload
 		return false;
 	}
 
-	const bool& scriptsConsoleLogs = g_config[ConfigKeysBoolean::SCRIPTS_CONSOLE_LOGS];
+	bool scriptsConsoleLogs = getBoolean(ConfigManager::SCRIPTS_CONSOLE_LOGS);
 	std::vector<std::string> disabled = {}, loaded = {}, reloaded = {};
 
 	fs::recursive_directory_iterator endit;

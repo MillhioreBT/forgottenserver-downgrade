@@ -13,7 +13,6 @@
 
 extern Game g_game;
 extern Weapons* g_weapons;
-extern ConfigManager g_config;
 extern Events* g_events;
 
 std::vector<Tile*> getList(const MatrixArea& area, const Position& targetPos, const Direction dir)
@@ -271,7 +270,7 @@ bool Combat::isInPvpZone(const Creature* attacker, const Creature* target)
 
 bool Combat::isProtected(const Player* attacker, const Player* target)
 {
-	const int64_t protectionLevel = g_config[ConfigKeysInteger::PROTECTION_LEVEL];
+	const int64_t protectionLevel = getInteger(ConfigManager::PROTECTION_LEVEL);
 	if (target->getLevel() < protectionLevel || attacker->getLevel() < protectionLevel) {
 		return true;
 	}

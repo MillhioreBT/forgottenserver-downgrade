@@ -4,6 +4,7 @@
 #ifndef FS_VOCATION_H
 #define FS_VOCATION_H
 
+#include "configmanager.h"
 #include "enums.h"
 #include "item.h"
 
@@ -42,6 +43,14 @@ public:
 
 	bool allowsPvp() const { return allowPvp; }
 
+	bool getMagicShield() const
+	{
+		if (!getBoolean(ConfigManager::MANASHIELD_BREAKABLE)) {
+			return false;
+		}
+		return magicShield;
+	}
+
 	float meleeDamageMultiplier = 1.0f;
 	float distDamageMultiplier = 1.0f;
 	float defenseMultiplier = 1.0f;
@@ -76,6 +85,8 @@ private:
 	uint8_t clientId = 0;
 
 	bool allowPvp = true;
+
+	bool magicShield = false;
 };
 
 using VocationMap = std::map<uint16_t, Vocation>;

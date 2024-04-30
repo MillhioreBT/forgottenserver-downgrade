@@ -4,10 +4,9 @@
 #ifndef FS_CONFIGMANAGER_H
 #define FS_CONFIGMANAGER_H
 
-using ExperienceStages = std::vector<std::tuple<uint32_t, uint32_t, float>>;
-using OTCFeatures = std::vector<uint8_t>;
+namespace ConfigManager {
 
-enum class ConfigKeysBoolean
+enum Boolean
 {
 	ALLOW_CHANGEOUTFIT,
 	ONE_PLAYER_ON_ACCOUNT,
@@ -47,11 +46,12 @@ enum class ConfigKeysBoolean
 	REMOVE_ON_DESPAWN,
 	MONSTER_OVERSPAWN,
 	ACCOUNT_MANAGER,
+	MANASHIELD_BREAKABLE,
 
-	LAST /* this must be the last one */
+	LAST_BOOLEAN /* this must be the last one */
 };
 
-enum class ConfigKeysString
+enum String
 {
 	MAP_NAME,
 	HOUSE_RENT_PERIOD,
@@ -72,10 +72,10 @@ enum class ConfigKeysString
 	MAP_AUTHOR,
 	CONFIG_FILE,
 
-	LAST /* this must be the last one */
+	LAST_STRING /* this must be the last one */
 };
 
-enum class ConfigKeysInteger
+enum Integer
 {
 	SQL_PORT,
 	MAX_PLAYERS,
@@ -128,52 +128,20 @@ enum class ConfigKeysInteger
 	RANGE_USE_ITEM_EX_INTERVAL,
 	RANGE_ROTATE_ITEM_INTERVAL,
 
-	LAST /* this must be the last one */
+	LAST_INTEGER /* this must be the last one */
 };
 
-template <typename T, typename E>
-struct ConfigValues
-{
-	using Container = std::array<T, static_cast<int>(E::LAST)>;
+bool load();
 
-public:
-	T& operator[](E key) { return values[static_cast<int>(key)]; }
-	const T& operator[](E key) const { return values[static_cast<int>(key)]; }
+bool getBoolean(Boolean what);
+std::string_view getString(String what);
+int64_t getInteger(Integer what);
+float getExperienceStage(uint32_t level);
+const std::vector<uint8_t>& getOTCFeatures();
 
-private:
-	Container values;
-};
-
-class ConfigManager
-{
-public:
-	ConfigManager();
-
-	bool load();
-
-	bool getBoolean(ConfigKeysBoolean what) const;
-	std::string_view getString(ConfigKeysString what) const;
-	int64_t getInteger(ConfigKeysInteger what) const;
-	float getExperienceStage(const uint32_t level) const;
-	OTCFeatures getOTCFeatures() const;
-
-	bool setBoolean(ConfigKeysBoolean what, const bool value);
-	bool setString(ConfigKeysString what, std::string_view value);
-	bool setInteger(ConfigKeysInteger what, const int64_t value);
-
-	auto operator[](ConfigKeysBoolean what) const { return getBoolean(what); }
-	auto operator[](ConfigKeysString what) const { return getString(what); }
-	auto operator[](ConfigKeysInteger what) const { return getInteger(what); }
-
-private:
-	ConfigValues<bool, ConfigKeysBoolean> booleans;
-	ConfigValues<std::string, ConfigKeysString> strings;
-	ConfigValues<int64_t, ConfigKeysInteger> integers;
-
-	ExperienceStages expStages = {};
-	OTCFeatures otcFeatures = {};
-
-	bool loaded = false;
-};
+bool setBoolean(Boolean what, bool value);
+bool setString(String what, std::string_view value);
+bool setInteger(Integer what, int64_t value);
+} // namespace ConfigManager
 
 #endif // FS_CONFIGMANAGER_H

@@ -15,7 +15,6 @@
 
 #include <iomanip>
 
-extern ConfigManager g_config;
 extern Game g_game;
 
 void ProtocolLogin::disconnectClient(std::string_view message)
@@ -37,7 +36,7 @@ void ProtocolLogin::getCharacterList(std::string_view accountName, std::string_v
 
 	auto output = OutputMessagePool::getOutputMessage();
 
-	auto motd = g_config[ConfigKeysString::MOTD];
+	auto motd = getString(ConfigManager::MOTD);
 	if (!motd.empty()) {
 		// Add MOTD
 		output->addByte(0x14);
@@ -48,9 +47,9 @@ void ProtocolLogin::getCharacterList(std::string_view accountName, std::string_v
 	output->addByte(0x64);
 
 	uint8_t size = std::min<size_t>(std::numeric_limits<uint8_t>::max(), account.characters.size());
-	auto IP = getIP(g_config[ConfigKeysString::IP]);
-	auto serverName = g_config[ConfigKeysString::SERVER_NAME];
-	const auto& gamePort = g_config[ConfigKeysInteger::GAME_PORT];
+	auto IP = getIP(getString(ConfigManager::IP));
+	auto serverName = getString(ConfigManager::SERVER_NAME);
+	auto gamePort = getInteger(ConfigManager::GAME_PORT);
 	output->addByte(size);
 	for (uint8_t i = 0; i < size; i++) {
 		output->addString(account.characters[i]);
@@ -60,7 +59,7 @@ void ProtocolLogin::getCharacterList(std::string_view accountName, std::string_v
 	}
 
 	// Add premium days
-	if (g_config[ConfigKeysBoolean::FREE_PREMIUM]) {
+	if (getBoolean(ConfigManager::FREE_PREMIUM)) {
 		output->add<uint16_t>(0xFFFF); // client displays free premium
 	} else {
 		auto currentTime = time(nullptr);
@@ -149,7 +148,7 @@ void ProtocolLogin::onRecvFirstMessage(NetworkMessage& msg)
 	const bool accountNameEmpty = accountName.empty();
 	const bool passwordEmpty = password.empty();
 
-	if (g_config[ConfigKeysBoolean::ACCOUNT_MANAGER] && accountNameEmpty && passwordEmpty) {
+	if (getBoolean(ConfigManager::ACCOUNT_MANAGER) && accountNameEmpty && passwordEmpty) {
 		g_dispatcher.addTask([=, thisPtr = std::static_pointer_cast<ProtocolLogin>(shared_from_this())]() {
 			thisPtr->getCharacterList(ACCOUNT_MANAGER_ACCOUNT_NAME, ACCOUNT_MANAGER_ACCOUNT_PASSWORD);
 		});

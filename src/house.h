@@ -115,7 +115,7 @@ public:
 	void setAccessList(uint32_t listId, std::string_view textlist);
 	std::optional<std::string_view> getAccessList(uint32_t listId) const;
 
-	bool isInvited(const Player* player);
+	bool isInvited(const Player* player) const;
 
 	AccessHouseLevel_t getHouseAccessLevel(const Player* player) const;
 	bool kickPlayer(Player* player, Player* target) const;

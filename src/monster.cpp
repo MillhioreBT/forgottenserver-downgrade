@@ -13,7 +13,6 @@
 extern Game g_game;
 extern Monsters g_monsters;
 extern Events* g_events;
-extern ConfigManager g_config;
 
 int32_t Monster::despawnRange;
 int32_t Monster::despawnRadius;
@@ -487,7 +486,7 @@ void Monster::onCreatureLeave(Creature* creature)
 		updateIdleStatus();
 
 		if (!isSummon() && targetList.empty()) {
-			const int64_t walkToSpawnRadius = g_config[ConfigKeysInteger::DEFAULT_WALKTOSPAWNRADIUS];
+			const int64_t walkToSpawnRadius = getInteger(ConfigManager::DEFAULT_WALKTOSPAWNRADIUS);
 			if (walkToSpawnRadius > 0 && !position.isInRange(masterPos, walkToSpawnRadius, walkToSpawnRadius)) {
 				walkToSpawn();
 			}
@@ -731,7 +730,7 @@ void Monster::onThink(uint32_t interval)
 
 	if (!isInSpawnRange(position)) {
 		g_game.addMagicEffect(this->getPosition(), CONST_ME_POFF);
-		if (g_config[ConfigKeysBoolean::REMOVE_ON_DESPAWN]) {
+		if (getBoolean(ConfigManager::REMOVE_ON_DESPAWN)) {
 			g_game.removeCreature(this, false);
 		} else {
 			g_game.internalTeleport(this, masterPos);

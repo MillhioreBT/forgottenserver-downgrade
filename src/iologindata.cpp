@@ -8,7 +8,6 @@
 #include "configmanager.h"
 #include "game.h"
 
-extern ConfigManager g_config;
 extern Game g_game;
 
 Account IOLoginData::loadAccount(uint32_t accno)
@@ -81,7 +80,7 @@ bool IOLoginData::loginserverAuthentication(std::string_view name, std::string_v
 	account.premiumEndsAt = result->getNumber<time_t>("premium_ends_at");
 	account.tibiaCoins = result->getNumber<uint64_t>("tibia_coins");
 
-	if (g_config[ConfigKeysBoolean::ACCOUNT_MANAGER] && account.id != ACCOUNT_MANAGER_ACCOUNT_ID) {
+	if (getBoolean(ConfigManager::ACCOUNT_MANAGER) && account.id != ACCOUNT_MANAGER_ACCOUNT_ID) {
 		account.characters.push_back(ACCOUNT_MANAGER_PLAYER_NAME);
 	}
 
@@ -186,7 +185,7 @@ void IOLoginData::setAccountType(uint32_t accountId, AccountType_t accountType)
 
 void IOLoginData::updateOnlineStatus(uint32_t guid, bool login)
 {
-	if (g_config[ConfigKeysBoolean::ALLOW_CLONES]) {
+	if (getBoolean(ConfigManager::ALLOW_CLONES)) {
 		return;
 	}
 

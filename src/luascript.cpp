@@ -30,7 +30,6 @@
 
 extern Chat* g_chat;
 extern Game g_game;
-extern ConfigManager g_config;
 extern Vocations g_vocations;
 extern Scripts* g_scripts;
 extern Spells* g_spells;
@@ -2028,87 +2027,87 @@ void LuaScriptInterface::registerFunctions()
 	// configKeys
 	registerTable("configKeys");
 
-	registerEnumIn("configKeys", ConfigKeysBoolean::ALLOW_CHANGEOUTFIT);
-	registerEnumIn("configKeys", ConfigKeysBoolean::ONE_PLAYER_ON_ACCOUNT);
-	registerEnumIn("configKeys", ConfigKeysBoolean::AIMBOT_HOTKEY_ENABLED);
-	registerEnumIn("configKeys", ConfigKeysBoolean::REMOVE_RUNE_CHARGES);
-	registerEnumIn("configKeys", ConfigKeysBoolean::REMOVE_WEAPON_AMMO);
-	registerEnumIn("configKeys", ConfigKeysBoolean::REMOVE_WEAPON_CHARGES);
-	registerEnumIn("configKeys", ConfigKeysBoolean::REMOVE_POTION_CHARGES);
-	registerEnumIn("configKeys", ConfigKeysBoolean::EXPERIENCE_FROM_PLAYERS);
-	registerEnumIn("configKeys", ConfigKeysBoolean::FREE_PREMIUM);
-	registerEnumIn("configKeys", ConfigKeysBoolean::REPLACE_KICK_ON_LOGIN);
-	registerEnumIn("configKeys", ConfigKeysBoolean::ALLOW_CLONES);
-	registerEnumIn("configKeys", ConfigKeysBoolean::BIND_ONLY_GLOBAL_ADDRESS);
-	registerEnumIn("configKeys", ConfigKeysBoolean::OPTIMIZE_DATABASE);
-	registerEnumIn("configKeys", ConfigKeysBoolean::MARKET_PREMIUM);
-	registerEnumIn("configKeys", ConfigKeysBoolean::EMOTE_SPELLS);
-	registerEnumIn("configKeys", ConfigKeysBoolean::STAMINA_SYSTEM);
-	registerEnumIn("configKeys", ConfigKeysBoolean::WARN_UNSAFE_SCRIPTS);
-	registerEnumIn("configKeys", ConfigKeysBoolean::CONVERT_UNSAFE_SCRIPTS);
-	registerEnumIn("configKeys", ConfigKeysBoolean::CLASSIC_EQUIPMENT_SLOTS);
-	registerEnumIn("configKeys", ConfigKeysBoolean::CLASSIC_ATTACK_SPEED);
-	registerEnumIn("configKeys", ConfigKeysBoolean::SERVER_SAVE_NOTIFY_MESSAGE);
-	registerEnumIn("configKeys", ConfigKeysBoolean::SERVER_SAVE_CLEAN_MAP);
-	registerEnumIn("configKeys", ConfigKeysBoolean::SERVER_SAVE_CLOSE);
-	registerEnumIn("configKeys", ConfigKeysBoolean::SERVER_SAVE_SHUTDOWN);
-	registerEnumIn("configKeys", ConfigKeysBoolean::ONLINE_OFFLINE_CHARLIST);
-	registerEnumIn("configKeys", ConfigKeysBoolean::HOUSE_DOOR_SHOW_PRICE);
-	registerEnumIn("configKeys", ConfigKeysBoolean::MONSTER_OVERSPAWN);
-	registerEnumIn("configKeys", ConfigKeysBoolean::REMOVE_ON_DESPAWN);
-	registerEnumIn("configKeys", ConfigKeysBoolean::ACCOUNT_MANAGER);
+	registerEnumIn("configKeys", ConfigManager::ALLOW_CHANGEOUTFIT);
+	registerEnumIn("configKeys", ConfigManager::ONE_PLAYER_ON_ACCOUNT);
+	registerEnumIn("configKeys", ConfigManager::AIMBOT_HOTKEY_ENABLED);
+	registerEnumIn("configKeys", ConfigManager::REMOVE_RUNE_CHARGES);
+	registerEnumIn("configKeys", ConfigManager::REMOVE_WEAPON_AMMO);
+	registerEnumIn("configKeys", ConfigManager::REMOVE_WEAPON_CHARGES);
+	registerEnumIn("configKeys", ConfigManager::REMOVE_POTION_CHARGES);
+	registerEnumIn("configKeys", ConfigManager::EXPERIENCE_FROM_PLAYERS);
+	registerEnumIn("configKeys", ConfigManager::FREE_PREMIUM);
+	registerEnumIn("configKeys", ConfigManager::REPLACE_KICK_ON_LOGIN);
+	registerEnumIn("configKeys", ConfigManager::ALLOW_CLONES);
+	registerEnumIn("configKeys", ConfigManager::BIND_ONLY_GLOBAL_ADDRESS);
+	registerEnumIn("configKeys", ConfigManager::OPTIMIZE_DATABASE);
+	registerEnumIn("configKeys", ConfigManager::MARKET_PREMIUM);
+	registerEnumIn("configKeys", ConfigManager::EMOTE_SPELLS);
+	registerEnumIn("configKeys", ConfigManager::STAMINA_SYSTEM);
+	registerEnumIn("configKeys", ConfigManager::WARN_UNSAFE_SCRIPTS);
+	registerEnumIn("configKeys", ConfigManager::CONVERT_UNSAFE_SCRIPTS);
+	registerEnumIn("configKeys", ConfigManager::CLASSIC_EQUIPMENT_SLOTS);
+	registerEnumIn("configKeys", ConfigManager::CLASSIC_ATTACK_SPEED);
+	registerEnumIn("configKeys", ConfigManager::SERVER_SAVE_NOTIFY_MESSAGE);
+	registerEnumIn("configKeys", ConfigManager::SERVER_SAVE_CLEAN_MAP);
+	registerEnumIn("configKeys", ConfigManager::SERVER_SAVE_CLOSE);
+	registerEnumIn("configKeys", ConfigManager::SERVER_SAVE_SHUTDOWN);
+	registerEnumIn("configKeys", ConfigManager::ONLINE_OFFLINE_CHARLIST);
+	registerEnumIn("configKeys", ConfigManager::HOUSE_DOOR_SHOW_PRICE);
+	registerEnumIn("configKeys", ConfigManager::MONSTER_OVERSPAWN);
+	registerEnumIn("configKeys", ConfigManager::REMOVE_ON_DESPAWN);
+	registerEnumIn("configKeys", ConfigManager::ACCOUNT_MANAGER);
 
-	registerEnumIn("configKeys", ConfigKeysString::MAP_NAME);
-	registerEnumIn("configKeys", ConfigKeysString::HOUSE_RENT_PERIOD);
-	registerEnumIn("configKeys", ConfigKeysString::SERVER_NAME);
-	registerEnumIn("configKeys", ConfigKeysString::OWNER_NAME);
-	registerEnumIn("configKeys", ConfigKeysString::OWNER_EMAIL);
-	registerEnumIn("configKeys", ConfigKeysString::URL);
-	registerEnumIn("configKeys", ConfigKeysString::LOCATION);
-	registerEnumIn("configKeys", ConfigKeysString::IP);
-	registerEnumIn("configKeys", ConfigKeysString::MOTD);
-	registerEnumIn("configKeys", ConfigKeysString::WORLD_TYPE);
-	registerEnumIn("configKeys", ConfigKeysString::MYSQL_HOST);
-	registerEnumIn("configKeys", ConfigKeysString::MYSQL_USER);
-	registerEnumIn("configKeys", ConfigKeysString::MYSQL_PASS);
-	registerEnumIn("configKeys", ConfigKeysString::MYSQL_DB);
-	registerEnumIn("configKeys", ConfigKeysString::MYSQL_SOCK);
-	registerEnumIn("configKeys", ConfigKeysString::DEFAULT_PRIORITY);
-	registerEnumIn("configKeys", ConfigKeysString::MAP_AUTHOR);
+	registerEnumIn("configKeys", ConfigManager::MAP_NAME);
+	registerEnumIn("configKeys", ConfigManager::HOUSE_RENT_PERIOD);
+	registerEnumIn("configKeys", ConfigManager::SERVER_NAME);
+	registerEnumIn("configKeys", ConfigManager::OWNER_NAME);
+	registerEnumIn("configKeys", ConfigManager::OWNER_EMAIL);
+	registerEnumIn("configKeys", ConfigManager::URL);
+	registerEnumIn("configKeys", ConfigManager::LOCATION);
+	registerEnumIn("configKeys", ConfigManager::IP);
+	registerEnumIn("configKeys", ConfigManager::MOTD);
+	registerEnumIn("configKeys", ConfigManager::WORLD_TYPE);
+	registerEnumIn("configKeys", ConfigManager::MYSQL_HOST);
+	registerEnumIn("configKeys", ConfigManager::MYSQL_USER);
+	registerEnumIn("configKeys", ConfigManager::MYSQL_PASS);
+	registerEnumIn("configKeys", ConfigManager::MYSQL_DB);
+	registerEnumIn("configKeys", ConfigManager::MYSQL_SOCK);
+	registerEnumIn("configKeys", ConfigManager::DEFAULT_PRIORITY);
+	registerEnumIn("configKeys", ConfigManager::MAP_AUTHOR);
 
-	registerEnumIn("configKeys", ConfigKeysInteger::SERVER_SAVE_NOTIFY_DURATION);
-	registerEnumIn("configKeys", ConfigKeysInteger::SQL_PORT);
-	registerEnumIn("configKeys", ConfigKeysInteger::MAX_PLAYERS);
-	registerEnumIn("configKeys", ConfigKeysInteger::PZ_LOCKED);
-	registerEnumIn("configKeys", ConfigKeysInteger::DEFAULT_DESPAWNRANGE);
-	registerEnumIn("configKeys", ConfigKeysInteger::DEFAULT_DESPAWNRADIUS);
-	registerEnumIn("configKeys", ConfigKeysInteger::DEFAULT_WALKTOSPAWNRADIUS);
-	registerEnumIn("configKeys", ConfigKeysInteger::RATE_EXPERIENCE);
-	registerEnumIn("configKeys", ConfigKeysInteger::RATE_SKILL);
-	registerEnumIn("configKeys", ConfigKeysInteger::RATE_LOOT);
-	registerEnumIn("configKeys", ConfigKeysInteger::RATE_MAGIC);
-	registerEnumIn("configKeys", ConfigKeysInteger::RATE_SPAWN);
-	registerEnumIn("configKeys", ConfigKeysInteger::HOUSE_PRICE);
-	registerEnumIn("configKeys", ConfigKeysInteger::KILLS_TO_RED);
-	registerEnumIn("configKeys", ConfigKeysInteger::KILLS_TO_BLACK);
-	registerEnumIn("configKeys", ConfigKeysInteger::MAX_MESSAGEBUFFER);
-	registerEnumIn("configKeys", ConfigKeysInteger::ACTIONS_DELAY_INTERVAL);
-	registerEnumIn("configKeys", ConfigKeysInteger::EX_ACTIONS_DELAY_INTERVAL);
-	registerEnumIn("configKeys", ConfigKeysInteger::KICK_AFTER_MINUTES);
-	registerEnumIn("configKeys", ConfigKeysInteger::PROTECTION_LEVEL);
-	registerEnumIn("configKeys", ConfigKeysInteger::DEATH_LOSE_PERCENT);
-	registerEnumIn("configKeys", ConfigKeysInteger::STATUSQUERY_TIMEOUT);
-	registerEnumIn("configKeys", ConfigKeysInteger::FRAG_TIME);
-	registerEnumIn("configKeys", ConfigKeysInteger::WHITE_SKULL_TIME);
-	registerEnumIn("configKeys", ConfigKeysInteger::GAME_PORT);
-	registerEnumIn("configKeys", ConfigKeysInteger::LOGIN_PORT);
-	registerEnumIn("configKeys", ConfigKeysInteger::STATUS_PORT);
-	registerEnumIn("configKeys", ConfigKeysInteger::STAIRHOP_DELAY);
-	registerEnumIn("configKeys", ConfigKeysInteger::MARKET_OFFER_DURATION);
-	registerEnumIn("configKeys", ConfigKeysInteger::EXP_FROM_PLAYERS_LEVEL_RANGE);
-	registerEnumIn("configKeys", ConfigKeysInteger::MAX_PACKETS_PER_SECOND);
-	registerEnumIn("configKeys", ConfigKeysInteger::STAMINA_REGEN_MINUTE);
-	registerEnumIn("configKeys", ConfigKeysInteger::STAMINA_REGEN_PREMIUM);
+	registerEnumIn("configKeys", ConfigManager::SERVER_SAVE_NOTIFY_DURATION);
+	registerEnumIn("configKeys", ConfigManager::SQL_PORT);
+	registerEnumIn("configKeys", ConfigManager::MAX_PLAYERS);
+	registerEnumIn("configKeys", ConfigManager::PZ_LOCKED);
+	registerEnumIn("configKeys", ConfigManager::DEFAULT_DESPAWNRANGE);
+	registerEnumIn("configKeys", ConfigManager::DEFAULT_DESPAWNRADIUS);
+	registerEnumIn("configKeys", ConfigManager::DEFAULT_WALKTOSPAWNRADIUS);
+	registerEnumIn("configKeys", ConfigManager::RATE_EXPERIENCE);
+	registerEnumIn("configKeys", ConfigManager::RATE_SKILL);
+	registerEnumIn("configKeys", ConfigManager::RATE_LOOT);
+	registerEnumIn("configKeys", ConfigManager::RATE_MAGIC);
+	registerEnumIn("configKeys", ConfigManager::RATE_SPAWN);
+	registerEnumIn("configKeys", ConfigManager::HOUSE_PRICE);
+	registerEnumIn("configKeys", ConfigManager::KILLS_TO_RED);
+	registerEnumIn("configKeys", ConfigManager::KILLS_TO_BLACK);
+	registerEnumIn("configKeys", ConfigManager::MAX_MESSAGEBUFFER);
+	registerEnumIn("configKeys", ConfigManager::ACTIONS_DELAY_INTERVAL);
+	registerEnumIn("configKeys", ConfigManager::EX_ACTIONS_DELAY_INTERVAL);
+	registerEnumIn("configKeys", ConfigManager::KICK_AFTER_MINUTES);
+	registerEnumIn("configKeys", ConfigManager::PROTECTION_LEVEL);
+	registerEnumIn("configKeys", ConfigManager::DEATH_LOSE_PERCENT);
+	registerEnumIn("configKeys", ConfigManager::STATUSQUERY_TIMEOUT);
+	registerEnumIn("configKeys", ConfigManager::FRAG_TIME);
+	registerEnumIn("configKeys", ConfigManager::WHITE_SKULL_TIME);
+	registerEnumIn("configKeys", ConfigManager::GAME_PORT);
+	registerEnumIn("configKeys", ConfigManager::LOGIN_PORT);
+	registerEnumIn("configKeys", ConfigManager::STATUS_PORT);
+	registerEnumIn("configKeys", ConfigManager::STAIRHOP_DELAY);
+	registerEnumIn("configKeys", ConfigManager::MARKET_OFFER_DURATION);
+	registerEnumIn("configKeys", ConfigManager::EXP_FROM_PLAYERS_LEVEL_RANGE);
+	registerEnumIn("configKeys", ConfigManager::MAX_PACKETS_PER_SECOND);
+	registerEnumIn("configKeys", ConfigManager::STAMINA_REGEN_MINUTE);
+	registerEnumIn("configKeys", ConfigManager::STAMINA_REGEN_PREMIUM);
 
 	// os
 	registerMethod("os", "mtime", LuaScriptInterface::luaSystemTime);
@@ -2726,7 +2725,7 @@ int LuaScriptInterface::luaAddEvent(lua_State* L)
 		return 1;
 	}
 
-	if (g_config[ConfigKeysBoolean::WARN_UNSAFE_SCRIPTS] || g_config[ConfigKeysBoolean::CONVERT_UNSAFE_SCRIPTS]) {
+	if (getBoolean(ConfigManager::WARN_UNSAFE_SCRIPTS) || getBoolean(ConfigManager::CONVERT_UNSAFE_SCRIPTS)) {
 		std::vector<std::pair<int32_t, LuaDataType>> indexes;
 		for (int i = 3; i <= parameters; ++i) {
 			if (lua_getmetatable(L, i) == 0) {
@@ -2768,7 +2767,7 @@ int LuaScriptInterface::luaAddEvent(lua_State* L)
 		}
 
 		if (!indexes.empty()) {
-			if (g_config[ConfigKeysBoolean::WARN_UNSAFE_SCRIPTS]) {
+			if (getBoolean(ConfigManager::WARN_UNSAFE_SCRIPTS)) {
 				bool plural = indexes.size() > 1;
 
 				std::string warningString = "Argument";
@@ -2797,7 +2796,7 @@ int LuaScriptInterface::luaAddEvent(lua_State* L)
 				reportErrorFunc(L, warningString);
 			}
 
-			if (g_config[ConfigKeysBoolean::CONVERT_UNSAFE_SCRIPTS]) {
+			if (getBoolean(ConfigManager::CONVERT_UNSAFE_SCRIPTS)) {
 				for (const auto& entry : indexes) {
 					switch (entry.second) {
 						case LuaData_Item:
@@ -2980,19 +2979,19 @@ const luaL_Reg LuaScriptInterface::luaConfigManagerTable[] = {
 
 int LuaScriptInterface::luaConfigManagerGetString(lua_State* L)
 {
-	Lua::pushString(L, g_config[Lua::getInteger<ConfigKeysString>(L, -1)]);
+	Lua::pushString(L, getString(Lua::getInteger<ConfigManager::String>(L, -1)));
 	return 1;
 }
 
 int LuaScriptInterface::luaConfigManagerGetNumber(lua_State* L)
 {
-	lua_pushinteger(L, g_config[Lua::getInteger<ConfigKeysInteger>(L, -1)]);
+	lua_pushinteger(L, getInteger(Lua::getInteger<ConfigManager::Integer>(L, -1)));
 	return 1;
 }
 
 int LuaScriptInterface::luaConfigManagerGetBoolean(lua_State* L)
 {
-	Lua::pushBoolean(L, g_config[Lua::getInteger<ConfigKeysBoolean>(L, -1)]);
+	Lua::pushBoolean(L, getBoolean(Lua::getInteger<ConfigManager::Boolean>(L, -1)));
 	return 1;
 }
 

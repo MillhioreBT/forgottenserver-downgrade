@@ -32,7 +32,7 @@ Item* Container::clone() const
 	return clone;
 }
 
-Container* Container::getParentContainer()
+Container* Container::getParentContainer() const
 {
 	Thing* thing = getParent();
 	if (!thing) {
@@ -135,7 +135,7 @@ bool Container::isHoldingItem(const Item* item) const
 	return false;
 }
 
-void Container::onAddContainerItem(Item* item)
+void Container::onAddContainerItem(Item* item) const
 {
 	SpectatorVec spectators;
 	g_game.map.getSpectators(spectators, getPosition(), false, true, 1, 1, 1, 1);
@@ -153,7 +153,7 @@ void Container::onAddContainerItem(Item* item)
 	}
 }
 
-void Container::onUpdateContainerItem(uint32_t index, Item* oldItem, Item* newItem)
+void Container::onUpdateContainerItem(uint32_t index, Item* oldItem, Item* newItem) const
 {
 	SpectatorVec spectators;
 	g_game.map.getSpectators(spectators, getPosition(), false, true, 1, 1, 1, 1);
@@ -171,7 +171,7 @@ void Container::onUpdateContainerItem(uint32_t index, Item* oldItem, Item* newIt
 	}
 }
 
-void Container::onRemoveContainerItem(uint32_t index, Item* item)
+void Container::onRemoveContainerItem(uint32_t index, Item* item) const
 {
 	SpectatorVec spectators;
 	g_game.map.getSpectators(spectators, getPosition(), false, true, 1, 1, 1, 1);
@@ -236,7 +236,15 @@ ReturnValue Container::queryAdd(int32_t index, const Thing& thing, uint32_t coun
 		}
 	}
 
-	const Cylinder* topParent = getTopParent();
+	const Cylinder* const topParent = getTopParent();
+	if (actor && getBoolean(ConfigManager::ONLY_INVITED_CAN_MOVE_HOUSE_ITEMS)) {
+		if (const HouseTile* houseTile = dynamic_cast<const HouseTile*>(topParent->getTile())) {
+			if (!topParent->getCreature() && !houseTile->getHouse()->isInvited(actor->getPlayer())) {
+				return RETURNVALUE_PLAYERISNOTINVITED;
+			}
+		}
+	}
+
 	if (topParent != this) {
 		return topParent->queryAdd(INDEX_WHEREEVER, *item, count, flags | FLAG_CHILDISOWNER, actor);
 	}
@@ -316,9 +324,13 @@ ReturnValue Container::queryRemove(const Thing& thing, uint32_t count, uint32_t 
 		return RETURNVALUE_NOTMOVEABLE;
 	}
 
-	const HouseTile* houseTile = dynamic_cast<const HouseTile*>(getTopParent());
-	if (houseTile) {
-		return houseTile->queryRemove(thing, count, flags, actor);
+	if (actor && getBoolean(ConfigManager::ONLY_INVITED_CAN_MOVE_HOUSE_ITEMS)) {
+		const Cylinder* const topParent = getTopParent();
+		if (const HouseTile* const houseTile = dynamic_cast<const HouseTile*>(topParent->getTile())) {
+			if (!topParent->getCreature() && !houseTile->getHouse()->isInvited(actor->getPlayer())) {
+				return RETURNVALUE_PLAYERISNOTINVITED;
+			}
+		}
 	}
 
 	return RETURNVALUE_NOERROR;

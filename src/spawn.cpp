@@ -12,7 +12,6 @@
 #include "pugicast.h"
 #include "scheduler.h"
 
-extern ConfigManager g_config;
 extern Monsters g_monsters;
 extern Game g_game;
 extern Events* g_events;
@@ -371,7 +370,7 @@ void Spawn::checkSpawn()
 				continue;
 			}
 
-			if (++spawnCount >= g_config[ConfigKeysInteger::RATE_SPAWN]) {
+			if (++spawnCount >= getInteger(ConfigManager::RATE_SPAWN)) {
 				break;
 			}
 		}

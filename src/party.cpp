@@ -10,7 +10,6 @@
 #include "game.h"
 
 extern Game g_game;
-extern ConfigManager g_config;
 extern Events* g_events;
 
 Party::Party(Player* leader) : leader(leader) { leader->setParty(this); }
@@ -382,7 +381,7 @@ bool Party::canUseSharedExperience(const Player* player) const
 		}
 
 		uint64_t timeDiff = OTSYS_TIME() - it->second;
-		if (timeDiff > static_cast<uint64_t>(g_config[ConfigKeysInteger::PZ_LOCKED])) {
+		if (timeDiff > static_cast<uint64_t>(getInteger(ConfigManager::PZ_LOCKED))) {
 			return false;
 		}
 	}

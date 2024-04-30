@@ -25,7 +25,6 @@
 #include "talkaction.h"
 #include "weapons.h"
 
-extern ConfigManager g_config;
 extern Actions* g_actions;
 extern Chat* g_chat;
 extern TalkActions* g_talkActions;
@@ -614,7 +613,7 @@ void Game::playerMoveThing(uint32_t playerId, const Position& fromPos, uint16_t 
 
 		if (movingCreature->getPosition().isInRange(player->getPosition(), 1, 1, 0)) {
 			SchedulerTask* task =
-			    createSchedulerTask(static_cast<uint32_t>(g_config[ConfigKeysInteger::RANGE_MOVE_CREATURE_INTERVAL]),
+			    createSchedulerTask(static_cast<uint32_t>(getInteger(ConfigManager::RANGE_MOVE_CREATURE_INTERVAL)),
 			                        [=, this, playerID = player->getID(), creatureID = movingCreature->getID()]() {
 				                        playerMoveCreatureByID(playerID, creatureID, fromPos, toPos);
 			                        });
@@ -696,7 +695,7 @@ void Game::playerMoveCreature(Player* player, Creature* movingCreature, const Po
 				playerAutoWalk(playerID, listDir);
 			});
 			SchedulerTask* task = createSchedulerTask(
-			    static_cast<uint32_t>(g_config[ConfigKeysInteger::RANGE_MOVE_CREATURE_INTERVAL]),
+			    static_cast<uint32_t>(getInteger(ConfigManager::RANGE_MOVE_CREATURE_INTERVAL)),
 			    [=, this, playerID = player->getID(), movingCreatureID = movingCreature->getID(),
 			     toPos = toTile->getPosition()] {
 				    playerMoveCreatureByID(playerID, movingCreatureID, movingCreatureOrigPos, toPos);
@@ -983,7 +982,7 @@ void Game::playerMoveItem(Player* player, const Position& fromPos, uint16_t spri
 				});
 
 				SchedulerTask* task = createSchedulerTask(
-				    static_cast<uint32_t>(g_config[ConfigKeysInteger::RANGE_MOVE_ITEM_INTERVAL]),
+				    static_cast<uint32_t>(getInteger(ConfigManager::RANGE_MOVE_ITEM_INTERVAL)),
 				    [this, playerID = player->getID(), itemPos, spriteId, itemStackPos, toPos, count]() {
 					    playerMoveItemByPlayerID(playerID, itemPos, spriteId, itemStackPos, toPos, count);
 				    });
@@ -1045,7 +1044,7 @@ void Game::playerMoveItem(Player* player, const Position& fromPos, uint16_t spri
 			});
 
 			SchedulerTask* task = createSchedulerTask(
-			    static_cast<uint32_t>(g_config[ConfigKeysInteger::RANGE_MOVE_ITEM_INTERVAL]),
+			    static_cast<uint32_t>(getInteger(ConfigManager::RANGE_MOVE_ITEM_INTERVAL)),
 			    [=, this, playerID = player->getID()]() {
 				    playerMoveItemByPlayerID(playerID, fromPos, spriteId, fromStackPos, toPos, count);
 			    });
@@ -2080,7 +2079,7 @@ void Game::playerUseItemEx(uint32_t playerId, const Position& fromPos, uint8_t f
 	}
 
 	bool isHotkey = (fromPos.x == 0xFFFF && fromPos.y == 0 && fromPos.z == 0);
-	if (isHotkey && !g_config[ConfigKeysBoolean::AIMBOT_HOTKEY_ENABLED]) {
+	if (isHotkey && !getBoolean(ConfigManager::AIMBOT_HOTKEY_ENABLED)) {
 		return;
 	}
 
@@ -2140,7 +2139,7 @@ void Game::playerUseItemEx(uint32_t playerId, const Position& fromPos, uint8_t f
 				});
 
 				SchedulerTask* task = createSchedulerTask(
-				    static_cast<uint32_t>(g_config[ConfigKeysInteger::RANGE_USE_ITEM_EX_INTERVAL]), [=, this]() {
+				    static_cast<uint32_t>(getInteger(ConfigManager::RANGE_USE_ITEM_EX_INTERVAL)), [=, this]() {
 					    playerUseItemEx(playerId, itemPos, itemStackPos, fromSpriteId, toPos, toStackPos, toSpriteId);
 				    });
 				player->setNextWalkActionTask(task);
@@ -2177,7 +2176,7 @@ void Game::playerUseItem(uint32_t playerId, const Position& pos, uint8_t stackPo
 	}
 
 	bool isHotkey = (pos.x == 0xFFFF && pos.y == 0 && pos.z == 0);
-	if (isHotkey && !g_config[ConfigKeysBoolean::AIMBOT_HOTKEY_ENABLED]) {
+	if (isHotkey && !getBoolean(ConfigManager::AIMBOT_HOTKEY_ENABLED)) {
 		return;
 	}
 
@@ -2211,7 +2210,7 @@ void Game::playerUseItem(uint32_t playerId, const Position& pos, uint8_t stackPo
 				});
 
 				SchedulerTask* task =
-				    createSchedulerTask(static_cast<uint32_t>(g_config[ConfigKeysInteger::RANGE_USE_ITEM_INTERVAL]),
+				    createSchedulerTask(static_cast<uint32_t>(getInteger(ConfigManager::RANGE_USE_ITEM_INTERVAL)),
 				                        [=, this]() { playerUseItem(playerId, pos, stackPos, index, spriteId); });
 				player->setNextWalkActionTask(task);
 				return;
@@ -2277,7 +2276,7 @@ void Game::playerUseWithCreature(uint32_t playerId, const Position& fromPos, uin
 	}
 
 	bool isHotkey = (fromPos.x == 0xFFFF && fromPos.y == 0 && fromPos.z == 0);
-	if (!g_config[ConfigKeysBoolean::AIMBOT_HOTKEY_ENABLED]) {
+	if (!getBoolean(ConfigManager::AIMBOT_HOTKEY_ENABLED)) {
 		if (creature->getPlayer() || isHotkey) {
 			player->sendCancelMessage(RETURNVALUE_DIRECTPLAYERSHOOT);
 			return;
@@ -2332,7 +2331,7 @@ void Game::playerUseWithCreature(uint32_t playerId, const Position& fromPos, uin
 				});
 
 				SchedulerTask* task = createSchedulerTask(
-				    static_cast<uint32_t>(g_config[ConfigKeysInteger::RANGE_USE_WITH_CREATURE_INTERVAL]),
+				    static_cast<uint32_t>(getInteger(ConfigManager::RANGE_USE_WITH_CREATURE_INTERVAL)),
 				    [=, this]() { playerUseWithCreature(playerId, itemPos, itemStackPos, creatureId, spriteId); });
 				player->setNextWalkActionTask(task);
 			} else {
@@ -2442,7 +2441,7 @@ void Game::playerRotateItem(uint32_t playerId, const Position& pos, uint8_t stac
 			});
 
 			SchedulerTask* task =
-			    createSchedulerTask(static_cast<uint32_t>(g_config[ConfigKeysInteger::RANGE_ROTATE_ITEM_INTERVAL]),
+			    createSchedulerTask(static_cast<uint32_t>(getInteger(ConfigManager::RANGE_ROTATE_ITEM_INTERVAL)),
 			                        [=, this]() { playerRotateItem(playerId, pos, stackPos, spriteId); });
 			player->setNextWalkActionTask(task);
 		} else {
@@ -2687,7 +2686,7 @@ void Game::playerRequestTrade(uint32_t playerId, const Position& pos, uint8_t st
 		return;
 	}
 
-	if (g_config[ConfigKeysBoolean::ONLY_INVITED_CAN_MOVE_HOUSE_ITEMS]) {
+	if (getBoolean(ConfigManager::ONLY_INVITED_CAN_MOVE_HOUSE_ITEMS)) {
 		if (HouseTile* houseTile = dynamic_cast<HouseTile*>(tradeItem->getTile())) {
 			House* house = houseTile->getHouse();
 			if (house && !house->isInvited(player)) {
@@ -3373,7 +3372,7 @@ void Game::playerTurn(uint32_t playerId, Direction dir)
 
 void Game::playerRequestOutfit(uint32_t playerId)
 {
-	if (!g_config[ConfigKeysBoolean::ALLOW_CHANGEOUTFIT]) {
+	if (!getBoolean(ConfigManager::ALLOW_CHANGEOUTFIT)) {
 		return;
 	}
 
@@ -3387,7 +3386,7 @@ void Game::playerRequestOutfit(uint32_t playerId)
 
 void Game::playerChangeOutfit(uint32_t playerId, Outfit_t outfit, bool randomizeMount /* = false*/)
 {
-	if (!g_config[ConfigKeysBoolean::ALLOW_CHANGEOUTFIT]) {
+	if (!getBoolean(ConfigManager::ALLOW_CHANGEOUTFIT)) {
 		return;
 	}
 
@@ -3535,7 +3534,7 @@ bool Game::playerSaySpell(Player* player, SpeakClasses type, std::string_view te
 
 	result = g_spells->playerSaySpell(player, words);
 	if (result == TalkActionResult::BREAK) {
-		if (!g_config[ConfigKeysBoolean::EMOTE_SPELLS]) {
+		if (!getBoolean(ConfigManager::EMOTE_SPELLS)) {
 			return internalCreatureSay(player, TALKTYPE_SAY, words, false);
 		} else {
 			return internalCreatureSay(player, TALKTYPE_MONSTER_SAY, words, false);
@@ -3579,9 +3578,9 @@ bool Game::playerYell(Player* player, std::string_view text)
 	}
 
 	if (!player->isAccessPlayer() && !player->hasFlag(PlayerFlag_IgnoreYellCheck)) {
-		const int64_t minimumLevel = g_config[ConfigKeysInteger::YELL_MINIMUM_LEVEL];
+		const int64_t minimumLevel = getInteger(ConfigManager::YELL_MINIMUM_LEVEL);
 		if (player->getLevel() < minimumLevel) {
-			if (g_config[ConfigKeysBoolean::YELL_ALLOW_PREMIUM]) {
+			if (getBoolean(ConfigManager::YELL_ALLOW_PREMIUM)) {
 				if (!player->isPremium()) {
 					player->sendTextMessage(
 					    MESSAGE_STATUS_SMALL,
@@ -3621,9 +3620,9 @@ bool Game::playerSpeakTo(Player* player, SpeakClasses type, std::string_view rec
 	}
 
 	if (!player->isAccessPlayer() && !player->hasFlag(PlayerFlag_IgnoreSendPrivateCheck)) {
-		const int64_t minimumLevel = g_config[ConfigKeysInteger::MINIMUM_LEVEL_TO_SEND_PRIVATE];
+		const int64_t minimumLevel = getInteger(ConfigManager::MINIMUM_LEVEL_TO_SEND_PRIVATE);
 		if (player->getLevel() < minimumLevel) {
-			if (g_config[ConfigKeysBoolean::PREMIUM_TO_SEND_PRIVATE]) {
+			if (getBoolean(ConfigManager::PREMIUM_TO_SEND_PRIVATE)) {
 				if (!player->isPremium()) {
 					player->sendTextMessage(
 					    MESSAGE_STATUS_SMALL,
@@ -4095,7 +4094,7 @@ bool Game::combatChangeHealth(Creature* attacker, Creature* target, CombatDamage
 
 			TextMessage message;
 			addAnimatedText(fmt::format("{:+d}", realHealthChange), targetPos,
-			                static_cast<TextColor_t>(g_config[ConfigKeysInteger::HEALTH_GAIN_COLOUR]));
+			                static_cast<TextColor_t>(getInteger(ConfigManager::HEALTH_GAIN_COLOUR)));
 
 			SpectatorVec spectators;
 			map.getSpectators(spectators, targetPos, false, true);
@@ -4195,7 +4194,7 @@ bool Game::combatChangeHealth(Creature* attacker, Creature* target, CombatDamage
 				std::string spectatorMessage;
 
 				addAnimatedText(fmt::format("{:+d}", -manaDamage), targetPos,
-				                static_cast<TextColor_t>(g_config[ConfigKeysInteger::MANA_GAIN_COLOUR]));
+				                static_cast<TextColor_t>(getInteger(ConfigManager::MANA_GAIN_COLOUR)));
 
 				for (Creature* spectator : spectators) {
 					assert(dynamic_cast<Player*>(spectator) != nullptr);
@@ -4452,7 +4451,7 @@ bool Game::combatChangeMana(Creature* attacker, Creature* target, CombatDamage& 
 
 		TextMessage message;
 		addAnimatedText(fmt::format("{:+d}", manaLoss), targetPos,
-		                static_cast<TextColor_t>(g_config[ConfigKeysInteger::MANA_LOSS_COLOUR]));
+		                static_cast<TextColor_t>(getInteger(ConfigManager::MANA_LOSS_COLOUR)));
 
 		SpectatorVec spectators;
 		map.getSpectators(spectators, targetPos, false, true);
@@ -4833,7 +4832,7 @@ void Game::loadMotdNum()
 	result = db.storeQuery("SELECT `value` FROM `server_config` WHERE `config` = 'motd_hash'");
 	if (result) {
 		motdHash = result->getString("value");
-		if (motdHash != transformToSHA1(g_config[ConfigKeysString::MOTD])) {
+		if (motdHash != transformToSHA1(getString(ConfigManager::MOTD))) {
 			++motdNum;
 		}
 	} else {
@@ -4846,7 +4845,7 @@ void Game::saveMotdNum() const
 	Database& db = Database::getInstance();
 	db.executeQuery(fmt::format("UPDATE `server_config` SET `value` = '{:d}' WHERE `config` = 'motd_num'", motdNum));
 	db.executeQuery(fmt::format("UPDATE `server_config` SET `value` = '{:s}' WHERE `config` = 'motd_hash'",
-	                            transformToSHA1(g_config[ConfigKeysString::MOTD])));
+	                            transformToSHA1(getString(ConfigManager::MOTD))));
 }
 
 void Game::checkPlayersRecord()
@@ -5233,7 +5232,7 @@ bool Game::reload(ReloadTypes_t reloadType)
 		case RELOAD_TYPE_CHAT:
 			return g_chat->load();
 		case RELOAD_TYPE_CONFIG:
-			return g_config.load();
+			return ConfigManager::load();
 		case RELOAD_TYPE_CREATURESCRIPTS: {
 			g_creatureEvents->reload();
 			g_creatureEvents->removeInvalidEvents();
@@ -5295,7 +5294,7 @@ bool Game::reload(ReloadTypes_t reloadType)
 			Npcs::reload();
 			raids.reload() && raids.startup();
 			Item::items.reload();
-			g_config.reload();
+			ConfigManager::reload();
 			g_events->load();
 			g_chat->load();
 			*/
@@ -5312,7 +5311,7 @@ bool Game::reload(ReloadTypes_t reloadType)
 			}
 
 			g_actions->reload();
-			g_config.load();
+			ConfigManager::load();
 			g_creatureEvents->reload();
 			g_monsters.reload();
 			g_moveEvents->reload();

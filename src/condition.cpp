@@ -9,7 +9,6 @@
 #include "game.h"
 
 extern Game g_game;
-extern ConfigManager g_config;
 
 bool Condition::setParam(ConditionParam_t param, int32_t value)
 {
@@ -1029,7 +1028,7 @@ bool ConditionRegeneration::executeCondition(Creature* creature, int32_t interva
 				player->sendTextMessage(message);
 
 				g_game.addAnimatedText(fmt::format("{:+d}", realHealthGain), player->getPosition(),
-				                       static_cast<TextColor_t>(g_config[ConfigKeysInteger::HEALTH_GAIN_COLOUR]));
+				                       static_cast<TextColor_t>(getInteger(ConfigManager::HEALTH_GAIN_COLOUR)));
 
 				SpectatorVec spectators;
 				g_game.map.getSpectators(spectators, player->getPosition(), false, true);
@@ -1067,7 +1066,7 @@ bool ConditionRegeneration::executeCondition(Creature* creature, int32_t interva
 				player->sendTextMessage(message);
 
 				g_game.addAnimatedText(fmt::format("{:+d}", realManaGain), player->getPosition(),
-				                       static_cast<TextColor_t>(g_config[ConfigKeysInteger::MANA_GAIN_COLOUR]));
+				                       static_cast<TextColor_t>(getInteger(ConfigManager::MANA_GAIN_COLOUR)));
 
 				SpectatorVec spectators;
 				g_game.map.getSpectators(spectators, player->getPosition(), false, true);
