@@ -338,9 +338,9 @@ do
 
 		local staminaMinutes = self:getStamina()
 		if staminaMinutes > 2400 and self:isPremium() then
-			self:addExperienceRate(ExperienceRateType.STAMINA, 50)
+			self:setExperienceRate(ExperienceRateType.STAMINA, 150)
 		elseif staminaMinutes <= 840 then
-			self:addExperienceRate(ExperienceRateType.STAMINA, -50)
+			self:setExperienceRate(ExperienceRateType.STAMINA, 100)
 		end
 		return true
 	end
