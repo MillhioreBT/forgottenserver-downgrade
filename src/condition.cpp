@@ -169,12 +169,7 @@ void Condition::serialize(PropWriteStream& propWriteStream)
 	}
 }
 
-void Condition::setEndTime(int64_t newEndTime)
-{
-	if (endTime == 0) {
-		endTime = newEndTime;
-	}
-}
+void Condition::setEndTime(int64_t newEndTime) { endTime = newEndTime; }
 
 void Condition::setTicks(int32_t newTicks)
 {
@@ -344,7 +339,7 @@ Condition_ptr Condition::createCondition(PropStream& propStream)
 
 bool Condition::startCondition(Creature*)
 {
-	if (ticks > 0) {
+	if (ticks > 0 && endTime == 0) {
 		setEndTime(ticks + OTSYS_TIME());
 	}
 	return true;
