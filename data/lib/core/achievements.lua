@@ -103,12 +103,7 @@ Storages:
 		points = 4,
 		description = "You won the merciless 2 vs. 2 team tournament on the Isle of Strife and wiped out wave after wave of fearsome opponents. Death or victory - you certainly chose the latter."
 	},
-	[14] = {
-		name = "Chorister",
-		grade = 1,
-		points = 1,
-		description = "Lalalala... you now know the cult's hymn sung in Liberty Bay"
-	},
+	[14] = {name = "Chorister", grade = 1, points = 1, description = "Lalalala... you now know the cult's hymn sung in Liberty Bay"},
 	[15] = {
 		name = "Clay Fighter",
 		grade = 1,
@@ -547,12 +542,7 @@ Storages:
 		secret = true,
 		description = "Your map is your friend - always in your back pocket and covered with countless marks of interesting and useful locations. One could say that you might be lost without it - but luckily there's no way to take it from you."
 	},
-	[82] = {
-		name = "The Milkman",
-		grade = 1,
-		points = 2,
-		description = "Who's the milkman? You are!"
-	},
+	[82] = {name = "The Milkman", grade = 1, points = 2, description = "Who's the milkman? You are!"},
 	[83] = {
 		name = "Top AVIN Agent",
 		grade = 2,
@@ -604,13 +594,7 @@ Storages:
 		secret = true,
 		description = "One thing's for sure: You definitely love swimming. Hanging out on the beach with your friends, having ice cream and playing beach ball is splashingly good fun!"
 	},
-	[91] = {
-		name = "Wayfarer",
-		grade = 1,
-		points = 3,
-		secret = true,
-		description = "Dragon dreams are golden."
-	},
+	[91] = {name = "Wayfarer", grade = 1, points = 3, secret = true, description = "Dragon dreams are golden."},
 	[92] = {
 		name = "Worm Whacker",
 		grade = 1,
@@ -941,12 +925,7 @@ Storages:
 		secret = true,
 		description = "You laugh at unprepared adventurers stuck in high grass or rush wood. Or maybe you actually do help them out. They call you... 'Machete'."
 	},
-	[141] = {
-		name = "Number of the Beast",
-		grade = 1,
-		points = 2,
-		description = "Six. Six. Six."
-	},
+	[141] = {name = "Number of the Beast", grade = 1, points = 2, description = "Six. Six. Six."},
 	[142] = {
 		name = "Of Wolves and Bears",
 		grade = 2,
@@ -1318,13 +1297,7 @@ Storages:
 		secret = true,
 		description = "Hopping, hopping through the snow - that's the funnest way to go! Making footprints in a flurry - it's more fun the more you hurry! Licking icicles all day - Winter, never go away!"
 	},
-	[198] = {
-		name = "Something's in There",
-		grade = 1,
-		points = 1,
-		secret = true,
-		description = "By the gods! What was that?"
-	},
+	[198] = {name = "Something's in There", grade = 1, points = 1, secret = true, description = "By the gods! What was that?"},
 	[199] = {
 		name = "Spectral Traveler",
 		grade = 1,
@@ -1751,13 +1724,7 @@ Storages:
 		points = 2,
 		description = "Your actions start to make a difference. You have blinded the antennae of the hive often enough to become an annoyance to it."
 	},
-	[266] = {
-		name = "Navigational Error",
-		grade = 2,
-		points = 5,
-		secret = true,
-		description = "You confronted the Navigator."
-	},
+	[266] = {name = "Navigational Error", grade = 2, points = 5, secret = true, description = "You confronted the Navigator."},
 	[267] = {
 		name = "Pimple",
 		grade = 1,
@@ -1855,18 +1822,8 @@ Storages:
 		points = 2,
 		description = "You gave zzze draken a tazte of your finizzzing move."
 	},
-	[282] = {
-		name = "Howly Silence",
-		grade = 1,
-		points = 1,
-		description = "You muted the everlasting howling of Hemming."
-	},
-	[283] = {
-		name = "Kapow!",
-		grade = 1,
-		points = 1,
-		description = "No joke, you murdered the bat."
-	},
+	[282] = {name = "Howly Silence", grade = 1, points = 1, description = "You muted the everlasting howling of Hemming."},
+	[283] = {name = "Kapow!", grade = 1, points = 1, description = "No joke, you murdered the bat."},
 	[284] = {
 		name = "King of the Ring",
 		grade = 1,
@@ -1880,12 +1837,7 @@ Storages:
 		secret = true,
 		description = "You've faced and defeated each of the mighty bosses the Paw and Fur society sent you out to kill. All by yourself. What a hunt!"
 	},
-	[286] = {
-		name = "Stepped on a Big Toe",
-		grade = 1,
-		points = 1,
-		description = "This time you knocked out the big one."
-	},
+	[286] = {name = "Stepped on a Big Toe", grade = 1, points = 1, description = "This time you knocked out the big one."},
 	[287] = {
 		name = "Zzztill Zzztanding!",
 		grade = 1,
@@ -2635,17 +2587,13 @@ end
 
 function getSecretAchievements()
 	local targetAchievement = {}
-	for k, v in pairs(achievements) do
-		if v.secret then targetAchievement[#targetAchievement + 1] = k end
-	end
+	for k, v in pairs(achievements) do if v.secret then targetAchievement[#targetAchievement + 1] = k end end
 	return targetAchievement
 end
 
 function getPublicAchievements()
 	local targetAchievement = {}
-	for k, v in pairs(achievements) do
-		if not v.secret then targetAchievement[#targetAchievement + 1] = k end
-	end
+	for k, v in pairs(achievements) do if not v.secret then targetAchievement[#targetAchievement + 1] = k end end
 	return targetAchievement
 end
 
@@ -2678,15 +2626,13 @@ function Player.hasAchievement(self, ach)
 		return false
 	end
 
-	return
-		self:getStorageValue(PlayerStorageKeys.achievementsBase + achievement.id) > 0
+	local storageValue = self:getStorageValue(PlayerStorageKeys.achievementsBase + achievement.id)
+	return storageValue and storageValue > 0
 end
 
 function Player.getAchievements(self)
 	local targetAchievement = {}
-	for k = 1, #achievements do
-		if self:hasAchievement(k) then targetAchievement[#targetAchievement + 1] = k end
-	end
+	for k = 1, #achievements do if self:hasAchievement(k) then targetAchievement[#targetAchievement + 1] = k end end
 	return targetAchievement
 end
 
@@ -2705,9 +2651,7 @@ function Player.addAchievement(self, ach, hideMsg)
 	if not self:hasAchievement(achievement.id) then
 		self:setStorageValue(PlayerStorageKeys.achievementsBase + achievement.id, 1)
 		if not hideMsg then
-			self:sendTextMessage(MESSAGE_EVENT_ADVANCE,
-			                     "Congratulations! You earned the achievement \"" ..
-				                     achievement.name .. "\".")
+			self:sendTextMessage(MESSAGE_EVENT_ADVANCE, "Congratulations! You earned the achievement \"" .. achievement.name .. "\".")
 		end
 	end
 	return true
@@ -2725,9 +2669,7 @@ function Player.removeAchievement(self, ach)
 		return false
 	end
 
-	if self:hasAchievement(achievement.id) then
-		self:setStorageValue(PlayerStorageKeys.achievementsBase + achievement.id, -1)
-	end
+	if self:hasAchievement(achievement.id) then self:removeStorageValue(PlayerStorageKeys.achievementsBase + achievement.id) end
 	return true
 end
 
@@ -2737,28 +2679,20 @@ function Player.addAllAchievements(self, hideMsg)
 end
 
 function Player.removeAllAchievements(self)
-	for k = 1, #achievements do
-		if self:hasAchievement(k) then self:removeAchievement(k) end
-	end
+	for k = 1, #achievements do if self:hasAchievement(k) then self:removeAchievement(k) end end
 	return true
 end
 
 function Player.getSecretAchievements(self)
 	local targetAchievement = {}
-	for k, v in pairs(achievements) do
-		if self:hasAchievement(k) and v.secret then
-			targetAchievement[#targetAchievement + 1] = k
-		end
-	end
+	for k, v in pairs(achievements) do if self:hasAchievement(k) and v.secret then targetAchievement[#targetAchievement + 1] = k end end
 	return targetAchievement
 end
 
 function Player.getPublicAchievements(self)
 	local targetAchievement = {}
 	for k, v in pairs(achievements) do
-		if self:hasAchievement(k) and not v.secret then
-			targetAchievement[#targetAchievement + 1] = k
-		end
+		if self:hasAchievement(k) and not v.secret then targetAchievement[#targetAchievement + 1] = k end
 	end
 	return targetAchievement
 end
@@ -2778,15 +2712,14 @@ function Player.getAchievementPoints(self)
 end
 
 function Player.addAchievementProgress(self, ach, value)
-	local achievement = tonumber(ach) ~= nil and getAchievementInfoById(ach) or
-		                    getAchievementInfoByName(ach)
+	local achievement = tonumber(ach) ~= nil and getAchievementInfoById(ach) or getAchievementInfoByName(ach)
 	if not achievement then
 		print('[!] -> Invalid achievement "' .. ach .. '".')
 		return true
 	end
 
 	local storage = PlayerStorageKeys.achievementsCounter + achievement.id
-	local progress = self:getStorageValue(storage)
+	local progress = self:getStorageValue(storage, -1)
 	if progress < value then
 		self:setStorageValue(storage, math.max(1, progress) + 1)
 	elseif progress == value then
