@@ -17,7 +17,7 @@ function Quest:register()
 end
 
 function Quest:isStarted(player)
-	return player:getStorageValue(self.storageId) >= self.storageValue
+	return player:getStorageValue(self.storageId, 0) >= self.storageValue
 end
 
 function Quest:isCompleted(player)
@@ -30,9 +30,7 @@ end
 function Quest:getMissions(player)
 	local playerMissions = {}
 	for _, mission in pairs(self.missions) do
-		if mission:isStarted(player) then
-			playerMissions[#playerMissions + 1] = mission
-		end
+		if mission:isStarted(player) then playerMissions[#playerMissions + 1] = mission end
 	end
 	return playerMissions
 end
@@ -41,7 +39,7 @@ Mission = {}
 Mission.__index = Mission
 
 function Mission:isStarted(player)
-	local value = player:getStorageValue(self.storageId)
+	local value = player:getStorageValue(self.storageId, 0)
 	if value >= self.startValue then
 		if self.ignoreEndValue or value <= self.endValue then return true end
 	end
@@ -50,15 +48,13 @@ end
 
 function Mission:isCompleted(player)
 	if self.ignoreEndValue then
-		return player:getStorageValue(self.storageId) >= self.endValue
+		return player:getStorageValue(self.storageId, 0) >= self.endValue
 	end
-	return player:getStorageValue(self.storageId) == self.endValue
+	return player:getStorageValue(self.storageId, 0) == self.endValue
 end
 
 function Mission:getName(player)
-	if self:isCompleted(player) then
-		return string.format("%s (Completed)", self.name)
-	end
+	if self:isCompleted(player) then return string.format("%s (Completed)", self.name) end
 	return self.name
 end
 
@@ -66,7 +62,7 @@ function Mission:getDescription(player)
 	local descriptionType = type(self.description)
 	if descriptionType == "function" then return self.description(player) end
 
-	local value = player:getStorageValue(self.storageId)
+	local value = player:getStorageValue(self.storageId, 0)
 	if descriptionType == "string" then
 		local description = self.description:gsub("|STATE|", value)
 		description = self.description:gsub("\\n", "\n")
@@ -145,7 +141,7 @@ function Player:getQuests()
 end
 
 function Player:sendQuestLog()
-	local msg <close> = NetworkMessage()
+	local msg<close> = NetworkMessage()
 	msg:addByte(0xF0)
 	local quests = self:getQuests()
 	msg:addU16(#quests)
@@ -153,7 +149,7 @@ function Player:sendQuestLog()
 	for _, quest in pairs(quests) do
 		msg:addU16(quest.id)
 		msg:addString(quest.name)
-		msg:addByte(quest:isCompleted(self))
+		msg:addByte(quest:isCompleted(self) and 1 or 0)
 	end
 
 	msg:sendToPlayer(self)
@@ -161,7 +157,7 @@ function Player:sendQuestLog()
 end
 
 function Player:sendQuestLine(quest)
-	local msg <close> = NetworkMessage()
+	local msg<close> = NetworkMessage()
 	msg:addByte(0xF1)
 	msg:addU16(quest.id)
 	local missions = quest:getMissions(self)
