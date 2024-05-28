@@ -346,7 +346,7 @@ CREATE TABLE IF NOT EXISTS `player_items` (
 CREATE TABLE IF NOT EXISTS `player_mounts` (
   `player_id` int NOT NULL DEFAULT '0',
   `mount_id` smallint unsigned NOT NULL DEFAULT '0',
-  ADD PRIMARY KEY (`player_id`, `mount_id`)
+  PRIMARY KEY (`player_id`, `mount_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 
 CREATE TABLE IF NOT EXISTS `player_spells` (
