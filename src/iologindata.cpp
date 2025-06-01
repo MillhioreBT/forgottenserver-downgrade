@@ -15,8 +15,7 @@ Account IOLoginData::loadAccount(uint32_t accno)
 	Account account;
 
 	DBResult_ptr result = Database::getInstance().storeQuery(fmt::format(
-	    "SELECT `id`, `name`, `password`, `type`, `premium_ends_at`, `tibia_coins` FROM `accounts` WHERE `id` = {:d}",
-	    accno));
+	    "SELECT `id`, `name`, `type`, `premium_ends_at`, `tibia_coins` FROM `accounts` WHERE `id` = {:d}", accno));
 	if (!result) {
 		return account;
 	}
@@ -145,8 +144,9 @@ std::pair<uint32_t, uint32_t> IOLoginData::getAccountIdByAccountName(std::string
 {
 	Database& db = Database::getInstance();
 
-	DBResult_ptr result = db.storeQuery(
-	    fmt::format("SELECT `id`, `password` FROM `accounts` WHERE `name` = {:s}", db.escapeString(accountName)));
+	DBResult_ptr result =
+	    db.storeQuery(fmt::format("SELECT `id`, UNHEX(`password`) AS `password` FROM `accounts` WHERE `name` = {:s}",
+	                              db.escapeString(accountName)));
 	if (!result) {
 		return {};
 	}
@@ -583,7 +583,8 @@ bool IOLoginData::loadPlayer(Player* player, DBResult_ptr result)
 	if ((result = db.storeQuery(fmt::format(
 	         "SELECT `outfit_id`, `addons` FROM `player_outfits` WHERE `player_id` = {:d}", player->getGUID())))) {
 		do {
-			player->addOutfit(result->getNumber<uint16_t>("outfit_id"), result->getNumber<uint8_t>("addons"));
+			player->addOutfit(result->getNumber<uint16_t>("outfit_id"),
+			                  static_cast<uint8_t>(result->getNumber<uint16_t>("addons")));
 		} while (result->next());
 	}
 
