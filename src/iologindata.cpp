@@ -63,7 +63,7 @@ bool IOLoginData::loginserverAuthentication(std::string_view name, std::string_v
 	Database& db = Database::getInstance();
 
 	DBResult_ptr result = db.storeQuery(fmt::format(
-	    "SELECT `id`, `name`, `password`, `secret`, `type`, `premium_ends_at`, `tibia_coins` FROM `accounts` WHERE `name` = {:s}",
+	    "SELECT `id`, `name`, UNHEX(`password`) AS `password`, `secret`, `type`, `premium_ends_at`, `tibia_coins` FROM `accounts` WHERE `name` = {:s}",
 	    db.escapeString(name)));
 	if (!result) {
 		return false;
@@ -100,7 +100,7 @@ std::pair<uint32_t, uint32_t> IOLoginData::gameworldAuthentication(std::string_v
 {
 	Database& db = Database::getInstance();
 	DBResult_ptr result = db.storeQuery(fmt::format(
-	    "SELECT `a`.`id` AS `account_id`, `a`.`password`, `a`.`secret`, `p`.`id` AS `character_id` FROM `accounts` `a` JOIN `players` `p` ON `a`.`id` = `p`.`account_id` WHERE (`a`.`name` = {:s} OR `a`.`email` = {:s}) AND `p`.`name` = {:s} AND `p`.`deletion` = 0",
+	    "SELECT `a`.`id` AS `account_id`, UNHEX(`a`.`password`) AS `password`, `a`.`secret`, `p`.`id` AS `character_id` FROM `accounts` `a` JOIN `players` `p` ON `a`.`id` = `p`.`account_id` WHERE (`a`.`name` = {:s} OR `a`.`email` = {:s}) AND `p`.`name` = {:s} AND `p`.`deletion` = 0",
 	    db.escapeString(accountName), db.escapeString(accountName), db.escapeString(characterName)));
 	if (!result) {
 		return {};

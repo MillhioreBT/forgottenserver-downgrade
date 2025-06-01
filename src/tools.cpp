@@ -7,6 +7,9 @@
 
 #include "configmanager.h"
 
+#include <openssl/evp.h>
+#include <openssl/hmac.h>
+
 void printXMLError(std::string_view where, std::string_view fileName, const pugi::xml_parse_result& result)
 {
 	std::cout << '[' << where << "] Failed to load " << fileName << ": " << result.description() << std::endl;
@@ -118,109 +121,75 @@ static void processSHA1MessageBlock(const uint8_t* messageBlock, uint32_t* H)
 
 std::string transformToSHA1(std::string_view input)
 {
-	uint32_t H[] = {0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0};
-
-	uint8_t messageBlock[64];
-	size_t index = 0;
-
-	uint32_t length_low = 0;
-	uint32_t length_high = 0;
-	for (char ch : input) {
-		messageBlock[index++] = ch;
-
-		length_low += 8;
-		if (length_low == 0) {
-			length_high++;
-		}
-
-		if (index == 64) {
-			processSHA1MessageBlock(messageBlock, H);
-			index = 0;
-		}
+	std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> ctx{EVP_MD_CTX_new(), EVP_MD_CTX_free};
+	if (!ctx) {
+		throw std::runtime_error("Failed to create EVP context");
 	}
 
-	messageBlock[index++] = 0x80;
-
-	if (index > 56) {
-		while (index < 64) {
-			messageBlock[index++] = 0;
-		}
-
-		processSHA1MessageBlock(messageBlock, H);
-		index = 0;
+	std::unique_ptr<EVP_MD, decltype(&EVP_MD_free)> md{EVP_MD_fetch(nullptr, "SHA1", nullptr), EVP_MD_free};
+	if (!md) {
+		throw std::runtime_error("Failed to fetch SHA1");
 	}
 
-	while (index < 56) {
-		messageBlock[index++] = 0;
+	if (!EVP_DigestInit_ex(ctx.get(), md.get(), nullptr)) {
+		throw std::runtime_error("Message digest initialization failed");
 	}
 
-	messageBlock[56] = static_cast<uint8_t>(length_high >> 24);
-	messageBlock[57] = static_cast<uint8_t>(length_high >> 16);
-	messageBlock[58] = static_cast<uint8_t>(length_high >> 8);
-	messageBlock[59] = static_cast<uint8_t>(length_high);
-
-	messageBlock[60] = static_cast<uint8_t>(length_low >> 24);
-	messageBlock[61] = static_cast<uint8_t>(length_low >> 16);
-	messageBlock[62] = static_cast<uint8_t>(length_low >> 8);
-	messageBlock[63] = static_cast<uint8_t>(length_low);
-
-	processSHA1MessageBlock(messageBlock, H);
-
-	char hexstring[41];
-	static const char hexDigits[] = {"0123456789abcdef"};
-	for (int hashByte = 20; --hashByte >= 0;) {
-		const uint8_t byte = H[hashByte >> 2] >> (((3 - hashByte) & 3) << 3);
-		index = hashByte << 1;
-		hexstring[index] = hexDigits[byte >> 4];
-		hexstring[index + 1] = hexDigits[byte & 15];
+	if (!EVP_DigestUpdate(ctx.get(), input.data(), input.size())) {
+		throw std::runtime_error("Message digest update failed");
 	}
-	return {hexstring, 40};
+
+	unsigned int len = EVP_MD_size(md.get());
+	std::string digest(static_cast<size_t>(len), '\0');
+	if (!EVP_DigestFinal_ex(ctx.get(), reinterpret_cast<unsigned char*>(digest.data()), &len)) {
+		throw std::runtime_error("Message digest finalization failed");
+	}
+
+	return digest;
 }
 
-std::string generateToken(const std::string& key, uint32_t ticks)
+std::string hmac(std::string_view algorithm, std::string_view key, std::string_view message)
 {
-	// generate message from ticks
-	std::string message(8, 0);
-	for (uint8_t i = 8; --i; ticks >>= 8) {
-		message[i] = static_cast<char>(ticks & 0xFF);
+	std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> ctx{EVP_MD_CTX_new(), EVP_MD_CTX_free};
+	if (!ctx) {
+		throw std::runtime_error("Failed to create EVP context");
 	}
 
-	// hmac key pad generation
-	std::string iKeyPad(64, 0x36), oKeyPad(64, 0x5C);
-	for (uint8_t i = 0; i < key.length(); ++i) {
-		iKeyPad[i] ^= key[i];
-		oKeyPad[i] ^= key[i];
+	std::unique_ptr<EVP_MD, decltype(&EVP_MD_free)> md{EVP_MD_fetch(nullptr, algorithm.data(), nullptr), EVP_MD_free};
+	if (!md) {
+		throw std::runtime_error(fmt::format("Failed to fetch {:s}", algorithm));
 	}
 
-	oKeyPad.reserve(84);
+	std::array<unsigned char, EVP_MAX_MD_SIZE> result;
+	unsigned int len;
 
-	// hmac concat inner pad with message
-	iKeyPad.append(message);
-
-	// hmac first pass
-	message.assign(transformToSHA1(iKeyPad));
-
-	// hmac concat outer pad with message, conversion from hex to int needed
-	for (uint8_t i = 0; i < message.length(); i += 2) {
-		oKeyPad.push_back(static_cast<char>(std::strtoul(message.substr(i, 2).c_str(), nullptr, 16)));
+	if (!HMAC(md.get(), key.data(), key.size(), reinterpret_cast<const unsigned char*>(message.data()), message.size(),
+	          result.data(), &len)) {
+		throw std::runtime_error("HMAC failed");
 	}
 
-	// hmac second pass
-	message.assign(transformToSHA1(oKeyPad));
+	return {reinterpret_cast<char*>(result.data()), len};
+}
+
+std::string generateToken(std::string_view key, uint64_t counter, size_t length /*= AUTHENTICATOR_DIGITS*/)
+{
+	std::string mac(8, 0);
+	for (uint8_t i = 8; --i; counter >>= 8) {
+		mac[i] = static_cast<char>(counter % 256);
+	}
+
+	mac = hmac("SHA1", key, mac);
 
 	// calculate hmac offset
-	uint32_t offset = static_cast<uint32_t>(std::strtoul(message.substr(39, 1).c_str(), nullptr, 16) & 0xF);
+	auto offset = mac.back() % 16u;
 
 	// get truncated hash
-	uint32_t truncHash =
-	    static_cast<uint32_t>(std::strtoul(message.substr(2 * offset, 8).c_str(), nullptr, 16)) & 0x7FFFFFFF;
-	message.assign(std::to_string(truncHash));
+	uint32_t p =
+	    (static_cast<unsigned char>(mac[offset + 0]) << 24u) | (static_cast<unsigned char>(mac[offset + 1]) << 16u) |
+	    (static_cast<unsigned char>(mac[offset + 2]) << 8u) | (static_cast<unsigned char>(mac[offset + 3]) << 0u);
 
-	// return only last AUTHENTICATOR_DIGITS (default 6) digits, also asserts exactly 6 digits
-	uint32_t hashLen = message.length();
-	message.assign(message.substr(hashLen - std::min(hashLen, AUTHENTICATOR_DIGITS)));
-	message.insert(0, AUTHENTICATOR_DIGITS - std::min(hashLen, AUTHENTICATOR_DIGITS), '0');
-	return message;
+	auto token = std::to_string(p & 0x7fffffff);
+	return token.substr(token.size() - length);
 }
 
 bool caseInsensitiveEqual(std::string_view str1, std::string_view str2)

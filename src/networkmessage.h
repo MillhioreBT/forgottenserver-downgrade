@@ -121,6 +121,8 @@ public:
 
 	MsgSize_t getBufferPosition() const { return info.position; }
 
+	MsgSize_t getRemainingBufferLength() const { return info.length - info.position; }
+
 	bool setBufferPosition(MsgSize_t pos)
 	{
 		if (pos < NETWORKMESSAGE_MAXSIZE - INITIAL_BUFFER_POSITION) {
@@ -142,6 +144,8 @@ public:
 		info.position = 2;
 		return &buffer[HEADER_LENGTH];
 	}
+
+	uint8_t* getRemainingBuffer() { return &buffer[0] + info.position; }
 
 protected:
 	struct NetworkMessageInfo

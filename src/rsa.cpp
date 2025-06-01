@@ -5,63 +5,53 @@
 
 #include "rsa.h"
 
-#include <cryptopp/base64.h>
-#include <cryptopp/osrng.h>
-#include <fstream>
-#include <sstream>
+#include <openssl/err.h>
+#include <openssl/pem.h>
+#include <openssl/rsa.h>
 
-static CryptoPP::AutoSeededRandomPool prng;
+namespace {
 
-void RSA::decrypt(char* msg) const
+struct Deleter
 {
-	try {
-		CryptoPP::Integer m{reinterpret_cast<uint8_t*>(msg), 128};
-		auto c = pk.CalculateInverse(prng, m);
-		c.Encode(reinterpret_cast<uint8_t*>(msg), 128);
-	} catch (const CryptoPP::Exception& e) {
-		std::cout << e.what() << '\n';
-	}
+	void operator()(BIO* bio) const { BIO_free(bio); }
+	void operator()(EVP_PKEY* pkey) const { EVP_PKEY_free(pkey); }
+	void operator()(EVP_PKEY_CTX* ctx) const { EVP_PKEY_CTX_free(ctx); }
+};
+
+template <class T>
+using C_ptr = std::unique_ptr<T, Deleter>;
+
+C_ptr<EVP_PKEY> pkey = nullptr;
+
+} // namespace
+
+namespace tfs::rsa {
+
+void decrypt(uint8_t* msg, size_t len)
+{
+	C_ptr<EVP_PKEY_CTX> pctx{EVP_PKEY_CTX_new_from_pkey(nullptr, pkey.get(), nullptr)};
+	EVP_PKEY_decrypt_init(pctx.get());
+	EVP_PKEY_CTX_set_rsa_padding(pctx.get(), RSA_NO_PADDING);
+
+	EVP_PKEY_decrypt(pctx.get(), msg, &len, msg, len);
 }
 
-static const std::string header = "-----BEGIN RSA PRIVATE KEY-----";
-static const std::string footer = "-----END RSA PRIVATE KEY-----";
-
-void RSA::loadPEM(const std::string& filename)
+EVP_PKEY* loadPEM(std::string_view pem)
 {
-	std::ifstream file{filename};
-
-	if (!file.is_open()) {
-		throw std::runtime_error("Missing file " + filename + ".");
+	C_ptr<BIO> bio{BIO_new(BIO_s_mem())};
+	if (!BIO_write(bio.get(), pem.data(), pem.size())) {
+		throw std::runtime_error(
+		    fmt::format("Error while reading PEM data: {}", ERR_error_string(ERR_get_error(), nullptr)));
 	}
 
-	std::ostringstream oss;
-	for (std::string line; std::getline(file, line); oss << line)
-		;
-	std::string key = oss.str();
-
-	if (key.substr(0, header.size()) != header) {
-		throw std::runtime_error("Missing RSA private key header.");
+	EVP_PKEY* pkey_ = nullptr;
+	if (!PEM_read_bio_PrivateKey(bio.get(), &pkey_, nullptr, nullptr)) {
+		throw std::runtime_error(
+		    fmt::format("Error while reading private key: {}", ERR_error_string(ERR_get_error(), nullptr)));
 	}
 
-	if (key.substr(key.size() - footer.size(), footer.size()) != footer) {
-		throw std::runtime_error("Missing RSA private key footer.");
-	}
-
-	key = key.substr(header.size(), key.size() - footer.size());
-
-	CryptoPP::ByteQueue queue;
-	CryptoPP::Base64Decoder decoder;
-	decoder.Attach(new CryptoPP::Redirector(queue));
-	decoder.Put(reinterpret_cast<const uint8_t*>(key.c_str()), key.size());
-	decoder.MessageEnd();
-
-	try {
-		pk.BERDecodePrivateKey(queue, false, queue.MaxRetrievable());
-
-		if (!pk.Validate(prng, 3)) {
-			throw std::runtime_error("RSA private key is not valid.");
-		}
-	} catch (const CryptoPP::Exception& e) {
-		std::cout << e.what() << '\n';
-	}
+	pkey.reset(pkey_);
+	return pkey_;
 }
+
+} // namespace tfs::rsa

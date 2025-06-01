@@ -74,6 +74,7 @@
     <ClCompile Include="..\src\wildcardtree.cpp" />
     <ClCompile Include="..\src\xtea.cpp" />
     <ClCompile Include="..\src\main.cpp" />
+    <ClCompile Include="..\src\mounts.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\luaactions.cpp">
@@ -217,7 +218,6 @@
     <ClInclude Include="..\src\itemloader.h" />
     <ClInclude Include="..\src\items.h" />
     <ClInclude Include="..\src\lockfree.h" />
-    <ClInclude Include="..\src\luaenv.h" />
     <ClInclude Include="..\src\luascript.h" />
     <ClInclude Include="..\src\mailbox.h" />
     <ClInclude Include="..\src\map.h" />
@@ -262,6 +262,7 @@
     <ClInclude Include="..\src\weapons.h" />
     <ClInclude Include="..\src\wildcardtree.h" />
     <ClInclude Include="..\src\xtea.h" />
+    <ClInclude Include="..\src\mounts.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="theforgottenserver.rc" />

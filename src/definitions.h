@@ -16,6 +16,8 @@ inline constexpr auto CLIENT_VERSION_STR = "860";
 inline constexpr unsigned int AUTHENTICATOR_DIGITS = 6;
 inline constexpr unsigned int AUTHENTICATOR_PERIOD = 30;
 
+#define OPENSSL_NO_DEPRECATED
+
 #ifndef __FUNCTION__
 #define __FUNCTION__ __func__
 #endif

@@ -1,25 +1,40 @@
 {
-    "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
-    "dependencies": [
-        "boost-asio",
-        "boost-iostreams",
-        "boost-lockfree",
-        "boost-system",
-        "boost-variant",
-        "cryptopp",
-        "fmt",
-        "libmariadb",
-        "lua",
-        "pugixml",
-        "sol2"
-    ],
-    "features": {
-        "luajit": {
-            "description": "Use LuaJIT instead of Lua",
-            "dependencies": [
-                "luajit"
-            ]
-        }
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "dependencies": [
+    "boost-asio",
+    "boost-iostreams",
+    "boost-locale",
+    "boost-lockfree",
+    "boost-system",
+    "boost-variant",
+    "fmt",
+    {
+      "name": "libiconv",
+      "platform": "osx"
     },
-    "builtin-baseline": "7f59e0013648f0dd80377330b770b414032233cb"
+    "libmariadb",
+    "openssl",
+    "pugixml",
+    "zlib"
+  ],
+  "features": {
+    "http": {
+      "description": "Enable HTTP support",
+      "dependencies": ["boost-beast", "boost-json"]
+    },
+    "lua": {
+      "description": "Use Lua instead of LuaJIT",
+      "dependencies": ["lua"]
+    },
+    "luajit": {
+      "description": "Use LuaJIT instead of Lua",
+      "dependencies": ["luajit"]
+    },
+    "unit-tests": {
+      "description": "Build unit tests",
+      "dependencies": ["boost-test"]
+    }
+  },
+  "default-features": ["lua", "http"],
+  "builtin-baseline": "215a2535590f1f63788ac9bd2ed58ad15e6afdff"
 }

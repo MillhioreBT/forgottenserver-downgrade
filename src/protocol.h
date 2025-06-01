@@ -60,6 +60,8 @@ protected:
 
 	virtual void release() {}
 
+	static constexpr size_t RSA_BUFFER_LENGTH = 128;
+
 private:
 	friend class Connection;
 
