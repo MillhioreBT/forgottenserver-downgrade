@@ -110,7 +110,7 @@ local function CreateAccount(account, IP)
 	end
 
 	local dbResult = db.query(string.format(
-		                          "INSERT INTO `accounts` (`name`, `password`, `creation`) VALUES (%s, %s, %d);",
+		                          "INSERT INTO `accounts` (`name`, `password`, `creation`) VALUES (%s, HEX(%s), %d);",
 		                          db.escapeString(account.accountName),
 		                          db.escapeString(transformToSHA1(account.password)),
 		                          timeNow))
