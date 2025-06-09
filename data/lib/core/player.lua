@@ -78,7 +78,7 @@ end
 function Player.isUsingOtClient(self) return self:getClient().os >= CLIENTOS_OTCLIENT_LINUX end
 
 function Player.sendExtendedOpcode(self, opcode, buffer)
-	if not self:isUsingOtcV8() then return false end
+	if not self:isUsingOtClient() then return false end
 
 	local networkMessage<close> = NetworkMessage()
 	networkMessage:addByte(0x32)
