@@ -7,10 +7,9 @@
 #include "configmanager.h"
 
 #include "game.h"
+#include "lua.hpp"
 #include "monster.h"
 #include "pugicast.h"
-
-#include "lua.hpp"
 
 #if LUA_VERSION_NUM >= 502
 #undef lua_strlen
