@@ -59,66 +59,6 @@ void printXMLError(std::string_view where, std::string_view fileName, const pugi
 	std::cout << '^' << std::endl;
 }
 
-static uint32_t circularShift(int bits, uint32_t value) { return (value << bits) | (value >> (32 - bits)); }
-
-static void processSHA1MessageBlock(const uint8_t* messageBlock, uint32_t* H)
-{
-	uint32_t W[80];
-	for (int i = 0; i < 16; ++i) {
-		const size_t offset = i << 2;
-		W[i] = messageBlock[offset] << 24 | messageBlock[offset + 1] << 16 | messageBlock[offset + 2] << 8 |
-		       messageBlock[offset + 3];
-	}
-
-	for (int i = 16; i < 80; ++i) {
-		W[i] = circularShift(1, W[i - 3] ^ W[i - 8] ^ W[i - 14] ^ W[i - 16]);
-	}
-
-	uint32_t A = H[0], B = H[1], C = H[2], D = H[3], E = H[4];
-
-	for (int i = 0; i < 20; ++i) {
-		const uint32_t tmp = circularShift(5, A) + ((B & C) | ((~B) & D)) + E + W[i] + 0x5A827999;
-		E = D;
-		D = C;
-		C = circularShift(30, B);
-		B = A;
-		A = tmp;
-	}
-
-	for (int i = 20; i < 40; ++i) {
-		const uint32_t tmp = circularShift(5, A) + (B ^ C ^ D) + E + W[i] + 0x6ED9EBA1;
-		E = D;
-		D = C;
-		C = circularShift(30, B);
-		B = A;
-		A = tmp;
-	}
-
-	for (int i = 40; i < 60; ++i) {
-		const uint32_t tmp = circularShift(5, A) + ((B & C) | (B & D) | (C & D)) + E + W[i] + 0x8F1BBCDC;
-		E = D;
-		D = C;
-		C = circularShift(30, B);
-		B = A;
-		A = tmp;
-	}
-
-	for (int i = 60; i < 80; ++i) {
-		const uint32_t tmp = circularShift(5, A) + (B ^ C ^ D) + E + W[i] + 0xCA62C1D6;
-		E = D;
-		D = C;
-		C = circularShift(30, B);
-		B = A;
-		A = tmp;
-	}
-
-	H[0] += A;
-	H[1] += B;
-	H[2] += C;
-	H[3] += D;
-	H[4] += E;
-}
-
 std::string transformToSHA1(std::string_view input)
 {
 	std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> ctx{EVP_MD_CTX_new(), EVP_MD_CTX_free};
