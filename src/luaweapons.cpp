@@ -97,6 +97,11 @@ int luaWeaponRegister(lua_State* L)
 			weapon = getUserdata<WeaponMelee>(L, 1);
 		}
 
+		if (!weapon) {
+			lua_pushnil(L);
+			return 1;
+		}
+
 		uint16_t id = weapon->getID();
 		ItemType& it = Item::items.getItemType(id);
 		it.weaponType = weapon->weaponType;
