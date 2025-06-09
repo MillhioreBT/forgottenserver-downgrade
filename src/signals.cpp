@@ -41,7 +41,7 @@ extern LuaEnvironment g_luaEnvironment;
 
 namespace {
 
-void sigbreakHandler()
+[[maybe_unused]] void sigbreakHandler()
 {
 	// Dispatcher thread
 	std::cout << "SIGBREAK received, shutting game server down..." << std::endl;

@@ -730,6 +730,7 @@ void LuaScriptInterface::registerGame()
 	registerMethod("Game", "getHouses", luaGameGetHouses);
 	registerMethod("Game", "getOutfits", luaGameGetOutfits);
 	registerMethod("Game", "getMounts", luaGameGetMounts);
+	registerMethod("Game", "getVocations", luaGameGetVocations);
 
 	registerMethod("Game", "getGameState", luaGameGetGameState);
 	registerMethod("Game", "setGameState", luaGameSetGameState);

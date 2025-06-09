@@ -950,7 +950,7 @@ void LuaScriptInterface::registerItemType()
 	registerMethod("ItemType", "getStackSize", luaItemTypeGetStackSize);
 
 	registerMethod("ItemType", "getHitChance", luaItemTypeGetHitChance);
-	registerMethod("ItemType", "getMaxHitChance", luaItemTypeGetHitChance);
+	registerMethod("ItemType", "getMaxHitChance", luaItemTypeGetMaxHitChance);
 	registerMethod("ItemType", "getShootRange", luaItemTypeGetShootRange);
 
 	registerMethod("ItemType", "getAttack", luaItemTypeGetAttack);
