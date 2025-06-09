@@ -370,8 +370,10 @@ void ProtocolGame::onRecvFirstMessage(NetworkMessage& msg)
 		isOTCv8 = msg.get<uint16_t>() != 0;
 	}
 
-	if (isOTCv8) {
-		sendOTCv8Features();
+	if (isOTCv8 || operatingSystem >= CLIENTOS_OTCLIENT_LINUX) {
+		if (isOTCv8) {
+			sendOTCv8Features();
+		}
 		NetworkMessage opcodeMessage;
 		opcodeMessage.addByte(0x32);
 		opcodeMessage.addByte(0x00);
