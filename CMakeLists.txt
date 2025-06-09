@@ -142,5 +142,3 @@ endif()
 ### END  Git Version ###
 
 target_precompile_headers(tfs PUBLIC src/otpch.h)
-find_package(Protobuf REQUIRED)
-include_directories(${Protobuf_INCLUDE_DIRS})
