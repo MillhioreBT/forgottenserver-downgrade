@@ -198,7 +198,7 @@ public:
 
 			void operator()(const boost::blank&) const {}
 
-			void operator()(std::string_view v) const { propWriteStream.writeString(v); }
+			void operator()(const std::string& v) const { propWriteStream.writeString(v); }
 
 			template <typename T>
 			void operator()(const T& v) const
