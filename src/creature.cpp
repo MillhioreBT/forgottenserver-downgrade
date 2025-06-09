@@ -1421,30 +1421,29 @@ int64_t Creature::getStepDuration(Direction dir) const
 int64_t Creature::getStepDuration() const
 {
 	if (isRemoved()) {
-		return 0;
-	}
+        return 0;
+    }
 
-	uint32_t groundSpeed;
-	int32_t stepSpeed = getStepSpeed();
-	Item* ground = tile->getGround();
-	if (ground) {
-		groundSpeed = Item::items[ground->getID()].speed;
-		if (groundSpeed == 0) {
-			groundSpeed = 150;
-		}
-	} else {
-		groundSpeed = 150;
-	}
+    uint32_t groundSpeed;
+    int32_t stepSpeed = getStepSpeed();
+    Item* ground = tile->getGround();
+    if (ground) {
+        groundSpeed = Item::items[ground->getID()].speed;
+        if (groundSpeed == 0) {
+            groundSpeed = 150;
+        }
+    } else {
+        groundSpeed = 150;
+    }
 
-	double duration = std::floor(1000 * groundSpeed) / stepSpeed;
-	int64_t stepDuration = std::ceil(duration / 50) * 50;
+    int64_t stepDuration = (1000 * static_cast<int64_t>(groundSpeed)) / stepSpeed;
 
-	const Monster* monster = getMonster();
-	if (monster && monster->isTargetNearby() && !monster->isFleeing() && !monster->getMaster()) {
-		stepDuration *= 3;
-	}
+    const Monster* monster = getMonster();
+    if (monster && monster->isTargetNearby() && !monster->isFleeing() && !monster->getMaster()) {
+        stepDuration *= 3;
+    }
 
-	return stepDuration;
+    return stepDuration;
 }
 
 int64_t Creature::getEventStepTicks(bool onlyDelay) const
