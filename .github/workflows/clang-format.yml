@@ -3,7 +3,7 @@ name: Check code style
 on:
   push:
     branches:
-      - master
+      - main
       - v*
 
     paths:
