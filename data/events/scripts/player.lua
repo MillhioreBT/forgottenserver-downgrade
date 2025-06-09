@@ -81,7 +81,7 @@ function Player:onTradeCompleted(target, item, targetItem, isSuccess)
 end
 
 function Player:onGainExperience(source, exp, rawExp)
-	return hasEvent.onGainExperience and Event.onGainExperience(self, source, exp, rawExp) or exp
+	return hasEvent.onGainExperience and math.floor(Event.onGainExperience(self, source, exp, rawExp)) or exp
 end
 
 function Player:onLoseExperience(exp)
@@ -90,26 +90,25 @@ end
 
 function Player:onGainSkillTries(skill, tries, artificial)
 	if artificial then
-		print(tries)
 		return hasEvent.onGainSkillTries and Event.onGainSkillTries(self, skill, tries, artificial) or
-			       tries
+			tries
 	end
 
 	if skill == SKILL_MAGLEVEL then
 		tries = tries * configManager.getNumber(configKeys.RATE_MAGIC)
-		return hasEvent.onGainSkillTries and Event.onGainSkillTries(self, skill, tries, artificial) or
-			       tries
+		return hasEvent.onGainSkillTries and math.floor(Event.onGainSkillTries(self, skill, tries, artificial)) or
+			tries
 	end
-	tries = tries * configManager.getNumber(configKeys.RATE_SKILL)
-	return hasEvent.onGainSkillTries and Event.onGainSkillTries(self, skill, tries, artificial) or
-		       tries
+	tries = math.floor(tries * configManager.getNumber(configKeys.RATE_SKILL))
+	return hasEvent.onGainSkillTries and math.floor(Event.onGainSkillTries(self, skill, tries, artificial)) or
+		tries
 end
 
 function Player:onNetworkMessage(recvByte, msg)
 	local handler = PacketHandlers[recvByte]
 	if not handler then
 		print(string.format("Player: %s sent an unknown packet header: 0x%02X with %d bytes!",
-		                    self:getName(), recvByte, msg:len()))
+			self:getName(), recvByte, msg:len()))
 		return
 	end
 
