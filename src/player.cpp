@@ -328,15 +328,7 @@ int32_t Player::getDefense() const
 	return (defenseSkill / 4. + 2.23) * defenseValue * 0.15 * getDefenseFactor() * vocation->defenseMultiplier;
 }
 
-uint32_t Player::getAttackSpeed() const
-{
-	const Item* weapon = getWeapon(true);
-	if (!weapon || weapon->getAttackSpeed() == 0) {
-		return vocation->getAttackSpeed();
-	}
 
-	return weapon->getAttackSpeed();
-}
 
 float Player::getAttackFactor() const
 {

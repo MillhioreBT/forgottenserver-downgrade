@@ -2075,6 +2075,32 @@ int luaPlayerGetFightMode(lua_State* L)
 	return 1;
 }
 
+int luaPlayerSetAttackSpeed(lua_State* L)
+{
+	// player:setAttackSpeed(ms)
+	Player* player = getUserdata<Player>(L, 1);
+	uint32_t ms = getInteger<uint32_t>(L, 2);
+	if (player) {
+		player->setAttackSpeed(ms);
+		pushBoolean(L, true);
+	} else {
+		lua_pushnil(L);
+	}
+	return 1;
+}
+
+int luaPlayerGetAttackSpeed(lua_State* L)
+{
+	// player:getAttackSpeed()
+	Player* player = getUserdata<Player>(L, 1);
+	if (player) {
+		lua_pushnumber(L, player->getAttackSpeed());
+	} else {
+		lua_pushnil(L);
+	}
+	return 1;
+}
+
 int luaPlayerGetIdleTime(lua_State* L)
 {
 	// player:getIdleTime()
@@ -2437,6 +2463,9 @@ void LuaScriptInterface::registerPlayer()
 	registerMethod("Player", "hasChaseMode", luaPlayerHasChaseMode);
 	registerMethod("Player", "hasSecureMode", luaPlayerHasSecureMode);
 	registerMethod("Player", "getFightMode", luaPlayerGetFightMode);
+
+	registerMethod("Player", "getAttackSpeed", luaPlayerGetAttackSpeed);
+	registerMethod("Player", "setAttackSpeed", luaPlayerSetAttackSpeed);
 
 	registerMethod("Player", "getIdleTime", luaPlayerGetIdleTime);
 	registerMethod("Player", "resetIdleTime", luaPlayerResetIdleTime);

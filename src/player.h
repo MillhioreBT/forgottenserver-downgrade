@@ -412,6 +412,14 @@ public:
 	void setFightMode(fightMode_t mode) { fightMode = mode; }
 	void setSecureMode(bool mode) { secureMode = mode; }
 
+	void setAttackSpeed(uint32_t speed) { attackSpeed = speed; }
+	uint32_t getAttackSpeed() const {
+		if (attackSpeed > 0) {
+			return attackSpeed;
+		}
+		return vocation->getAttackSpeed();
+	}
+
 	// combat functions
 	bool setAttackedCreature(Creature* creature) override;
 	bool isImmune(CombatType_t type) const override;
@@ -1081,6 +1089,7 @@ private:
 	Town* town = nullptr;
 	Vocation* vocation = nullptr;
 
+	uint32_t attackSpeed = 0;
 	uint32_t inventoryWeight = 0;
 	uint32_t capacity = 40000;
 	uint32_t damageImmunities = 0;
@@ -1151,8 +1160,6 @@ private:
 	}
 
 	bool isPromoted() const;
-
-	uint32_t getAttackSpeed() const;
 
 	static uint16_t getBasisPointLevel(uint64_t count, uint64_t nextLevelCount);
 	uint64_t getLostExperience() const override
