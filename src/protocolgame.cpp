@@ -1396,6 +1396,13 @@ void ProtocolGame::sendCreatureLight(const Creature* creature)
 	writeToOutputBuffer(msg);
 }
 
+void ProtocolGame::sendWorldLight(LightInfo lightInfo)
+{
+	NetworkMessage msg;
+	AddWorldLight(msg, lightInfo);
+	writeToOutputBuffer(msg);
+}
+
 void ProtocolGame::sendCreatureWalkthrough(const Creature* creature, bool walkthrough)
 {
 	if (!canSee(creature)) {
@@ -2081,6 +2088,9 @@ void ProtocolGame::sendAddCreature(const Creature* creature, const Position& pos
 
 	sendStats();
 	sendSkills();
+
+	// gameworld light-settings
+	sendWorldLight(g_game.getWorldLightInfo());
 
 	// player light level
 	sendCreatureLight(creature);

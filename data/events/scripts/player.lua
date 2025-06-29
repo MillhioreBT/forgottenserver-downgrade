@@ -107,8 +107,8 @@ end
 function Player:onNetworkMessage(recvByte, msg)
 	local handler = PacketHandlers[recvByte]
 	if not handler then
-		print(string.format("Player: %s sent an unknown packet header: 0x%02X with %d bytes!",
-			self:getName(), recvByte, msg:len()))
+		--print(string.format("Player: %s sent an unknown packet header: 0x%02X with %d bytes!",
+			--self:getName(), recvByte, msg:len()))
 		return
 	end
 

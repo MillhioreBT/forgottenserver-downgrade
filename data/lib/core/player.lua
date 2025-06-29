@@ -266,25 +266,6 @@ function Player.removeTibiaCoins(self, removeCoins)
 	return self:setTibiaCoins(tibiaCoins - removeCoins)
 end
 
-function Player.sendWorldLight(self, color, level)
-	local msg<close> = NetworkMessage()
-	msg:addByte(0x82)
-	msg:addByte(self:getGroup():getAccess() and 0xFF or level)
-	msg:addByte(color)
-	msg:sendToPlayer(self)
-	return true
-end
-
-function Player.sendWorldTime(self, time)
-	if self:getClient().version < 1272 then return false end
-	local msg<close> = NetworkMessage()
-	msg:addByte(0xEF)
-	msg:addByte(time / 60) -- hour
-	msg:addByte(time % 60) -- min
-	msg:sendToPlayer(self)
-	return true
-end
-
 function Player.setExhaustion(self, key, milliseconds)
 	return self:setStorageValue(key, os.mtime() + milliseconds)
 end

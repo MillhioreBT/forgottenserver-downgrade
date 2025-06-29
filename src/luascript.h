@@ -400,8 +400,11 @@ private:
 	// get item info
 	static int luaGetDepotId(lua_State* L);
 
-	// get world info
+	// get world infoAdd commentMore actions
+	static int luaGetWorldTime(lua_State* L);
 	static int luaGetWorldUpTime(lua_State* L);
+	static int luaGetWorldLight(lua_State* L);
+	static int luaSetWorldLight(lua_State* L);
 
 	// get subtype name
 	static int luaGetSubTypeName(lua_State* L);
