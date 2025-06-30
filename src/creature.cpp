@@ -606,7 +606,8 @@ void Creature::onCreatureMove(Creature* creature, const Tile* newTile, const Pos
 
 	if (creature == followCreature || (creature == this && followCreature)) {
 		if (hasFollowPath) {
-			isUpdatingPath = true;
+			isUpdatingPath = false;
+			g_dispatcher.addTask(createTask(std::bind(&Game::updateCreatureWalk, &g_game, getID())));
 		}
 
 		if (newPos.z != oldPos.z || !canSee(followCreature->getPosition())) {
@@ -935,11 +936,26 @@ bool Creature::setAttackedCreature(Creature* creature)
 
 void Creature::getPathSearchParams(const Creature*, FindPathParams& fpp) const
 {
-	fpp.fullPathSearch = !hasFollowPath;
-	fpp.clearSight = true;
-	fpp.maxSearchDist = 12;
-	fpp.minTargetDist = 1;
-	fpp.maxTargetDist = 1;
+	const Monster* monster = getMonster();
+	if (monster && monster->getMaster()) {
+		fpp.fullPathSearch = false;
+		fpp.clearSight = false;
+		fpp.maxSearchDist = 8;
+		fpp.minTargetDist = 1;
+		fpp.maxTargetDist = 2;
+	} else if (monster) {
+		fpp.fullPathSearch = false;
+		fpp.clearSight = true;
+		fpp.maxSearchDist = 10;
+		fpp.minTargetDist = 1;
+		fpp.maxTargetDist = 1;
+	} else {
+		fpp.fullPathSearch = !hasFollowPath;
+		fpp.clearSight = true;
+		fpp.maxSearchDist = 12;
+		fpp.minTargetDist = 1;
+		fpp.maxTargetDist = 1;
+	}
 }
 
 void Creature::goToFollowCreature()
