@@ -73,6 +73,10 @@ onlyInvitedCanMoveHouseItems = true
 timeBetweenActions = 200
 timeBetweenExActions = 1000
 
+-- Fast Potions Configuration
+fastPotions = true
+fastPotionIds = { 26031, 26030, 8473, 7591, 8472, 7588, 26029, 7590, 7589, 7620, 7618, 8704, 8474 }
+
 -- Scheduler Task Intervals
 MOVE_CREATURE_INTERVAL = 250
 RANGE_MOVE_CREATURE_INTERVAL = 250

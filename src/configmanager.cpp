@@ -30,6 +30,9 @@ ExperienceStages expStages;
 using OTCFeatures = std::vector<uint8_t>;
 OTCFeatures otcFeatures;
 
+using FastPotionIds = std::vector<uint16_t>;
+FastPotionIds fastPotionIds;
+
 bool loaded = false;
 
 template <typename T>
@@ -169,6 +172,25 @@ OTCFeatures loadLuaOTCFeatures(lua_State* L)
 	return features;
 }
 
+FastPotionIds loadLuaFastPotionIds(lua_State* L)
+{
+	FastPotionIds ids;
+
+	lua_getglobal(L, "fastPotionIds");
+	if (!lua_istable(L, -1)) {
+		return {};
+	}
+
+	lua_pushnil(L);
+	while (lua_next(L, -2) != 0) {
+		const auto id = static_cast<uint16_t>(lua_tointeger(L, -1));
+		ids.push_back(id);
+		lua_pop(L, 1);
+	}
+	lua_pop(L, 1);
+	return ids;
+}
+
 } // namespace
 
 bool ConfigManager::load()
@@ -228,6 +250,7 @@ bool ConfigManager::load()
 	booleans[Boolean::REMOVE_WEAPON_AMMO] = getGlobalBoolean(L, "removeWeaponAmmunition", true);
 	booleans[Boolean::REMOVE_WEAPON_CHARGES] = getGlobalBoolean(L, "removeWeaponCharges", true);
 	booleans[Boolean::REMOVE_POTION_CHARGES] = getGlobalBoolean(L, "removeChargesFromPotions", true);
+	booleans[Boolean::FAST_POTIONS_ENABLED] = getGlobalBoolean(L, "fastPotions", true);
 	booleans[Boolean::EXPERIENCE_FROM_PLAYERS] = getGlobalBoolean(L, "experienceByKillingPlayers", false);
 	booleans[Boolean::FREE_PREMIUM] = getGlobalBoolean(L, "freePremium", false);
 	booleans[Boolean::REPLACE_KICK_ON_LOGIN] = getGlobalBoolean(L, "replaceKickOnLogin", true);
@@ -334,6 +357,7 @@ bool ConfigManager::load()
 	expStages.shrink_to_fit();
 
 	otcFeatures = loadLuaOTCFeatures(L);
+	fastPotionIds = loadLuaFastPotionIds(L);
 
 	loaded = true;
 	lua_close(L);
@@ -416,3 +440,5 @@ bool ConfigManager::setInteger(Integer what, int64_t value)
 }
 
 const OTCFeatures& ConfigManager::getOTCFeatures() { return otcFeatures; }
+
+const FastPotionIds& ConfigManager::getFastPotionIds() { return fastPotionIds; }

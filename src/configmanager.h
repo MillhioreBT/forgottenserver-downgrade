@@ -15,6 +15,7 @@ enum Boolean
 	REMOVE_WEAPON_AMMO,
 	REMOVE_WEAPON_CHARGES,
 	REMOVE_POTION_CHARGES,
+	FAST_POTIONS_ENABLED,
 	EXPERIENCE_FROM_PLAYERS,
 	FREE_PREMIUM,
 	REPLACE_KICK_ON_LOGIN,
@@ -73,6 +74,13 @@ enum String
 	CONFIG_FILE,
 
 	LAST_STRING /* this must be the last one */
+};
+
+enum StringList
+{
+	FAST_POTION_IDS,
+
+	LAST_STRING_LIST /* this must be the last one */
 };
 
 enum Integer
@@ -138,6 +146,7 @@ std::string_view getString(String what);
 int64_t getInteger(Integer what);
 float getExperienceStage(uint32_t level);
 const std::vector<uint8_t>& getOTCFeatures();
+const std::vector<uint16_t>& getFastPotionIds();
 
 bool setBoolean(Boolean what, bool value);
 bool setString(String what, std::string_view value);

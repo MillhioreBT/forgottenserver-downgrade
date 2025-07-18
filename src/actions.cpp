@@ -3,6 +3,8 @@
 
 #include "otpch.h"
 
+#include <algorithm>
+
 #include "actions.h"
 
 #include "bed.h"
@@ -382,7 +384,19 @@ static void showUseHotkeyMessage(Player* player, const Item* item, uint32_t coun
 
 bool Actions::useItem(Player* player, const Position& pos, uint8_t index, Item* item, bool isHotkey)
 {
-	player->setNextAction(OTSYS_TIME() + getInteger(ConfigManager::ACTIONS_DELAY_INTERVAL));
+	bool fastPotions = getBoolean(ConfigManager::FAST_POTIONS_ENABLED);
+	const auto& fastPotionIds = ConfigManager::getFastPotionIds();
+	
+	// Check if item is in fast potion list
+	bool isFastPotion = false;
+	if (fastPotions && !fastPotionIds.empty()) {
+		uint16_t itemId = item->getID();
+		isFastPotion = std::find(fastPotionIds.begin(), fastPotionIds.end(), itemId) != fastPotionIds.end();
+	}
+	
+	if (!isFastPotion) {
+		player->setNextAction(OTSYS_TIME() + getInteger(ConfigManager::ACTIONS_DELAY_INTERVAL));
+	}
 
 	if (isHotkey) {
 		uint16_t subType = item->getSubType();
