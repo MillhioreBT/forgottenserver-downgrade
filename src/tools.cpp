@@ -1032,6 +1032,9 @@ std::string_view getReturnMessage(ReturnValue value)
 		case RETURNVALUE_YOUCANNOTUSETHISBED:
 			return "This bed can't be used, but Premium Account players can rent houses and sleep in beds there to regain health and mana.";
 
+		case RETURNVALUE_CANNOTTHROWONTELEPORT:
+			return "You cannot throw items on teleports!";
+
 		default: // RETURNVALUE_NOTPOSSIBLE, etc
 			return "Sorry, not possible.";
 	}

@@ -79,6 +79,7 @@ enum String
 enum StringList
 {
 	FAST_POTION_IDS,
+	BLOCKED_TELEPORT_IDS,
 
 	LAST_STRING_LIST /* this must be the last one */
 };
@@ -145,8 +146,9 @@ bool getBoolean(Boolean what);
 std::string_view getString(String what);
 int64_t getInteger(Integer what);
 float getExperienceStage(uint32_t level);
-const std::vector<uint8_t>& getOTCFeatures();
-const std::vector<uint16_t>& getFastPotionIds();
+	const std::vector<uint8_t>& getOTCFeatures();
+	const std::vector<uint16_t>& getFastPotionIds();
+	const std::vector<uint16_t>& getBlockedTeleportIds();
 
 bool setBoolean(Boolean what, bool value);
 bool setString(String what, std::string_view value);

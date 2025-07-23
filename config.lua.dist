@@ -77,6 +77,10 @@ timeBetweenExActions = 1000
 fastPotions = true
 fastPotionIds = { 26031, 26030, 8473, 7591, 8472, 7588, 26029, 7590, 7589, 7620, 7618, 8704, 8474 }
 
+-- Teleport Block Configuration
+-- IDs of teleports where it is not allowed to throw items
+blockedTeleportIds = { 1387, 11796, 11797, 12509, 12510 }
+
 -- Scheduler Task Intervals
 MOVE_CREATURE_INTERVAL = 250
 RANGE_MOVE_CREATURE_INTERVAL = 250

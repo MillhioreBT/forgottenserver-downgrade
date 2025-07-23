@@ -1132,6 +1132,40 @@ ReturnValue Game::internalMoveItem(Cylinder* fromCylinder, Cylinder* toCylinder,
 		return RETURNVALUE_NOERROR; // silently ignore move
 	}
 
+	// Check if destination has teleport items (blocked teleport IDs)
+	if (actorPlayer && toPos) {
+		const Tile* toTile = toCylinder->getTile();
+		if (toTile) {
+			const auto& blockedIds = ConfigManager::getBlockedTeleportIds();
+			
+			// Check ground item for teleport
+			const Item* ground = toTile->getGround();
+			if (ground) {
+				const uint16_t groundId = ground->getID();
+				if (std::find(blockedIds.begin(), blockedIds.end(), groundId) != blockedIds.end()) {
+					actorPlayer->sendCancelMessage(RETURNVALUE_CANNOTTHROWONTELEPORT);
+					addMagicEffect(*toPos, CONST_ME_POFF);
+					return RETURNVALUE_CANNOTTHROWONTELEPORT;
+				}
+			}
+
+			// Check all items on the tile for teleports
+			const TileItemVector* items = toTile->getItemList();
+			if (items) {
+				for (const Item* tileItem : *items) {
+					if (tileItem) {
+						const uint16_t itemId = tileItem->getID();
+						if (std::find(blockedIds.begin(), blockedIds.end(), itemId) != blockedIds.end()) {
+							actorPlayer->sendCancelMessage(RETURNVALUE_CANNOTTHROWONTELEPORT);
+							addMagicEffect(*toPos, CONST_ME_POFF);
+							return RETURNVALUE_CANNOTTHROWONTELEPORT;
+						}
+					}
+				}
+			}
+		}
+	}
+
 	// check if we can add this item
 	ReturnValue ret = toCylinder->queryAdd(index, *item, count, flags, actor);
 	if (ret == RETURNVALUE_NEEDEXCHANGE) {
