@@ -142,6 +142,66 @@ local function getPlayerIdByPlayerName(playerName)
 	return 0
 end
 
+---@param accountId number
+---@param newPassword string
+---@return string
+local function ChangePassword(accountId, newPassword)
+	local dbResult = db.query(string.format(
+		"UPDATE `accounts` SET `password` = HEX(%s) WHERE `id` = %d;",
+		db.escapeString(transformToSHA1(newPassword)),
+		accountId))
+	if dbResult then
+		return "success"
+	end
+	return "failed"
+end
+
+---@param accountId number
+---@return string
+local function GenerateRecoveryKey(accountId)
+	-- Generate a random recovery key
+	local chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	local key = ""
+	for i = 1, 12 do
+		local rand = math.random(1, #chars)
+		key = key .. chars:sub(rand, rand)
+	end
+	
+	-- Store the recovery key in the database using the secret column
+	local dbResult = db.query(string.format(
+		"UPDATE `accounts` SET `secret` = %s WHERE `id` = %d;",
+		db.escapeString(key),
+		accountId))
+	if dbResult then
+		return key
+	end
+	return nil
+end
+
+---@param characterName string
+---@param accountId number
+---@return string
+local function DeleteCharacter(characterName, accountId)
+	local dbResult = db.storeQuery(string.format(
+		"SELECT `id` FROM `players` WHERE `name` = %s AND `account_id` = %d LIMIT 1;",
+		db.escapeString(characterName),
+		accountId))
+	if not dbResult then
+		return "not found"
+	end
+	
+	local playerId = result.getNumber(dbResult, "id")
+	result.free(dbResult)
+	
+	local deleteResult = db.query(string.format(
+		"DELETE FROM `players` WHERE `id` = %d;",
+		playerId))
+	if deleteResult then
+		return "success"
+	end
+	return "failed"
+end
+
 ---@param character table
 ---@param IP number
 ---@return string
@@ -269,26 +329,103 @@ function event.onAccountManager(player, text)
 	local command = text:trim():lower()
 
 	if not state.talk then
-		if command == "account" then
+		if command == "password" then
+			send("What would you like your new password to be?")
+			state.talk = "change password"
+			state.changePassword = {}
+			return
+		elseif command == "recovery key" or command == "recovery" then
+			local recoveryKey = GenerateRecoveryKey(accountId)
+			if recoveryKey then
+				send("Your recovery key is: {%s}", recoveryKey)
+				send("Please save this key in a safe place.")
+			else
+				send("Failed to generate recovery key. Please try again.")
+			end
+			return
+		elseif command == "character" then
+			send("What would you like as your character name?")
+			state.talk = "create character"
+			state.createCharacter = {}
+		elseif command == "delete" then
+			send("What character would you like to delete?")
+			state.talk = "delete character"
+			state.deleteCharacter = {}
+			return
+		elseif command == "account" then
 			if isAccountManager then
 				send("What would you like your password to be?")
 				state.talk = "create account"
 				state.createAccount = {}
 				return
 			end
-
 			send("Type {character} to create a new character.")
 			return
-		elseif command == "character" then
-			if isAccountManager then return end
-
-			send("What would you like as your character name?")
-			state.talk = "create character"
-			state.createCharacter = {}
-		elseif command == "recover" then
-			if isAccountManager then return end
 		end
 		return
+	end
+
+	-- Change Password
+	if state.talk == "change password" then
+		local changePassword = state.changePassword
+		if not changePassword.newPassword then
+			local validation = validatePassword(text)
+			if validation == "valid" then
+				changePassword.newPassword = text
+				send("%s is it? {yes} or {no}?", text)
+			else
+				send("Your password is " .. validation .. ".")
+			end
+			return
+		elseif not changePassword.confirmPassword then
+			if text == "yes" then
+				local result = ChangePassword(accountId, changePassword.newPassword)
+				if result == "success" then
+					send("Your password has been changed successfully!")
+				else
+					send("Failed to change password. Please try again.")
+				end
+				state.talk = nil
+				state.changePassword = nil
+			elseif text == "no" then
+				send("What would you like your new password to be then?")
+				changePassword.newPassword = nil
+			else
+				send("Type {yes} or {no}.")
+			end
+			return
+		end
+	end
+
+	-- Delete Character
+	if state.talk == "delete character" then
+		local deleteCharacter = state.deleteCharacter
+		if not deleteCharacter.characterName then
+			deleteCharacter.characterName = text
+			send("Are you sure you want to delete character {%s}? {yes} or {no}?", text)
+			return
+		elseif not deleteCharacter.confirmDelete then
+			if text == "yes" then
+				deleteCharacter.confirmDelete = true
+				local result = DeleteCharacter(deleteCharacter.characterName, accountId)
+				if result == "success" then
+					send("Character {%s} has been deleted successfully!", deleteCharacter.characterName)
+				elseif result == "not found" then
+					send("Character {%s} not found or doesn't belong to your account.", deleteCharacter.characterName)
+				else
+					send("Failed to delete character. Please try again.")
+				end
+				state.talk = nil
+				state.deleteCharacter = nil
+			elseif text == "no" then
+				send("Character deletion cancelled.")
+				state.talk = nil
+				state.deleteCharacter = nil
+			else
+				send("Type {yes} or {no}.")
+			end
+			return
+		end
 	end
 
 	-- Create Account
@@ -503,7 +640,7 @@ function login.onLogin(player)
 			send(
 				"Hello, type {account} to create an account or {recover} to recover an account.")
 		else
-			send("Hello, type {character} to create a new character.")
+			send("Do you want to change your {password}, request {recovery key}, add a {character}, or {delete} character?")
 		end
 	end
 	return true
