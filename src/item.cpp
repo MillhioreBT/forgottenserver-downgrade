@@ -586,13 +586,25 @@ Attr_ReadValue Item::readAttr(AttrTypes_t attr, PropStream& propStream)
 			break;
 		}
 
-		case ATTR_OPENCONTAINER: {
-			uint8_t openContainer;
-			if (!propStream.read<uint8_t>(openContainer)) {
+
+
+		case ATTR_CLASSIFICATION: {
+			uint32_t classification;
+			if (!propStream.read<uint32_t>(classification)) {
 				return ATTR_READ_ERROR;
 			}
 
-			setIntAttr(ITEM_ATTRIBUTE_OPENCONTAINER, openContainer);
+			setIntAttr(ITEM_ATTRIBUTE_CLASSIFICATION, classification);
+			break;
+		}
+
+		case ATTR_TIER: {
+			uint32_t tier;
+			if (!propStream.read<uint32_t>(tier)) {
+				return ATTR_READ_ERROR;
+			}
+
+			setIntAttr(ITEM_ATTRIBUTE_TIER, tier);
 			break;
 		}
 
@@ -669,13 +681,7 @@ Attr_ReadValue Item::readAttr(AttrTypes_t attr, PropStream& propStream)
 			break;
 		}
 
-		// Podium class
-		case ATTR_PODIUMOUTFIT: {
-			if (!propStream.skip(15)) {
-				return ATTR_READ_ERROR;
-			}
-			break;
-		}
+
 
 		// Teleport class
 		case ATTR_TELE_DEST: {
@@ -827,6 +833,16 @@ void Item::serializeAttr(PropWriteStream& propWriteStream) const
 		propWriteStream.write<uint32_t>(getIntAttr(ITEM_ATTRIBUTE_ATTACK_SPEED));
 	}
 
+	if (hasAttribute(ITEM_ATTRIBUTE_CLASSIFICATION)) {
+		propWriteStream.write<uint8_t>(ATTR_CLASSIFICATION);
+		propWriteStream.write<uint32_t>(getIntAttr(ITEM_ATTRIBUTE_CLASSIFICATION));
+	}
+
+	if (hasAttribute(ITEM_ATTRIBUTE_TIER)) {
+		propWriteStream.write<uint8_t>(ATTR_TIER);
+		propWriteStream.write<uint32_t>(getIntAttr(ITEM_ATTRIBUTE_TIER));
+	}
+
 	if (hasAttribute(ITEM_ATTRIBUTE_DEFENSE)) {
 		propWriteStream.write<uint8_t>(ATTR_DEFENSE);
 		propWriteStream.write<int32_t>(getIntAttr(ITEM_ATTRIBUTE_DEFENSE));
@@ -960,6 +976,8 @@ std::string Item::getNameDescription() const
 	const ItemType& it = items[id];
 	return getNameDescription(it, this);
 }
+
+
 
 std::string Item::getWeightDescription(const ItemType& it, uint32_t weight, uint32_t count /*= 1*/)
 {

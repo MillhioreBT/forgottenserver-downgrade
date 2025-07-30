@@ -909,6 +909,30 @@ int luaItemTypeHasSubType(lua_State* L)
 	}
 	return 1;
 }
+int luaItemTypeGetClassification(lua_State* L)
+{
+	// itemType:getClassification()
+	const ItemType* itemType = getUserdata<const ItemType>(L, 1);
+	if (itemType) {
+		lua_pushnumber(L, itemType->classification);
+	} else {
+		lua_pushnil(L);
+	}
+	return 1;
+}
+
+int luaItemTypeGetTier(lua_State* L)
+{
+	// itemType:getTier()
+	const ItemType* itemType = getUserdata<const ItemType>(L, 1);
+	if (itemType) {
+		lua_pushnumber(L, itemType->tier);
+	} else {
+		lua_pushnil(L);
+	}
+	return 1;
+}
+
 } // namespace
 
 void LuaScriptInterface::registerItemType()
@@ -955,6 +979,8 @@ void LuaScriptInterface::registerItemType()
 
 	registerMethod("ItemType", "getAttack", luaItemTypeGetAttack);
 	registerMethod("ItemType", "getAttackSpeed", luaItemTypeGetAttackSpeed);
+	registerMethod("ItemType", "getClassification", luaItemTypeGetClassification);
+	registerMethod("ItemType", "getTier", luaItemTypeGetTier);
 	registerMethod("ItemType", "getDefense", luaItemTypeGetDefense);
 	registerMethod("ItemType", "getExtraDefense", luaItemTypeGetExtraDefense);
 	registerMethod("ItemType", "getArmor", luaItemTypeGetArmor);

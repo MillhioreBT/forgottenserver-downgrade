@@ -57,6 +57,20 @@ function Item:getAttackSpeed()
 	return self:getType():getAttackSpeed()
 end
 
+function Item:getClassification()
+	if self:hasAttribute(ITEM_ATTRIBUTE_CLASSIFICATION) then
+		return self:getAttribute(ITEM_ATTRIBUTE_CLASSIFICATION) --[[@as integer]]
+	end
+	return self:getType():getClassification()
+end
+
+function Item:getTier()
+	if self:hasAttribute(ITEM_ATTRIBUTE_TIER) then
+		return self:getAttribute(ITEM_ATTRIBUTE_TIER) --[[@as integer]]
+	end
+	return self:getType():getTier()
+end
+
 function Item:getHitChance()
 	if self:hasAttribute(ITEM_ATTRIBUTE_HITCHANCE) then
 		return self:getAttribute(ITEM_ATTRIBUTE_HITCHANCE) --[[@as integer]]
@@ -333,6 +347,15 @@ do
 		do
 			local arm = item:getArmor()
 			if arm > 0 then descriptions[#descriptions + 1] = fmt("Arm:%d", arm) end
+		end
+
+		-- classification and tier
+		do
+			local classification = item:getClassification()
+			local tier = item:getTier()
+			if classification > 0 then
+				descriptions[#descriptions + 1] = fmt("Classification: %d Tier: %d", classification, tier)
+			end
 		end
 
 		-- abilities (will be reused)

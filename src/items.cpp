@@ -28,6 +28,8 @@ const std::unordered_map<std::string, ItemParseAttributes_t> ItemParseAttributes
     {"extradef", ITEM_PARSE_EXTRADEF},
     {"attack", ITEM_PARSE_ATTACK},
     {"attackspeed", ITEM_PARSE_ATTACK_SPEED},
+    {"classification", ITEM_PARSE_CLASSIFICATION},
+    {"tier", ITEM_PARSE_TIER},
     {"rotateto", ITEM_PARSE_ROTATETO},
     {"moveable", ITEM_PARSE_MOVEABLE},
     {"movable", ITEM_PARSE_MOVEABLE},
@@ -744,6 +746,16 @@ void Items::parseItemNode(const pugi::xml_node& itemNode, uint16_t id)
 						          << std::endl;
 						it.attackSpeed = 100;
 					}
+					break;
+				}
+
+				case ITEM_PARSE_CLASSIFICATION: {
+					it.classification = pugi::cast<int32_t>(valueAttribute.value());
+					break;
+				}
+
+				case ITEM_PARSE_TIER: {
+					it.tier = pugi::cast<int32_t>(valueAttribute.value());
 					break;
 				}
 

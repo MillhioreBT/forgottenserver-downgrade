@@ -788,6 +788,10 @@ itemAttrTypes stringToItemAttribute(std::string_view str)
 		return ITEM_ATTRIBUTE_STOREITEM;
 	} else if (str == "attackspeed") {
 		return ITEM_ATTRIBUTE_ATTACK_SPEED;
+	} else if (str == "classification") {
+		return ITEM_ATTRIBUTE_CLASSIFICATION;
+	} else if (str == "tier") {
+		return ITEM_ATTRIBUTE_TIER;
 	}
 	return ITEM_ATTRIBUTE_NONE;
 }
