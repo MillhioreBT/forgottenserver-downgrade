@@ -89,8 +89,9 @@ enum AttrTypes_t
 	ATTR_ATTACK_SPEED = 38,
 	ATTR_CLASSIFICATION = 39,
 	ATTR_TIER = 40,
-	ATTR_REFLECT = 41,
-	ATTR_BOOST = 42,
+	ATTR_REWARDID = 41,
+	ATTR_REFLECT = 42,
+	ATTR_BOOST = 43,
 };
 
 enum Attr_ReadValue
@@ -348,7 +349,7 @@ private:
 	};
 
 	std::vector<Attribute> attributes;
-	uint32_t attributeBits = 0;
+	uint64_t attributeBits = 0;
 
 	std::map<CombatType_t, Reflect> reflect;
 	std::map<CombatType_t, uint16_t> boostPercent;

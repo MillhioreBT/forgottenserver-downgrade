@@ -14,6 +14,7 @@
 #include "spells.h"
 #include "teleport.h"
 #include "trashholder.h"
+#include "rewardchest.h"
 
 extern Game g_game;
 extern Spells* g_spells;
@@ -37,6 +38,8 @@ Item* Item::CreateItem(const uint16_t type, uint16_t count /*= 0*/)
 	if (it.id != 0) {
 		if (it.isDepot()) {
 			newItem = new DepotLocker(type);
+		} else if (it.isRewardChest()) {
+			newItem = new RewardChest(type);
 		} else if (it.isContainer()) {
 			newItem = new Container(type);
 		} else if (it.isTeleport()) {
@@ -586,7 +589,14 @@ Attr_ReadValue Item::readAttr(AttrTypes_t attr, PropStream& propStream)
 			break;
 		}
 
-
+		case ATTR_REWARDID: {
+			uint32_t rewardid;
+			if (!propStream.read<uint32_t>(rewardid)) {
+				return ATTR_READ_ERROR;
+			}
+			setIntAttr(ITEM_ATTRIBUTE_REWARDID, rewardid);
+			break;
+		}
 
 		case ATTR_CLASSIFICATION: {
 			uint32_t classification;
@@ -841,6 +851,11 @@ void Item::serializeAttr(PropWriteStream& propWriteStream) const
 	if (hasAttribute(ITEM_ATTRIBUTE_TIER)) {
 		propWriteStream.write<uint8_t>(ATTR_TIER);
 		propWriteStream.write<uint32_t>(getIntAttr(ITEM_ATTRIBUTE_TIER));
+	}
+
+	if (hasAttribute(ITEM_ATTRIBUTE_REWARDID)) {
+		propWriteStream.write<uint8_t>(ATTR_REWARDID);
+		propWriteStream.write<uint32_t>(getIntAttr(ITEM_ATTRIBUTE_REWARDID));
 	}
 
 	if (hasAttribute(ITEM_ATTRIBUTE_DEFENSE)) {

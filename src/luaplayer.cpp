@@ -244,6 +244,23 @@ int luaPlayerGetDepotChest(lua_State* L)
 	return 1;
 }
 
+int luaPlayerGetRewardChest(lua_State* L)
+{
+	// player:getRewardChest()
+	Player* player = getUserdata<Player>(L, 1);
+	if (!player) {
+		lua_pushnil(L);
+		return 1;
+	}
+
+	RewardChest& rewardChest = player->getRewardChest();
+	
+	pushUserdata<Item>(L, &rewardChest);
+	setItemMetatable(L, -1, &rewardChest);
+
+	return 1;
+}
+
 int luaPlayerGetSkullTime(lua_State* L)
 {
 	// player:getSkullTime()
@@ -2325,6 +2342,7 @@ void LuaScriptInterface::registerPlayer()
 	registerMethod("Player", "getFreeCapacity", luaPlayerGetFreeCapacity);
 
 	registerMethod("Player", "getDepotChest", luaPlayerGetDepotChest);
+	registerMethod("Player", "getRewardChest", luaPlayerGetRewardChest);
 
 	registerMethod("Player", "getSkullTime", luaPlayerGetSkullTime);
 	registerMethod("Player", "setSkullTime", luaPlayerSetSkullTime);

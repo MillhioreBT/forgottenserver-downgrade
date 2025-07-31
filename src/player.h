@@ -17,6 +17,7 @@
 #include "protocolgame.h"
 #include "town.h"
 #include "vocation.h"
+#include "rewardchest.h"
 
 #include <bitset>
 
@@ -343,6 +344,7 @@ public:
 
 	DepotChest* getDepotChest(uint32_t depotId, bool autoCreate);
 	DepotLocker* getDepotLocker(uint32_t depotId);
+	RewardChest& getRewardChest();
 	void onReceiveMail() const;
 	bool isNearDepotBox() const;
 
@@ -1094,6 +1096,7 @@ private:
 	SchedulerTask* walkTask = nullptr;
 	Town* town = nullptr;
 	Vocation* vocation = nullptr;
+	std::shared_ptr<RewardChest> rewardChest = nullptr;
 
 	uint32_t attackSpeed = 0;
 	uint32_t inventoryWeight = 0;

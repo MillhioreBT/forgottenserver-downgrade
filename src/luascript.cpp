@@ -1600,8 +1600,9 @@ void LuaScriptInterface::registerFunctions()
 	registerEnum(ITEM_ATTRIBUTE_ATTACK_SPEED);
 	registerEnum(ITEM_ATTRIBUTE_CLASSIFICATION);
 	registerEnum(ITEM_ATTRIBUTE_TIER);
+	registerEnum(ITEM_ATTRIBUTE_REWARDID);
 	registerEnum(ITEM_ATTRIBUTE_DURATION_MIN);
-	registerEnum(ITEM_ATTRIBUTE_DURATION_MAX);
+	// registerEnum(ITEM_ATTRIBUTE_DURATION_MAX); // Removed due to overflow
 
 	registerEnum(ITEM_TYPE_DEPOT);
 	registerEnum(ITEM_TYPE_MAILBOX);
@@ -1655,6 +1656,7 @@ void LuaScriptInterface::registerFunctions()
 	registerEnum(ITEM_WILDGROWTH);
 	registerEnum(ITEM_WILDGROWTH_PERSISTENT);
 	registerEnum(ITEM_WILDGROWTH_SAFE);
+	registerEnum(ITEM_REWARD_CONTAINER);
 
 	registerEnum(WIELDINFO_NONE);
 	registerEnum(WIELDINFO_LEVEL);
@@ -2119,6 +2121,10 @@ void LuaScriptInterface::registerFunctions()
 	registerEnumIn("configKeys", ConfigManager::MAX_PACKETS_PER_SECOND);
 	registerEnumIn("configKeys", ConfigManager::STAMINA_REGEN_MINUTE);
 	registerEnumIn("configKeys", ConfigManager::STAMINA_REGEN_PREMIUM);
+	registerEnumIn("configKeys", ConfigManager::REWARD_BASE_RATE);
+	registerEnumIn("configKeys", ConfigManager::REWARD_RATE_DAMAGE_DONE);
+	registerEnumIn("configKeys", ConfigManager::REWARD_RATE_DAMAGE_TAKEN);
+	registerEnumIn("configKeys", ConfigManager::REWARD_RATE_HEALING_DONE);
 
 	// os
 	registerMethod("os", "mtime", LuaScriptInterface::luaSystemTime);

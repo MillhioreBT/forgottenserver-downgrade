@@ -140,11 +140,21 @@ enum Integer
 	LAST_INTEGER /* this must be the last one */
 };
 
+enum float_config_t
+{
+	REWARD_BASE_RATE,
+	REWARD_RATE_DAMAGE_DONE,
+	REWARD_RATE_DAMAGE_TAKEN,
+	REWARD_RATE_HEALING_DONE,
+	LAST_FLOAT_CONFIG /* this must be the last one */
+};
+
 bool load();
 
 bool getBoolean(Boolean what);
 std::string_view getString(String what);
 int64_t getInteger(Integer what);
+float getFloat(float_config_t what);
 float getExperienceStage(uint32_t level);
 	const std::vector<uint8_t>& getOTCFeatures();
 	const std::vector<uint16_t>& getFastPotionIds();
@@ -153,6 +163,7 @@ float getExperienceStage(uint32_t level);
 bool setBoolean(Boolean what, bool value);
 bool setString(String what, std::string_view value);
 bool setInteger(Integer what, int64_t value);
+bool setFloat(float_config_t what, float value);
 } // namespace ConfigManager
 
 #endif // FS_CONFIGMANAGER_H

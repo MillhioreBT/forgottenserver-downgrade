@@ -73,6 +73,7 @@ public:
 	bool canPushItems() const;
 	bool canPushCreatures() const { return mType->info.canPushCreatures; }
 	bool isHostile() const { return mType->info.isHostile; }
+	bool isRewardBoss() const { return mType->info.isRewardBoss; }
 	bool canSee(const Position& pos) const override;
 	bool canSeeInvisibility() const override { return isImmune(CONDITION_INVISIBLE); }
 	uint32_t getManaCost() const { return mType->info.manaCost; }

@@ -727,7 +727,7 @@ do
 
 		if lookDistance <= 1 then
 			local weight = item:getWeight()
-			if isPickupable and not isUnique then
+			if isPickupable and not isUnique and item:getId() ~= ITEM_REWARD_CONTAINER then
 				response[#response + 1] = fmt("\n%s %0.2f oz.", (count == 1 or not itemType:hasShowCount()) and
 					                              "It weighs" or "They weigh", weight / 100)
 			end

@@ -204,6 +204,23 @@ int luaMonsterTypeIsBoss(lua_State* L)
 	return 1;
 }
 
+int luaMonsterTypeIsRewardBoss(lua_State* L)
+{
+	// get: monsterType:isRewardBoss() set: monsterType:isRewardBoss(bool)
+	MonsterType* monsterType = getUserdata<MonsterType>(L, 1);
+	if (monsterType) {
+		if (lua_gettop(L) == 1) {
+			pushBoolean(L, monsterType->info.isRewardBoss);
+		} else {
+			monsterType->info.isRewardBoss = getBoolean(L, 2);
+			pushBoolean(L, true);
+		}
+	} else {
+		lua_pushnil(L);
+	}
+	return 1;
+}
+
 int luaMonsterTypeCanPushItems(lua_State* L)
 {
 	// get: monsterType:canPushItems() set: monsterType:canPushItems(bool)
@@ -1146,6 +1163,7 @@ void LuaScriptInterface::registerMonsterType()
 	registerMethod("MonsterType", "isPushable", luaMonsterTypeIsPushable);
 	registerMethod("MonsterType", "isHealthHidden", luaMonsterTypeIsHealthHidden);
 	registerMethod("MonsterType", "isBoss", luaMonsterTypeIsBoss);
+	registerMethod("MonsterType", "isRewardBoss", luaMonsterTypeIsRewardBoss);
 
 	registerMethod("MonsterType", "canPushItems", luaMonsterTypeCanPushItems);
 	registerMethod("MonsterType", "canPushCreatures", luaMonsterTypeCanPushCreatures);

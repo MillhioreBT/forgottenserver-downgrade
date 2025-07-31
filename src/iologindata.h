@@ -34,6 +34,7 @@ public:
 	static bool loadPlayerByName(Player* player, std::string_view name);
 	static bool loadPlayer(Player* player, DBResult_ptr result);
 	static bool savePlayer(Player* player);
+	static bool addRewardItems(uint32_t playerId, const ItemBlockList& itemList, DBInsert& query_insert, PropWriteStream& propWriteStream);
 	static uint32_t getGuidByName(std::string_view name);
 	static bool getGuidByNameEx(uint32_t& guid, bool& specialVip, std::string& name);
 	static std::string_view getNameByGuid(uint32_t guid);

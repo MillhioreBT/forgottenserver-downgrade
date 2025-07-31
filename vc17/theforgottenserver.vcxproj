@@ -257,6 +257,7 @@
     <ClCompile Include="..\src\protocollogin.cpp" />
     <ClCompile Include="..\src\protocolold.cpp" />
     <ClCompile Include="..\src\raids.cpp" />
+    <ClCompile Include="..\src\rewardchest.cpp" />
     <ClCompile Include="..\src\rsa.cpp" />
     <ClCompile Include="..\src\scheduler.cpp" />
     <ClCompile Include="..\src\script.cpp" />
@@ -338,6 +339,7 @@
     <ClInclude Include="..\src\protocolold.h" />
     <ClInclude Include="..\src\pugicast.h" />
     <ClInclude Include="..\src\raids.h" />
+    <ClInclude Include="..\src\rewardchest.h" />
     <ClInclude Include="..\src\rsa.h" />
     <ClInclude Include="..\src\scheduler.h" />
     <ClInclude Include="..\src\script.h" />

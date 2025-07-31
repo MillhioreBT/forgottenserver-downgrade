@@ -792,6 +792,8 @@ itemAttrTypes stringToItemAttribute(std::string_view str)
 		return ITEM_ATTRIBUTE_CLASSIFICATION;
 	} else if (str == "tier") {
 		return ITEM_ATTRIBUTE_TIER;
+	} else if (str == "rewardid") {
+		return ITEM_ATTRIBUTE_REWARDID;
 	}
 	return ITEM_ATTRIBUTE_NONE;
 }
@@ -1038,6 +1040,9 @@ std::string_view getReturnMessage(ReturnValue value)
 
 		case RETURNVALUE_CANNOTTHROWONTELEPORT:
 			return "You cannot throw items on teleports!";
+
+		case RETURNVALUE_REWARDCHESTEMPTY:
+			return "The chest is currently empty. You did not\ntake part in any battles in the last seven\ndays or already claimed your reward.";
 
 		default: // RETURNVALUE_NOTPOSSIBLE, etc
 			return "Sorry, not possible.";

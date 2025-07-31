@@ -81,6 +81,13 @@ fastPotionIds = { 26031, 26030, 8473, 7591, 8472, 7588, 26029, 7590, 7589, 7620,
 -- IDs of teleports where it is not allowed to throw items
 blockedTeleportIds = { 1387, 11796, 11797, 12509, 12510 }
 
+-- Rates for reward boss system
+-- If a player meets their share of the expectedScore (totalScore/contributors), they receive a lootRate according to the rewardBaseRate.
+rewardBaseRate = 1
+rewardRateDamageDone = 1
+rewardRateDamageTaken = 0.5
+rewardRateHealingDone = 0.3
+
 -- Scheduler Task Intervals
 MOVE_CREATURE_INTERVAL = 250
 RANGE_MOVE_CREATURE_INTERVAL = 250

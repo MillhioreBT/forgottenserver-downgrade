@@ -23,6 +23,7 @@ namespace {
 std::array<std::string, ConfigManager::String::LAST_STRING> strings = {};
 std::array<int64_t, ConfigManager::Integer::LAST_INTEGER> integers = {};
 std::array<bool, ConfigManager::Boolean::LAST_BOOLEAN> booleans = {};
+std::array<float, ConfigManager::LAST_FLOAT_CONFIG> floats = {};
 
 using ExperienceStages = std::vector<std::tuple<uint32_t, uint32_t, float>>;
 ExperienceStages expStages;
@@ -91,6 +92,18 @@ bool getGlobalBoolean(lua_State* L, const char* identifier, const bool defaultVa
 	int val = lua_toboolean(L, -1);
 	lua_pop(L, 1);
 	return val != 0;
+}
+
+float getGlobalFloat(lua_State* L, const char* identifier, const float defaultValue = 0.0f)
+{
+	lua_getglobal(L, identifier);
+	if (!lua_isnumber(L, -1)) {
+		lua_pop(L, 1);
+		return defaultValue;
+	}
+	float val = static_cast<float>(lua_tonumber(L, -1));
+	lua_pop(L, 1);
+	return val;
 }
 
 ExperienceStages loadLuaStages(lua_State* L)
@@ -367,6 +380,11 @@ bool ConfigManager::load()
 	integers[Integer::RANGE_ROTATE_ITEM_INTERVAL] =
 	    getGlobalInteger(L, "RANGE_ROTATE_ITEM_INTERVAL", RANGE_ROTATE_ITEM_INTERVAL);
 
+	floats[REWARD_BASE_RATE] = getGlobalFloat(L, "rewardBaseRate", 1.0f);
+	floats[REWARD_RATE_DAMAGE_DONE] = getGlobalFloat(L, "rewardRateDamageDone", 1.0f);
+	floats[REWARD_RATE_DAMAGE_TAKEN] = getGlobalFloat(L, "rewardRateDamageTaken", 1.0f);
+	floats[REWARD_RATE_HEALING_DONE] = getGlobalFloat(L, "rewardRateHealingDone", 1.0f);
+
 	expStages = loadXMLStages();
 	if (expStages.empty()) {
 		expStages = loadLuaStages(L);
@@ -458,6 +476,25 @@ bool ConfigManager::setInteger(Integer what, int64_t value)
 	}
 
 	integers[what] = value;
+	return true;
+}
+
+float ConfigManager::getFloat(float_config_t what)
+{
+	if (what >= LAST_FLOAT_CONFIG) {
+		std::cout << "[Warning - ConfigManager::getFloat] Accessing invalid index: " << what << std::endl;
+		return 0.0f;
+	}
+	return floats[what];
+}
+
+bool ConfigManager::setFloat(float_config_t what, float value)
+{
+	if (what >= LAST_FLOAT_CONFIG) {
+		std::cout << "[Warning - ConfigManager::setFloat] Accessing invalid index: " << what << std::endl;
+		return false;
+	}
+	floats[what] = value;
 	return true;
 }
 

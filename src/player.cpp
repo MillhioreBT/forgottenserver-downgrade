@@ -15,6 +15,7 @@
 #include "movement.h"
 #include "scheduler.h"
 #include "weapons.h"
+#include "rewardchest.h"
 
 extern Game g_game;
 extern Chat* g_chat;
@@ -754,6 +755,14 @@ DepotLocker* Player::getDepotLocker(uint32_t depotId)
 	it->second->setDepotId(static_cast<uint16_t>(depotId));
 	it->second->internalAddThing(getDepotChest(depotId, true));
 	return it->second.get();
+}
+
+RewardChest& Player::getRewardChest()
+{
+	if (!rewardChest) {
+		rewardChest = std::make_shared<RewardChest>(ITEM_REWARD_CHEST);
+	}
+	return *rewardChest;
 }
 
 void Player::sendCancelMessage(ReturnValue message) const { sendCancelMessage(getReturnMessage(message)); }

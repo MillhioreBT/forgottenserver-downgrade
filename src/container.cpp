@@ -615,6 +615,11 @@ void Container::internalAddThing(uint32_t, Thing* thing)
 	item->setParent(this);
 	itemlist.push_front(item);
 	updateItemWeight(item->getWeight());
+
+	if (getID() == ITEM_REWARD_CONTAINER && item->isStackable()) {
+		item->removeAttribute(ITEM_ATTRIBUTE_DATE);
+		item->removeAttribute(ITEM_ATTRIBUTE_REWARDID);
+	}
 }
 
 void Container::startDecaying()
@@ -644,6 +649,16 @@ ContainerIterator Container::iterator() const
 		cit.cur = itemlist.begin();
 	}
 	return cit;
+}
+
+bool Container::isRewardCorpse() const
+{
+	for (Item* subItem : getItemList()) {
+		                		if (subItem->getID() == ITEM_REWARD_CONTAINER) {
+			return true;
+		}
+	}
+	return false;
 }
 
 Item* ContainerIterator::operator*() { return *cur; }

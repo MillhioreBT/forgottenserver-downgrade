@@ -470,6 +470,8 @@ private:
 
 	static int luaTableCreate(lua_State* L);
 
+
+
 	//
 	std::string lastLuaError;
 

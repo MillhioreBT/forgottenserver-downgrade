@@ -416,6 +416,9 @@ enum item_t : uint16_t
 
 	ITEM_AMULETOFLOSS = 2173,
 
+	ITEM_REWARD_CHEST = 21584,
+	ITEM_REWARD_CONTAINER = 21518,
+
 	ITEM_DOCUMENT_RO = 1968, // read-only
 };
 
