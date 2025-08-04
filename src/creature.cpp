@@ -1437,34 +1437,30 @@ int64_t Creature::getStepDuration(Direction dir) const
 int64_t Creature::getStepDuration() const
 {
 	if (isRemoved()) {
-        return 0;
-    }
+		return 0;
+	}
 
-    uint32_t groundSpeed;
-    int32_t stepSpeed = getStepSpeed();
-    Item* ground = tile->getGround();
-    if (ground) {
-        groundSpeed = Item::items[ground->getID()].speed;
-        if (groundSpeed == 0) {
-            groundSpeed = 150;
-        }
-    } else {
-        groundSpeed = 150;
-    }
+	uint32_t groundSpeed;
+	int32_t stepSpeed = getStepSpeed();
+	Item* ground = tile->getGround();
+	if (ground) {
+		groundSpeed = Item::items[ground->getID()].speed;
+		if (groundSpeed == 0) {
+			groundSpeed = 150;
+		}
+	} else {
+		groundSpeed = 150;
+	}
 
-    double duration = (1000.0 * static_cast<double>(groundSpeed)) / static_cast<double>(stepSpeed);
-    int64_t stepDuration = static_cast<int64_t>(std::ceil(duration / 50.0) * 50.0);
-    
-    if (stepDuration < 50) {
-        stepDuration = 50;
-    }
+	double duration = std::floor(1000 * groundSpeed) / stepSpeed;
+	int64_t stepDuration = std::ceil(duration / 50) * 50;
 
-    const Monster* monster = getMonster();
-    if (monster && monster->isTargetNearby() && !monster->isFleeing() && !monster->getMaster()) {
-        stepDuration *= 2;
-    }
+	const Monster* monster = getMonster();
+	if (monster && monster->isTargetNearby() && !monster->isFleeing() && !monster->getMaster()) {
+		stepDuration *= 3;
+	}
 
-    return stepDuration;
+	return stepDuration;
 }
 
 int64_t Creature::getEventStepTicks(bool onlyDelay) const
