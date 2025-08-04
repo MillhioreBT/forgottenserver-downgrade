@@ -54,8 +54,6 @@ inline constexpr int32_t PLAYER_NAME_LENGTH = 25;
 
 inline constexpr int32_t EVENT_LIGHTINTERVAL = 10000;
 inline constexpr int32_t EVENT_WORLDTIMEINTERVAL = 2500;
-inline constexpr int32_t EVENT_DECAYINTERVAL = 250;
-inline constexpr int32_t EVENT_DECAY_BUCKETS = 4;
 
 inline constexpr int32_t MOVE_CREATURE_INTERVAL = 1000;
 inline constexpr int32_t RANGE_MOVE_CREATURE_INTERVAL = 1500;
@@ -464,6 +462,8 @@ public:
 	bool saveAccountStorageValues() const;
 
 	void startDecay(Item* item);
+	void stopDecay(Item* item);
+	void internalDecayItem(Item* item);
 
 	void loadMotdNum();
 	int16_t getWorldTime() { return worldTime; }
@@ -530,9 +530,6 @@ private:
 	bool playerSpeakTo(Player* player, SpeakClasses type, std::string_view receiver, std::string_view text);
 	void playerSpeakToNpc(Player* player, std::string_view text);
 
-	void checkDecay();
-	void internalDecayItem(Item* item);
-
 	std::unordered_map<uint32_t, Player*> players;
 	std::unordered_map<std::string, Player*> mappedPlayerNames;
 	std::unordered_map<uint32_t, Player*> mappedPlayerGuids;
@@ -541,7 +538,6 @@ private:
 	std::map<uint32_t, uint32_t> stages;
 	std::unordered_map<uint32_t, std::unordered_map<uint32_t, int32_t>> accountStorageMap;
 
-	std::list<Item*> decayItems[EVENT_DECAY_BUCKETS];
 	std::list<Creature*> checkCreatureLists[EVENT_CREATURECOUNT];
 
 	std::vector<Creature*> ToReleaseCreatures;

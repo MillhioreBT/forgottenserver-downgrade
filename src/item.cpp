@@ -244,14 +244,17 @@ void Item::setID(uint16_t newid)
 	uint32_t newDuration = normal_random(it.decayTimeMin, it.decayTimeMax) * 1000;
 
 	if (newDuration == 0 && !it.stopTime && it.decayTo < 0) {
-		removeAttribute(ITEM_ATTRIBUTE_DECAYSTATE);
+	//We'll get called startDecay anyway so let's schedule it - actually not in all casses
+	if (hasAttribute(ITEM_ATTRIBUTE_DECAYSTATE)) {
+		setDecaying(DECAYING_STOPPING);
+	}
 		removeAttribute(ITEM_ATTRIBUTE_DURATION);
 	}
 
 	removeAttribute(ITEM_ATTRIBUTE_CORPSEOWNER);
 
 	if (newDuration > 0 && (!prevIt.stopTime || !hasAttribute(ITEM_ATTRIBUTE_DURATION))) {
-		setDecaying(DECAYING_FALSE);
+		setDecaying(DECAYING_PENDING);
 		setDuration(newDuration);
 	}
 }
@@ -433,7 +436,7 @@ Attr_ReadValue Item::readAttr(AttrTypes_t attr, PropStream& propStream)
 				return ATTR_READ_ERROR;
 			}
 
-			setDuration(std::max<int32_t>(0, duration));
+			setDuration(duration);
 			break;
 		}
 
@@ -556,16 +559,6 @@ Attr_ReadValue Item::readAttr(AttrTypes_t attr, PropStream& propStream)
 			}
 
 			setIntAttr(ITEM_ATTRIBUTE_SHOOTRANGE, shootRange);
-			break;
-		}
-
-		case ATTR_DECAYTO: {
-			int32_t decayTo;
-			if (!propStream.read<int32_t>(decayTo)) {
-				return ATTR_READ_ERROR;
-			}
-
-			setIntAttr(ITEM_ATTRIBUTE_DECAYTO, decayTo);
 			break;
 		}
 
@@ -804,7 +797,7 @@ void Item::serializeAttr(PropWriteStream& propWriteStream) const
 
 	if (hasAttribute(ITEM_ATTRIBUTE_DURATION)) {
 		propWriteStream.write<uint8_t>(ATTR_DURATION);
-		propWriteStream.write<uint32_t>(getIntAttr(ITEM_ATTRIBUTE_DURATION));
+		propWriteStream.write<int32_t>(getDuration());
 	}
 
 	ItemDecayState_t decayState = getDecaying();
@@ -881,11 +874,6 @@ void Item::serializeAttr(PropWriteStream& propWriteStream) const
 	if (hasAttribute(ITEM_ATTRIBUTE_SHOOTRANGE)) {
 		propWriteStream.write<uint8_t>(ATTR_SHOOTRANGE);
 		propWriteStream.write<uint8_t>(getIntAttr(ITEM_ATTRIBUTE_SHOOTRANGE));
-	}
-
-	if (hasAttribute(ITEM_ATTRIBUTE_DECAYTO)) {
-		propWriteStream.write<uint8_t>(ATTR_DECAYTO);
-		propWriteStream.write<int32_t>(getIntAttr(ITEM_ATTRIBUTE_DECAYTO));
 	}
 
 	if (hasAttribute(ITEM_ATTRIBUTE_CUSTOM)) {
@@ -1061,7 +1049,7 @@ bool Item::canDecay() const
 		return false;
 	}
 
-	if (getDecayTo() < 0 || (getDecayTimeMin() == 0 && getDecayTimeMax() == 0)) {
+	if (items[id].decayTo < 0 || (getDecayTimeMin() == 0 && getDecayTimeMax() == 0)) {
 		return false;
 	}
 
@@ -1263,4 +1251,9 @@ const bool& ItemAttributes::CustomAttribute::get<bool>()
 	}
 
 	return emptyBool;
+}
+
+void Item::stopDecaying()
+{
+	g_game.stopDecay(this);
 }

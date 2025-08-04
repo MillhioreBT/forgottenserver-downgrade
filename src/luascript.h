@@ -609,7 +609,7 @@ inline typename std::enable_if<std::is_enum<T>::value, T>::type getNumber(lua_St
 	int isNum = 0;
 	lua_Number num = lua_tonumberx(L, arg, &isNum);
 	if (isNum == 0) {
-		return 0;
+		return static_cast<T>(0);
 	} else if (num < std::numeric_limits<lua_Number>::lowest()) {
 		reportErrorFunc(L, fmt::format("Argument {} has out-of-range value for {}: {}", arg, typeid(T).name(), num));
 		return static_cast<T>(std::numeric_limits<typename std::underlying_type<T>::type>::lowest());

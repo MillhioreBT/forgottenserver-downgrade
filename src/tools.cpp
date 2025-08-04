@@ -781,7 +781,7 @@ itemAttrTypes stringToItemAttribute(std::string_view str)
 	} else if (str == "doorid") {
 		return ITEM_ATTRIBUTE_DOORID;
 	} else if (str == "decayto") {
-		return ITEM_ATTRIBUTE_DECAYTO;
+		return ITEM_ATTRIBUTE_DECAYSTATE;
 	} else if (str == "wrapid") {
 		return ITEM_ATTRIBUTE_WRAPID;
 	} else if (str == "storeitem") {

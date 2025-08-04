@@ -116,6 +116,7 @@ public:
 	void internalAddThing(Thing* thing) override final;
 	void internalAddThing(uint32_t index, Thing* thing) override final;
 	void startDecaying() override final;
+	void stopDecaying() override final;
 
 protected:
 	ItemDeque itemlist;
