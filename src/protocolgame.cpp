@@ -2496,6 +2496,10 @@ void ProtocolGame::AddPlayerStats(NetworkMessage& msg)
 	msg.add<uint16_t>(player->getStaminaMinutes());
 
 	if (isOTCv8) {
+		msg.add<uint16_t>(player->getOfflineTrainingTime() / 60 / 1000);
+	}
+
+	if (isOTCv8) {
 		msg.add<uint16_t>(player->getBaseSpeed() / 2);
 	}
 

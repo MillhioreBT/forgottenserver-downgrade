@@ -773,6 +773,7 @@ void Player::sendStats()
 {
 	if (client) {
 		client->sendStats();
+		lastStatsTrainingTime = getOfflineTrainingTime() / 60 / 1000;
 	}
 }
 
@@ -1004,6 +1005,10 @@ void Player::onCreatureAppear(Creature* creature, bool isLogin)
 				defaultOutfit.lookMount = 0;
 				g_game.internalCreatureChangeOutfit(this, defaultOutfit);
 			}
+
+		addOfflineTrainingTries(static_cast<skills_t>(offlineTrainingSkill), offlineTrainingTime / 1000);
+		offlineTrainingTime = 0;
+		offlineTrainingSkill = 0;
 		}
 
 		// mounted player moved to pz on login, update mount status
@@ -1013,8 +1018,16 @@ void Player::onCreatureAppear(Creature* creature, bool isLogin)
 			guild->addMember(this);
 		}
 
+		int32_t offlineTime;
+		if (getLastLogout() != 0) {
+			// Not counting more than 21 days to prevent overflow when multiplying with 1000 (for milliseconds).
+			offlineTime = std::min<int32_t>(time(nullptr) - getLastLogout(), 86400 * 21);
+		} else {
+			offlineTime = 0;
+		}
+
 		for (Condition* condition : getMuteConditions()) {
-			condition->setTicks(condition->getTicks());
+			condition->setTicks(condition->getTicks() - (offlineTime * 1000));
 			if (condition->getTicks() <= 0) {
 				removeCondition(condition);
 			}
@@ -1381,6 +1394,11 @@ void Player::onThink(uint32_t interval)
 
 	if (g_game.getWorldType() != WORLD_TYPE_PVP_ENFORCED) {
 		checkSkullTicks(interval / 1000);
+	}
+
+	addOfflineTrainingTime(interval);
+	if (lastStatsTrainingTime != getOfflineTrainingTime() / 60 / 1000) {
+		sendStats();
 	}
 }
 
@@ -4437,4 +4455,130 @@ void Player::updateRegeneration()
 		condition->setParam(CONDITION_PARAM_MANAGAIN, vocation->getManaGainAmount());
 		condition->setParam(CONDITION_PARAM_MANATICKS, vocation->getManaGainTicks() * 1000);
 	}
+}
+
+bool Player::addOfflineTrainingTries(skills_t skill, uint64_t tries)
+{
+	if (tries == 0 || skill == SKILL_LEVEL) {
+		return false;
+	}
+
+	bool sendUpdate = false;
+	uint32_t oldSkillValue, newSkillValue;
+	long double oldPercentToNextLevel, newPercentToNextLevel;
+
+	if (skill == SKILL_MAGLEVEL) {
+		uint64_t currReqMana = vocation->getReqMana(magLevel);
+		uint64_t nextReqMana = vocation->getReqMana(magLevel + 1);
+
+		if (currReqMana >= nextReqMana) {
+			return false;
+		}
+
+		oldSkillValue = magLevel;
+		oldPercentToNextLevel = static_cast<long double>(manaSpent * 100) / nextReqMana;
+
+		g_events->eventPlayerOnGainSkillTries(this, SKILL_MAGLEVEL, tries, true);
+		uint32_t currMagLevel = magLevel;
+
+		while ((manaSpent + tries) >= nextReqMana) {
+			tries -= nextReqMana - manaSpent;
+
+			magLevel++;
+			manaSpent = 0;
+
+			g_creatureEvents->playerAdvance(this, SKILL_MAGLEVEL, magLevel - 1, magLevel);
+
+			sendUpdate = true;
+			currReqMana = nextReqMana;
+			nextReqMana = vocation->getReqMana(magLevel + 1);
+
+			if (currReqMana >= nextReqMana) {
+				tries = 0;
+				break;
+			}
+		}
+
+		manaSpent += tries;
+
+		if (magLevel != currMagLevel) {
+			sendTextMessage(MESSAGE_EVENT_ADVANCE, fmt::format("You advanced to magic level {:d}.", magLevel));
+		}
+
+		uint8_t newPercent;
+		if (nextReqMana > currReqMana) {
+			newPercent = Player::getBasisPointLevel(manaSpent, nextReqMana);
+			newPercentToNextLevel = static_cast<long double>(manaSpent * 100) / nextReqMana;
+		} else {
+			newPercent = 0;
+			newPercentToNextLevel = 0;
+		}
+
+		if (newPercent != magLevelPercent) {
+			magLevelPercent = newPercent;
+			sendUpdate = true;
+		}
+
+		newSkillValue = magLevel;
+	} else {
+		uint64_t currReqTries = vocation->getReqSkillTries(skill, skills[skill].level);
+		uint64_t nextReqTries = vocation->getReqSkillTries(skill, skills[skill].level + 1);
+		if (currReqTries >= nextReqTries) {
+			return false;
+		}
+
+		oldSkillValue = skills[skill].level;
+		oldPercentToNextLevel = static_cast<long double>(skills[skill].tries * 100) / nextReqTries;
+
+		g_events->eventPlayerOnGainSkillTries(this, skill, tries, true);
+		uint32_t currSkillLevel = skills[skill].level;
+
+		while ((skills[skill].tries + tries) >= nextReqTries) {
+			tries -= nextReqTries - skills[skill].tries;
+
+			skills[skill].level++;
+			skills[skill].tries = 0;
+			skills[skill].percent = 0;
+
+			g_creatureEvents->playerAdvance(this, skill, (skills[skill].level - 1), skills[skill].level);
+
+			sendUpdate = true;
+			currReqTries = nextReqTries;
+			nextReqTries = vocation->getReqSkillTries(skill, skills[skill].level + 1);
+
+			if (currReqTries >= nextReqTries) {
+				tries = 0;
+				break;
+			}
+		}
+
+		skills[skill].tries += tries;
+
+		if (currSkillLevel != skills[skill].level) {
+			sendTextMessage(MESSAGE_EVENT_ADVANCE, fmt::format("You advanced to {:s} level {:d}.", getSkillName(skill), skills[skill].level));
+		}
+
+		uint8_t newPercent;
+		if (nextReqTries > currReqTries) {
+			newPercent = Player::getBasisPointLevel(skills[skill].tries, nextReqTries);
+			newPercentToNextLevel = static_cast<long double>(skills[skill].tries * 100) / nextReqTries;
+		} else {
+			newPercent = 0;
+			newPercentToNextLevel = 0;
+		}
+
+		if (skills[skill].percent != newPercent) {
+			skills[skill].percent = newPercent;
+			sendUpdate = true;
+		}
+
+		newSkillValue = skills[skill].level;
+	}
+
+	if (sendUpdate) {
+		sendSkills();
+	}
+
+	sendTextMessage(MESSAGE_EVENT_ADVANCE, fmt::format("Your {:s} skill changed from level {:d} (with {:.2f}% progress towards level {:d}) to level {:d} (with {:.2f}% progress towards level {:d})", ucwords(getSkillName(skill)), oldSkillValue, oldPercentToNextLevel, (oldSkillValue + 1), newSkillValue, newPercentToNextLevel, (newSkillValue + 1)));
+	return sendUpdate;
 }

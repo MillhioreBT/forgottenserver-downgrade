@@ -48,6 +48,7 @@ enum Boolean
 	MONSTER_OVERSPAWN,
 	ACCOUNT_MANAGER,
 	MANASHIELD_BREAKABLE,
+	BED_OFFLINE_TRAINING,
 
 	LAST_BOOLEAN /* this must be the last one */
 };

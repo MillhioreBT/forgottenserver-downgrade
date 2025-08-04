@@ -19,6 +19,7 @@ extern Game g_game;
 extern Spells* g_spells;
 extern Actions* g_actions;
 
+
 Actions::Actions() : scriptInterface("Action Interface") { scriptInterface.initState(); }
 
 Actions::~Actions() { clear(false); }
@@ -317,7 +318,15 @@ ReturnValue Actions::internalUseItem(Player* player, const Position& pos, uint8_
 
 		if (bed->trySleep(player)) {
 			player->setBedItem(bed);
-			bed->sleep(player);
+									if (ConfigManager::getBoolean(ConfigManager::BED_OFFLINE_TRAINING)) {
+				g_game.sendOfflineTrainingDialog(player);
+			}
+			else {
+				BedItem* bedItem = player->getBedItem();
+				if (bedItem) {
+					bedItem->sleep(player);
+				}
+			}
 		}
 
 		return RETURNVALUE_NOERROR;

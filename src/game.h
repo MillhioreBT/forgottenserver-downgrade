@@ -521,6 +521,8 @@ public:
 	std::optional<int64_t> getStorageValue(uint32_t key) const;
 	decltype(auto) getStorageMap() const { return storageMap; }
 
+	void sendOfflineTrainingDialog(Player* player);
+
 private:
 	std::map<uint32_t, int64_t> storageMap;
 
@@ -556,6 +558,8 @@ private:
 	std::map<uint32_t, BedItem*> bedSleepersMap;
 
 	std::unordered_set<Tile*> tilesToClean;
+
+	ModalWindow offlineTrainingWindow { std::numeric_limits<uint32_t>::max(), "Train while you sleep", "Please choose a skill to train:" };
 
 	static constexpr uint8_t LIGHT_DAY = 250;
 	static constexpr uint8_t LIGHT_NIGHT = 40;

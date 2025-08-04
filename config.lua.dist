@@ -4,6 +4,7 @@
 OTCFeatures = {
 	9, -- GameSkillsBase
 	12, -- GamePlayerMounts
+	20, -- GameOfflineTrainingTime
 	29, -- GameDoubleSkills
 	53, -- GameBaseSkillU16
 	76 -- GameAdditionalSkills
@@ -125,6 +126,7 @@ mysqlSock = ""
 -- may cause high CPU usage with many players and potentially affect performance!
 -- NOTE: forceMonsterTypesOnLoad loads all monster types on startup to validate them.
 -- You can disable it to save some memory if you don't see any errors at startup.
+-- bedOfflineTraining to true enables offline training while in bed. If set to false, the player can only sleep in bed without training.
 allowChangeOutfit = true
 freePremium = false
 kickIdlePlayerAfterMinutes = 15
@@ -140,6 +142,7 @@ minimumLevelToSendPrivate = 1
 premiumToSendPrivate = false
 forceMonsterTypesOnLoad = true
 cleanProtectionZones = false
+bedOfflineTraining = true
 showPlayerLogInConsole = true
 healthGainColour = 95
 manaGainColour = 5
