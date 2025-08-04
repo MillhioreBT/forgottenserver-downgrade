@@ -6,7 +6,7 @@
 
 inline constexpr int32_t NETWORKMESSAGE_MAXSIZE = 24590;
 
-enum MagicEffectClasses : uint8_t
+enum MagicEffectClasses : uint16_t
 {
 	CONST_ME_NONE,
 
