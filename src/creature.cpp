@@ -476,10 +476,10 @@ void Creature::onCreatureMove(Creature* creature, const Tile* newTile, const Pos
 				// floor change extra cost
 				lastStepCost = 2;
 			} else if (newPos.getDistanceX(oldPos) >= 1 && newPos.getDistanceY(oldPos) >= 1) {
-				if (getPlayer()) {
-					lastStepCost = 1;
-				} else {
+					// diagonal extra cost
 					lastStepCost = 3;
+				if (getPlayer()) {
+					lastStepCost -= 1;
 				}
 			}
 		} else {

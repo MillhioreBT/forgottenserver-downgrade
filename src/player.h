@@ -1157,9 +1157,7 @@ private:
 	void updateItemsLight(bool internal = false);
 	int32_t getStepSpeed() const override
 	{
-		uint16_t speed = static_cast<uint16_t>(std::max<int32_t>(PLAYER_MIN_SPEED, 
-			std::min<int32_t>(PLAYER_MAX_SPEED, getSpeed())));
-		return static_cast<int32_t>(speed);
+		return std::max<int32_t>(PLAYER_MIN_SPEED, std::min<int32_t>(PLAYER_MAX_SPEED, getSpeed()));
 	}
 	void updateBaseSpeed()
 	{
