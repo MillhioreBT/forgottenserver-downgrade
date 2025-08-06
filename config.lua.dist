@@ -4,9 +4,10 @@
 OTCFeatures = {
 	9, -- GameSkillsBase
 	12, -- GamePlayerMounts
-	16, -- GamePlayerMounts
+	16, -- GameMagicEffectU16
 	20, -- GameOfflineTrainingTime
 	29, -- GameDoubleSkills
+	30, -- GameDoubleSkills
 	53, -- GameBaseSkillU16
 	76 -- GameAdditionalSkills
 }
