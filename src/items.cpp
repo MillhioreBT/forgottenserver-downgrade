@@ -202,6 +202,7 @@ const std::unordered_map<std::string, ItemParseAttributes_t> ItemParseAttributes
     {"allowdistread", ITEM_PARSE_ALLOWDISTREAD},
     {"storeitem", ITEM_PARSE_STOREITEM},
     {"worth", ITEM_PARSE_WORTH},
+    {"stacksize", ITEM_PARSE_STACKSIZE},
     {"supply", ITEM_PARSE_SUPPLY},
     {"experienceratebase", ITEM_PARSE_EXPERIENCERATE_BASE},
     {"experienceratelowlevel", ITEM_PARSE_EXPERIENCERATE_LOW_LEVEL},
@@ -1894,6 +1895,11 @@ void Items::parseItemNode(const pugi::xml_node& itemNode, uint16_t id)
 				case ITEM_PARSE_EXPERIENCERATE_STAMINA: {
 					int32_t rate = pugi::cast<int32_t>(valueAttribute.value());
 					abilities.experienceRate[static_cast<size_t>(ExperienceRateType::STAMINA)] = rate;
+					break;
+				}
+
+				case ITEM_PARSE_STACKSIZE: {
+					it.stackSize = pugi::cast<uint8_t>(valueAttribute.value());
 					break;
 				}
 
