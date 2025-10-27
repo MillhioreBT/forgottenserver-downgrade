@@ -10,7 +10,6 @@
 *.user
 *.sln.docstates
 .idea/
-.vscode/
 .vs/
 
 # Build results
@@ -19,6 +18,8 @@
 [Rr]elease/
 x64/
 build/
+build-release/
+build-debug/
 [Bb]in/
 [Oo]bj/
 cmake-build-*/

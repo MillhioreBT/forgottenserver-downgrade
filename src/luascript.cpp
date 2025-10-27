@@ -257,7 +257,9 @@ int32_t LuaScriptInterface::scriptEnvIndex = -1;
 
 LuaScriptInterface::LuaScriptInterface(std::string_view interfaceName) : interfaceName{interfaceName}
 {
-	if (!g_luaEnvironment.getLuaState()) {
+	// Don't initialize g_luaEnvironment here if we ARE g_luaEnvironment
+	// This prevents infinite recursion during static initialization
+	if (this != &g_luaEnvironment && !g_luaEnvironment.getLuaState()) {
 		g_luaEnvironment.initState();
 	}
 }

@@ -44,6 +44,14 @@ ScriptingManager::~ScriptingManager()
 
 bool ScriptingManager::loadScriptSystems()
 {
+	// Ensure g_luaEnvironment is properly initialized
+	if (!g_luaEnvironment.getLuaState()) {
+		if (!g_luaEnvironment.initState()) {
+			std::cout << "> ERROR: Failed to initialize Lua environment!" << std::endl;
+			return false;
+		}
+	}
+
 	if (g_luaEnvironment.loadFile("data/global.lua") == -1) {
 		std::cout << "[Warning - ScriptingManager::loadScriptSystems] Can not load data/global.lua" << std::endl;
 	}

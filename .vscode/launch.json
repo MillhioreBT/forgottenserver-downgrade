@@ -1,0 +1,109 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "🐞 Debug (Linux)",
+            "program": "${workspaceFolder}/build-debug/tfs",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "🐞 Build (Debug Linux)"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "🌸 Release (Linux)",
+            "program": "${workspaceFolder}/build-release/tfs",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "🌸 Build (Release Linux)"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "🕷️ Re-Debug (Linux)",
+            "program": "${workspaceFolder}/build-debug/tfs",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "🕷️ Re-Build (Debug Linux)"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "🌷 Re-Release (Linux)",
+            "program": "${workspaceFolder}/build-release/tfs",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "🌷 Re-Build (Release Linux)"
+        },
+        {
+            "name": "🐞 Debug (Visual Studio x64)",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/vc17/x64/Debug/theforgottenserver-x64.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [
+                {
+                    "name": "PATH",
+                    "value": "${workspaceFolder}\\vcpkg_installed\\x64-windows\\x64-windows\\debug\\bin;${env:PATH}"
+                }
+            ],
+            "console": "integratedTerminal",
+            "preLaunchTask": "🐞 Build (Debug Visual Studio x64)"
+        },
+        {
+            "name": "🌸 Release (Visual Studio x64)",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/vc17/x64/Release/theforgottenserver-x64.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [
+                {
+                    "name": "PATH",
+                    "value": "${workspaceFolder}\\vcpkg_installed\\x64-windows\\x64-windows\\bin;${env:PATH}"
+                }
+            ],
+            "console": "integratedTerminal",
+            "preLaunchTask": "🌸 Build (Release Visual Studio x64)"
+        },
+        {
+            "name": "🐞 Re-Debug (Visual Studio x64)",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/vc17/x64/Debug/theforgottenserver-x64.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [
+                {
+                    "name": "PATH",
+                    "value": "${workspaceFolder}\\vcpkg_installed\\x64-windows\\x64-windows\\debug\\bin;${env:PATH}"
+                }
+            ],
+            "console": "integratedTerminal",
+            "preLaunchTask": "🐞 Re-Build (Debug Visual Studio x64)"
+        },
+        {
+            "name": "🌸 Re-Release (Visual Studio x64)",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/vc17/x64/Release/theforgottenserver-x64.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [
+                {
+                    "name": "PATH",
+                    "value": "${workspaceFolder}\\vcpkg_installed\\x64-windows\\x64-windows\\bin;${env:PATH}"
+                }
+            ],
+            "console": "integratedTerminal",
+            "preLaunchTask": "🌸 Re-Build (Release Visual Studio x64)"
+        }
+    ]
+}

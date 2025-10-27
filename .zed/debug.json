@@ -1,0 +1,50 @@
+[
+    {
+        "label": "🌸 Build & Execute (Release Mode - Linux)",
+        "build": {
+            "command": "mkdir -p $ZED_WORKTREE_ROOT/build-release && cd $ZED_WORKTREE_ROOT/build-release && ",
+            "args": ["cmake -DCMAKE_BUILD_TYPE=Release .. && make -j8"],
+            "cwd": "$ZED_WORKTREE_ROOT/build-release"
+        },
+        "program": "$ZED_WORKTREE_ROOT/build-release/tfs",
+        "request": "launch",
+        "adapter": "CodeLLDB",
+        "cwd": "$ZED_WORKTREE_ROOT"
+    },
+    {
+        "label": "🐞 Build & Execute (Debug Mode - Linux)",
+        "build": {
+            "command": "mkdir -p $ZED_WORKTREE_ROOT/build-debug && cd $ZED_WORKTREE_ROOT/build-debug && ",
+            "args": ["cmake -DCMAKE_BUILD_TYPE=Debug .. && make -j8"],
+            "cwd": "$ZED_WORKTREE_ROOT/build-debug"
+        },
+        "program": "$ZED_WORKTREE_ROOT/build-debug/tfs",
+        "request": "launch",
+        "adapter": "CodeLLDB",
+        "cwd": "$ZED_WORKTREE_ROOT"
+    },
+    {
+        "label": "🌷 Re-Build & Execute (Release Mode - Linux)",
+        "build": {
+            "command": "mkdir -p $ZED_WORKTREE_ROOT/build-release && cd $ZED_WORKTREE_ROOT/build-release && ",
+            "args": ["make clean && cmake -DCMAKE_BUILD_TYPE=Release .. && make -j8"],
+            "cwd": "$ZED_WORKTREE_ROOT/build-release"
+        },
+        "program": "$ZED_WORKTREE_ROOT/build-release/tfs",
+        "request": "launch",
+        "adapter": "CodeLLDB",
+        "cwd": "$ZED_WORKTREE_ROOT"
+    },
+    {
+        "label": "🕷️ Re-Build & Execute (Debug Mode - Linux)",
+        "build": {
+            "command": "mkdir -p $ZED_WORKTREE_ROOT/build-debug && cd $ZED_WORKTREE_ROOT/build-debug && ",
+            "args": ["make clean && cmake -DCMAKE_BUILD_TYPE=Debug .. && make -j8"],
+            "cwd": "$ZED_WORKTREE_ROOT/build-debug"
+        },
+        "program": "$ZED_WORKTREE_ROOT/build-debug/tfs",
+        "request": "launch",
+        "adapter": "CodeLLDB",
+        "cwd": "$ZED_WORKTREE_ROOT"
+    }
+]

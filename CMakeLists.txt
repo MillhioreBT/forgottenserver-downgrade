@@ -84,7 +84,7 @@ endif()
 
 # Forzar soporte UTF-8 en MSVC (Visual Studio/VSCode en Windows)
 if(MSVC)
-  add_compile_options(/utf-8)
+    add_compile_options(/utf-8)
 endif()
 
 set(BOOST_REQUIRED_COMPONENTS system iostreams locale)
