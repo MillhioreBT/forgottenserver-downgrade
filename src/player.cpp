@@ -2108,12 +2108,11 @@ uint16_t Player::getBasisPointLevel(uint64_t count, uint64_t nextLevelCount)
 		return 0;
 	}
 
-	// Use double precision to avoid overflow with large XP values
-	double result = (static_cast<double>(count) * 10000.0) / static_cast<double>(nextLevelCount);
-	if (result > 10000.0) {
+	uint16_t result = ((count * 10000.) / nextLevelCount);
+	if (result > 10000) {
 		return 10000;
 	}
-	return static_cast<uint16_t>(result);
+	return result;
 }
 
 void Player::onBlockHit()

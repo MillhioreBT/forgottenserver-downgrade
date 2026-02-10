@@ -2976,12 +2976,7 @@ void ProtocolGame::AddPlayerStats(NetworkMessage& msg)
 
 	msg.add<uint32_t>(player->hasFlag(PlayerFlag_HasInfiniteCapacity) ? 1000000 : player->getFreeCapacity());
 
-	// OTCv8 supports uint64_t for experience, standard 8.60 client only supports uint32_t
-	if (isOTCv8) {
-		msg.add<uint64_t>(player->getExperience());
-	} else {
-		msg.add<uint32_t>(static_cast<uint32_t>(std::min<uint64_t>(player->getExperience(), std::numeric_limits<uint32_t>::max())));
-	}
+	msg.add<uint32_t>(std::min<uint32_t>(player->getExperience(), std::numeric_limits<int32_t>::max()));
 
 	msg.add<uint16_t>(static_cast<uint16_t>(player->getLevel()));
 	msg.addByte(player->getLevelPercent());
