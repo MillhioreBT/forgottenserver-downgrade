@@ -176,6 +176,7 @@ class ProtocolSpectator final : public ProtocolGame
 
 		uint8_t challengeRandom = 0;
 
+		bool isOTCv8 = false;
 		bool debugAssertSent = false;
 		bool acceptPackets = false;
 		struct AwareRange {

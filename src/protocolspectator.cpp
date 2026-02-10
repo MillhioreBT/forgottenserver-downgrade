@@ -176,16 +176,18 @@ void ProtocolSpectator::connect(uint32_t playerId, OperatingSystem_t operatingSy
 	caster->addSpectator(this);
 
 	player->client = getThis();
-	sendAddCreature(caster, caster->getPosition(), 0, false);
 	player->lastIP = player->getIP();
 	acceptPackets = true;
 
-	// Send Live Cast channel to spectator
+	// Send Live Cast channel to spectator BEFORE sending map
 	NetworkMessage msg;
 	msg.addByte(0xAC);
 	msg.add<uint16_t>(CHANNEL_CAST);
 	msg.addString("Live Cast");
 	writeToOutputBuffer(msg);
+
+	// Now send the creature and map
+	sendAddCreature(caster, caster->getPosition(), 0, false);
 
 	// Notify everyone that spectator joined
 	std::stringstream ss;
