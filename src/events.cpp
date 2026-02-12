@@ -1027,9 +1027,10 @@ void Events::eventPlayerOnTradeCompleted(Player* player, Player* target, Item* i
 	return scriptInterface.callVoidFunction(5);
 }
 
-void Events::eventPlayerOnGainExperience(Player* player, Creature* source, uint64_t& exp, uint64_t rawExp)
+void Events::eventPlayerOnGainExperience(Player* player, Creature* source, uint64_t& exp, uint64_t rawExp,
+                                        bool sendText)
 {
-	// Player:onGainExperience(source, exp, rawExp)
+	// Player:onGainExperience(source, exp, rawExp, sendText)
 	// rawExp gives the original exp which is not multiplied
 	if (info.playerOnGainExperience == -1) {
 		return;
@@ -1058,8 +1059,9 @@ void Events::eventPlayerOnGainExperience(Player* player, Creature* source, uint6
 
 	lua_pushinteger(L, exp);
 	lua_pushinteger(L, rawExp);
+	Lua::pushBoolean(L, sendText);
 
-	if (scriptInterface.protectedCall(L, 4, 1) != 0) {
+	if (scriptInterface.protectedCall(L, 5, 1) != 0) {
 		LuaScriptInterface::reportError(nullptr, Lua::popString(L));
 	} else {
 		exp = Lua::getInteger<uint64_t>(L, -1);

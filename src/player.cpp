@@ -1934,7 +1934,7 @@ void Player::addExperience(Creature* source, uint64_t exp, bool sendText /* = fa
 		return;
 	}
 
-	g_events->eventPlayerOnGainExperience(this, source, exp, rawExp);
+	g_events->eventPlayerOnGainExperience(this, source, exp, rawExp, sendText);
 	if (exp == 0) {
 		return;
 	}
@@ -1950,27 +1950,6 @@ void Player::addExperience(Creature* source, uint64_t exp, bool sendText /* = fa
 	}
 
 	experience += exp;
-
-	if (sendText) {
-		std::string expString = std::to_string(exp) + (exp != 1 ? " experience points." : " experience point.");
-
-		TextMessage message(MESSAGE_STATUS_DEFAULT, "You gained " + expString);
-		sendTextMessage(message);
-
-		g_game.addAnimatedText(std::to_string(exp), position, TEXTCOLOR_WHITE);
-
-		SpectatorVec spectators;
-		g_game.map.getSpectators(spectators, position, false, true);
-		spectators.erase(this);
-		if (!spectators.empty()) {
-			message.type = MESSAGE_STATUS_DEFAULT;
-			message.text = getName() + " gained " + expString;
-			for (Creature* spectator : spectators) {
-				assert(dynamic_cast<Player*>(spectator) != nullptr);
-				static_cast<Player*>(spectator)->sendTextMessage(message);
-			}
-		}
-	}
 
 	uint32_t prevLevel = level;
 	while (experience >= nextLevelExp) {

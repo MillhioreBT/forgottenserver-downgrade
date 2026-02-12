@@ -80,8 +80,8 @@ function Player:onTradeCompleted(target, item, targetItem, isSuccess)
 	if hasEvent.onTradeCompleted then Event.onTradeCompleted(self, target, item, targetItem, isSuccess) end
 end
 
-function Player:onGainExperience(source, exp, rawExp)
-	return hasEvent.onGainExperience and math.floor(Event.onGainExperience(self, source, exp, rawExp)) or exp
+function Player:onGainExperience(source, exp, rawExp, sendText)
+	return hasEvent.onGainExperience and math.floor(Event.onGainExperience(self, source, exp, rawExp, sendText)) or exp
 end
 
 function Player:onLoseExperience(exp)

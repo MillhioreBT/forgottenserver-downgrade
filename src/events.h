@@ -115,7 +115,7 @@ public:
 	bool eventPlayerOnTradeRequest(Player* player, Player* target, Item* item);
 	bool eventPlayerOnTradeAccept(Player* player, Player* target, Item* item, Item* targetItem);
 	void eventPlayerOnTradeCompleted(Player* player, Player* target, Item* item, Item* targetItem, bool isSuccess);
-	void eventPlayerOnGainExperience(Player* player, Creature* source, uint64_t& exp, uint64_t rawExp);
+	void eventPlayerOnGainExperience(Player* player, Creature* source, uint64_t& exp, uint64_t rawExp, bool sendText);
 	void eventPlayerOnLoseExperience(Player* player, uint64_t& exp);
 	void eventPlayerOnGainSkillTries(Player* player, skills_t skill, uint64_t& tries, bool artificial);
 	void eventPlayerOnNetworkMessage(Player* player, uint8_t recvByte, NetworkMessage_ptr& msg);
