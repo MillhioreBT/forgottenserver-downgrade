@@ -427,10 +427,23 @@ void Spawn::scheduleSpawn(uint32_t spawnId, uint32_t interval, bool blocked)
 
 		spawnBlock_t& sb = it->second;
 		if (blocked) {
-			g_game.addMagicEffect(sb.pos, CONST_ME_POFF);
-			sb.lastSpawn = OTSYS_TIME();
-			sb.effectInitialInterval = 0;
-			return;
+			bool playerBlocking = findPlayer(sb.pos);
+			if (playerBlocking) {
+				bool anyIgnoresBlock = false;
+				for (const auto& pair : sb.mTypes) {
+					if (pair.first->info.isIgnoringSpawnBlock) {
+						anyIgnoresBlock = true;
+						break;
+					}
+				}
+
+				if (!anyIgnoresBlock) {
+					g_game.addMagicEffect(sb.pos, CONST_ME_POFF);
+					sb.lastSpawn = OTSYS_TIME();
+					sb.effectInitialInterval = 0;
+					return;
+				}
+			}
 		}
 
 		spawnMonster(spawnId, sb);
