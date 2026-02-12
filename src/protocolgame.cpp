@@ -1309,6 +1309,93 @@ void ProtocolGame::parseExecuteCommand(const std::string& text) {
 		} else {
 			sendChannelMessage("", "Invalid option, usage: /togglechat on/off", TALKTYPE_CHANNEL_R1, CHANNEL_CAST, false);
 		}
+		} else if(command == "cast") {
+			std::string param;
+			if(pos != std::string::npos) {
+				param = text.substr(pos + 1);
+			} else {
+				param = "";
+			}
+			auto ltrim = [](std::string& s) {
+				auto it = s.find_first_not_of(" \t\r\n");
+				if(it == std::string::npos) { s.clear(); return; }
+				s.erase(0, it);
+			};
+			auto rtrim = [](std::string& s) {
+				auto it = s.find_last_not_of(" \t\r\n");
+				if(it == std::string::npos) { s.clear(); return; }
+				s.erase(it + 1);
+			};
+			ltrim(param);
+			rtrim(param);
+			std::string lparam = param;
+			std::transform(lparam.begin(), lparam.end(), lparam.begin(), ::tolower);
+
+			if(lparam == "on" || lparam == "start") {
+				if(player->isLiveCasting()) {
+					player->stopLiveCasting();
+				}
+				player->startLiveCasting(std::string());
+				sendChannelMessage("", "========================================", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
+				sendChannelMessage("", "       LIVE CAST STARTED!", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
+				sendChannelMessage("", "========================================", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
+				sendChannelMessage("", "Password: None (public cast)", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
+				sendChannelMessage("", "----------------------------------------", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
+				sendChannelMessage("", "Commands:", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
+				sendChannelMessage("", "  /cast on - Start live casting (public, with bonus)", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
+				sendChannelMessage("", "  /cast off - Stop live casting", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
+				sendChannelMessage("", "  /cast password, <pass> - Start live casting with password (no bonus)", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
+				sendChannelMessage("", "  /cast commands - View all cast commands", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
+				sendChannelMessage("", "========================================", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
+				return;
+			} else if(lparam == "off" || lparam == "stop") {
+				if(player->isLiveCasting()) {
+					player->stopLiveCasting();
+					sendChannelMessage("", "[Cast] You have stopped live casting.", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
+				} else {
+					sendChannelMessage("", "[Cast] You are not live casting.", TALKTYPE_CHANNEL_O, CHANNEL_CAST, false);
+				}
+				return;
+			} else {
+				std::string pass = param;
+				if(!lparam.empty()) {
+					if(lparam.rfind("password", 0) == 0 || lparam.rfind("pass", 0) == 0) {
+						size_t ppos = param.find_first_of(", ");
+						if(ppos != std::string::npos) {
+							pass = param.substr(ppos + 1);
+							ltrim(pass);
+							rtrim(pass);
+						}
+					}
+				}
+				std::string clean;
+				for(char c : pass) {
+					if(std::isalnum(static_cast<unsigned char>(c))) clean.push_back(c);
+				}
+				if(clean.size() > 30) {
+					sendChannelMessage("", "[Cast] Invalid password. Maximum 30 characters allowed.", TALKTYPE_CHANNEL_R1, CHANNEL_CAST, false);
+					return;
+				}
+				if(player->isLiveCasting()) {
+					player->stopLiveCasting();
+				}
+				player->startLiveCasting(clean);
+				sendChannelMessage("", "========================================", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
+				sendChannelMessage("", "       LIVE CAST STARTED!", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
+				sendChannelMessage("", "========================================", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
+				if(!clean.empty())
+					sendChannelMessage("", std::string("Password: ") + clean, TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
+				else
+					sendChannelMessage("", "Password: None (public cast)", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
+				sendChannelMessage("", "----------------------------------------", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
+				sendChannelMessage("", "Commands:", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
+				sendChannelMessage("", "  /cast on - Start live casting (public, with bonus)", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
+				sendChannelMessage("", "  /cast off - Stop live casting", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
+				sendChannelMessage("", "  /cast password, <pass> - Start live casting with password (no bonus)", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
+				sendChannelMessage("", "  /cast commands - View all cast commands", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
+				sendChannelMessage("", "========================================", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
+				return;
+			}
 	}
 }
 
@@ -1347,7 +1434,7 @@ void ProtocolGame::parseSay(NetworkMessage& msg)
 				g_game.playerSay(playerID, 0, TALKTYPE_SAY, "", text);
 			});
 		} else {
-			if (!text.empty() && text.front() == '/') {
+			if (!text.empty() && (text.front() == '/' || text.front() == '!')) {
 				parseExecuteCommand(std::string(text));
 			} else {
 				player->sendChannelMessage(player->getName(), std::string(text), TALKTYPE_CHANNEL_O, CHANNEL_CAST);
