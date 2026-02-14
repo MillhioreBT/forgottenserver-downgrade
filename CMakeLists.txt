@@ -40,7 +40,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 if (NOT WIN32)
     add_compile_options(-Wall -Wextra -Wnon-virtual-dtor -pedantic -Werror -pipe -fvisibility=hidden)
     add_compile_options(-Wno-error=old-style-cast)
-    add_compile_options(-O3 -march=native -flto -ffast-math)
+    add_compile_options(-O3 -march=native -flto=auto -ffast-math)
 endif ()
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")

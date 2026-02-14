@@ -232,8 +232,6 @@ void Monster::onCreatureMove(Creature* creature, const Tile* newTile, const Posi
 			isMasterInRange = canSee(getMaster()->getPosition());
 		}
 
-		// OTIMIZAÇÃO: Só summons fazem rebuild completo da target list ao mover.
-		// Monstros normais confiam em onCreatureEnter/onCreatureLeave.
 		if (isSummon()) {
 			updateTargetList();
 		}
@@ -252,8 +250,6 @@ void Monster::onCreatureMove(Creature* creature, const Tile* newTile, const Posi
 			isMasterInRange = true; // Follow master again
 		}
 
-		// OTIMIZAÇÃO: Só verifica idle status se já estava idle.
-		// O despertar acontece via onCreatureEnter -> onCreatureFound -> updateIdleStatus.
 		if (isIdle) {
 			updateIdleStatus();
 		}
@@ -278,7 +274,7 @@ void Monster::onCreatureMove(Creature* creature, const Tile* newTile, const Posi
 					}
 				}
 			} else if (isOpponent(creature)) {
-				// Sem alvo? Tenta pegar esta criatura
+				// we have no target lets try pick this one
 				selectTarget(creature);
 			}
 		}
@@ -1720,6 +1716,7 @@ bool Monster::getDistanceStep(const Position& targetPos, Direction& direction, b
 		return true;
 	}
 
+	// Secondary: fallback
 	if (canWalkTo(creaturePos, chase_list[THIRD_ENTRY])) {
 		direction = chase_list[THIRD_ENTRY];
 		return true;
