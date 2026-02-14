@@ -3,8 +3,6 @@
 
 #include "otpch.h"
 
-#include "protocolspectator.h"
-
 #include "actions.h"
 #include "ban.h"
 #include "configmanager.h"
@@ -12,8 +10,10 @@
 #include "iologindata.h"
 #include "outputmessage.h"
 #include "player.h"
+#include "protocolspectator.h"
 #include "scheduler.h"
 #include "spells.h"
+
 #include <unordered_set>
 
 extern CreatureEvents* g_creatureEvents;
@@ -25,7 +25,8 @@ namespace {
 std::deque<std::pair<int64_t, uint32_t>> waitList; // (timeout, player guid)
 auto priorityEnd = waitList.end();
 
-auto findClient(uint32_t guid) {
+auto findClient(uint32_t guid)
+{
 	std::size_t slot = 1;
 	for (auto it = waitList.begin(), end = waitList.end(); it != end; ++it, ++slot) {
 		if (it->second == guid) {
@@ -107,7 +108,7 @@ void ProtocolGame::release()
 {
 	// dispatcher thread
 	if (player && player->client == shared_from_this()) {
-		if(player->isLiveCasting()) {
+		if (player->isLiveCasting()) {
 			player->stopLiveCasting();
 		}
 		player->client.reset();
@@ -276,13 +277,13 @@ void ProtocolGame::login(uint32_t characterId, uint32_t accountId, OperatingSyst
 
 		if (foundPlayer->client) {
 			foundPlayer->client->disconnectClient(
-				"You are already logged in.\nSomeone is trying to access your account?");
+			    "You are already logged in.\nSomeone is trying to access your account?");
 			foundPlayer->client->disconnect();
 			foundPlayer->client = nullptr;
 			g_scheduler.addEvent(
-				createSchedulerTask(1000, ([=, thisPtr = getThis(), playerID = foundPlayer->getID()]() {
-					thisPtr->connect(playerID, operatingSystem);
-				})));
+			    createSchedulerTask(1000, ([=, thisPtr = getThis(), playerID = foundPlayer->getID()]() {
+				                        thisPtr->connect(playerID, operatingSystem);
+			                        })));
 			return;
 		} else {
 			connect(foundPlayer->getID(), operatingSystem);
@@ -496,14 +497,14 @@ void ProtocolGame::disconnectClient(std::string_view message) const
 	disconnect();
 }
 
-void ProtocolGame::writeToOutputBuffer(const NetworkMessage& msg, bool broadcast/* = true*/)
+void ProtocolGame::writeToOutputBuffer(const NetworkMessage& msg, bool broadcast /* = true*/)
 {
 	const uint8_t opcode = msg.getBuffer()[NetworkMessage::INITIAL_BUFFER_POSITION];
-	const bool isMapOrMoveOpcode = (opcode == 0x64 || opcode == 0x4B || opcode == 0x6C || opcode == 0x6D || opcode == 0x65 ||
-	                               opcode == 0x66 || opcode == 0x67 || opcode == 0x68);
-	if(player && broadcast && player->isLiveCasting()) {
-		for(auto& spectator : player->spectators) {
-			if(spectator && spectator->acceptPackets) {
+	const bool isMapOrMoveOpcode = (opcode == 0x64 || opcode == 0x4B || opcode == 0x6C || opcode == 0x6D ||
+	                                opcode == 0x65 || opcode == 0x66 || opcode == 0x67 || opcode == 0x68);
+	if (player && broadcast && player->isLiveCasting()) {
+		for (auto& spectator : player->spectators) {
+			if (spectator && spectator->acceptPackets) {
 				if (!spectator->isOTCv8 && isMapOrMoveOpcode) {
 					continue;
 				}
@@ -913,10 +914,7 @@ std::pair<bool, uint32_t> ProtocolGame::isKnownCreature(uint32_t id)
 	return {};
 }
 
-void ProtocolGame::removeKnownCreature(uint32_t creatureId)
-{
-	knownCreatureSet.erase(creatureId);
-}
+void ProtocolGame::removeKnownCreature(uint32_t creatureId) { knownCreatureSet.erase(creatureId); }
 
 bool ProtocolGame::canSee(const Creature* c) const
 {
@@ -956,10 +954,8 @@ bool ProtocolGame::canSee(int32_t x, int32_t y, int32_t z) const
 
 	// negative offset means that the action taken place is on a lower floor than ourself
 	int32_t offsetz = myPos.getZ() - z;
-	if ((x >= myPos.getX() - awareRange.left() + offsetz) &&
-	    (x <= myPos.getX() + awareRange.right() + offsetz) &&
-	    (y >= myPos.getY() - awareRange.top() + offsetz) &&
-	    (y <= myPos.getY() + awareRange.bottom() + offsetz)) {
+	if ((x >= myPos.getX() - awareRange.left() + offsetz) && (x <= myPos.getX() + awareRange.right() + offsetz) &&
+	    (y >= myPos.getY() - awareRange.top() + offsetz) && (y <= myPos.getY() + awareRange.bottom() + offsetz)) {
 		return true;
 	}
 	return false;
@@ -1184,35 +1180,44 @@ void ProtocolGame::parseLookInBattleList(NetworkMessage& msg)
 	                     [=, playerID = player->getID()]() { g_game.playerLookInBattleList(playerID, creatureId); });
 }
 
-void ProtocolGame::parseExecuteCommand(const std::string& text) {
+void ProtocolGame::parseExecuteCommand(const std::string& text)
+{
 	size_t pos = text.find(' ');
 	std::string command = text.substr(1, pos - 1);
 	if (command.empty()) {
 		return;
 	}
 
-	if(command == "commands") {
+	if (command == "commands") {
 		player->sendChannelMessage("", "Available commands:", TALKTYPE_CHANNEL_O, CHANNEL_CAST, false);
-		player->sendChannelMessage("", "/kick PLAYERNAME - kick a player from your live cast.", TALKTYPE_CHANNEL_O, CHANNEL_CAST, false);
-		player->sendChannelMessage("", "/(un)mute PLAYERNAME - (un)mute a player in your live cast.", TALKTYPE_CHANNEL_O, CHANNEL_CAST, false);
-		player->sendChannelMessage("", "/mutelist - view current mutes in your live cast.", TALKTYPE_CHANNEL_O, CHANNEL_CAST, false);
-		player->sendChannelMessage("", "/(un)ban PLAYERNAME - (un)ban a player from your live cast.", TALKTYPE_CHANNEL_O, CHANNEL_CAST, false);
-		player->sendChannelMessage("", "/banlist - view current bans in your live cast.", TALKTYPE_CHANNEL_O, CHANNEL_CAST, false);
-		player->sendChannelMessage("", "/togglechat on/off - toggle the chat on or off in your live cast.", TALKTYPE_CHANNEL_O, CHANNEL_CAST, false);
-		player->sendChannelMessage("", "/spectators - view current spectators in your live cast.", TALKTYPE_CHANNEL_O, CHANNEL_CAST, false);
-		player->sendChannelMessage("", "/commands - view available live cast commands.", TALKTYPE_CHANNEL_O, CHANNEL_CAST, false);
-	} else if(command == "spectators") {
+		player->sendChannelMessage("", "/kick PLAYERNAME - kick a player from your live cast.", TALKTYPE_CHANNEL_O,
+		                           CHANNEL_CAST, false);
+		player->sendChannelMessage("", "/(un)mute PLAYERNAME - (un)mute a player in your live cast.",
+		                           TALKTYPE_CHANNEL_O, CHANNEL_CAST, false);
+		player->sendChannelMessage("", "/mutelist - view current mutes in your live cast.", TALKTYPE_CHANNEL_O,
+		                           CHANNEL_CAST, false);
+		player->sendChannelMessage("", "/(un)ban PLAYERNAME - (un)ban a player from your live cast.",
+		                           TALKTYPE_CHANNEL_O, CHANNEL_CAST, false);
+		player->sendChannelMessage("", "/banlist - view current bans in your live cast.", TALKTYPE_CHANNEL_O,
+		                           CHANNEL_CAST, false);
+		player->sendChannelMessage("", "/togglechat on/off - toggle the chat on or off in your live cast.",
+		                           TALKTYPE_CHANNEL_O, CHANNEL_CAST, false);
+		player->sendChannelMessage("", "/spectators - view current spectators in your live cast.", TALKTYPE_CHANNEL_O,
+		                           CHANNEL_CAST, false);
+		player->sendChannelMessage("", "/commands - view available live cast commands.", TALKTYPE_CHANNEL_O,
+		                           CHANNEL_CAST, false);
+	} else if (command == "spectators") {
 		std::stringstream ss;
 		ss << "Currently spectating your live cast (" << player->getSpectatorCount() << "):";
 		sendChannelMessage("", ss.str(), TALKTYPE_CHANNEL_O, CHANNEL_CAST, false);
-		for(ProtocolSpectator* Spectator : player->getSpectators()) {
+		for (ProtocolSpectator* Spectator : player->getSpectators()) {
 			sendChannelMessage("", Spectator->player->getName(), TALKTYPE_CHANNEL_O, CHANNEL_CAST, false);
 		}
-	} else if(command == "kick") {
+	} else if (command == "kick") {
 		std::string name = text.substr(pos + 1);
-		for(ProtocolSpectator* Spectator : player->getSpectators()) {
+		for (ProtocolSpectator* Spectator : player->getSpectators()) {
 			Player* spectator = Spectator->player;
-			if(spectator->getName() == name) {
+			if (spectator->getName() == name) {
 				std::stringstream ss;
 				ss << spectator->getName() << " have been kicked from this live cast.";
 				sendChannelMessage("", ss.str(), TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
@@ -1221,11 +1226,11 @@ void ProtocolGame::parseExecuteCommand(const std::string& text) {
 			}
 		}
 		sendChannelMessage("", "Could not find a spectator with that name.", TALKTYPE_CHANNEL_R1, CHANNEL_CAST, false);
-	} else if(command == "ban") {
+	} else if (command == "ban") {
 		std::string name = text.substr(pos + 1);
-		for(ProtocolSpectator* Spectator : player->getSpectators()) {
+		for (ProtocolSpectator* Spectator : player->getSpectators()) {
 			Player* spectator = Spectator->player;
-			if(spectator->getName() == name) {
+			if (spectator->getName() == name) {
 				std::stringstream ss;
 				ss << spectator->getName() << " have been banned from this live cast.";
 				sendChannelMessage("", ss.str(), TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
@@ -1235,11 +1240,11 @@ void ProtocolGame::parseExecuteCommand(const std::string& text) {
 			}
 		}
 		sendChannelMessage("", "Could not find a spectator with that name.", TALKTYPE_CHANNEL_R1, CHANNEL_CAST, false);
-	} else if(command == "unban") {
+	} else if (command == "unban") {
 		std::string name = text.substr(pos + 1);
 
-		for(auto it : player->spectatorBans) {
-			if(it.first == name) {
+		for (auto it : player->spectatorBans) {
+			if (it.first == name) {
 				std::stringstream ss;
 				ss << name << " have been unbanned from this live cast.";
 				sendChannelMessage("", ss.str(), TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
@@ -1248,19 +1253,19 @@ void ProtocolGame::parseExecuteCommand(const std::string& text) {
 			}
 		}
 		sendChannelMessage("", "Could not find a ban with that name.", TALKTYPE_CHANNEL_R1, CHANNEL_CAST, false);
-	} else if(command == "banlist") {
+	} else if (command == "banlist") {
 		std::stringstream ss;
 		ss << "Currently banned from your live cast (" << player->spectatorBans.size() << "):";
 		sendChannelMessage("", ss.str(), TALKTYPE_CHANNEL_O, CHANNEL_CAST, false);
 
-		for(auto it : player->spectatorBans) {
+		for (auto it : player->spectatorBans) {
 			sendChannelMessage("", it.first, TALKTYPE_CHANNEL_O, CHANNEL_CAST, false);
 		}
-	} else if(command == "mute") {
+	} else if (command == "mute") {
 		std::string name = text.substr(pos + 1);
-		for(ProtocolSpectator* Spectator : player->getSpectators()) {
+		for (ProtocolSpectator* Spectator : player->getSpectators()) {
 			Player* spectator = Spectator->player;
-			if(spectator->getName() == name) {
+			if (spectator->getName() == name) {
 				std::stringstream ss;
 				ss << spectator->getName() << " have been muted.";
 				sendChannelMessage("", ss.str(), TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
@@ -1269,133 +1274,149 @@ void ProtocolGame::parseExecuteCommand(const std::string& text) {
 			}
 		}
 		sendChannelMessage("", "Could not find a spectator with that name.", TALKTYPE_CHANNEL_R1, CHANNEL_CAST, false);
-	} else if(command == "unmute") {
+	} else if (command == "unmute") {
 		std::string name = text.substr(pos + 1);
-		for(ProtocolSpectator* Spectator : player->getSpectators()) {
+		for (ProtocolSpectator* Spectator : player->getSpectators()) {
 			Player* spectator = Spectator->player;
-			if(spectator->getName() == name) {
+			if (spectator->getName() == name) {
 				std::stringstream ss;
 				ss << spectator->getName() << " have been unmuted.";
 				sendChannelMessage("", ss.str(), TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
-				player->spectatorMutes.erase(std::remove(player->spectatorMutes.begin(), player->spectatorMutes.end(), spectator), player->spectatorMutes.end());
+				player->spectatorMutes.erase(
+				    std::remove(player->spectatorMutes.begin(), player->spectatorMutes.end(), spectator),
+				    player->spectatorMutes.end());
 				return;
 			}
 		}
 		sendChannelMessage("", "Could not find a mute with that name.", TALKTYPE_CHANNEL_R1, CHANNEL_CAST, false);
-	} else if(command == "mutelist") {
+	} else if (command == "mutelist") {
 		std::stringstream ss;
 		ss << "Currently muted in your live cast (" << player->spectatorMutes.size() << "):";
 		sendChannelMessage("", ss.str(), TALKTYPE_CHANNEL_O, CHANNEL_CAST, false);
 
-		for(auto it : player->spectatorMutes) {
+		for (auto it : player->spectatorMutes) {
 			sendChannelMessage("", it->getName(), TALKTYPE_CHANNEL_O, CHANNEL_CAST, false);
 		}
-	} else if(command == "togglechat") {
+	} else if (command == "togglechat") {
 		std::string option = text.substr(pos + 1);
-		if(option == "on") {
-			if(player->liveChatDisabled) {
+		if (option == "on") {
+			if (player->liveChatDisabled) {
 				player->liveChatDisabled = false;
 				sendChannelMessage("", "Chat has been enabled.", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
 			} else {
-				sendChannelMessage("", "Invalid option, chat is already enabled.", TALKTYPE_CHANNEL_R1, CHANNEL_CAST, false);
+				sendChannelMessage("", "Invalid option, chat is already enabled.", TALKTYPE_CHANNEL_R1, CHANNEL_CAST,
+				                   false);
 			}
-		} else if(option == "off") {
-			if(player->liveChatDisabled == false) {
+		} else if (option == "off") {
+			if (player->liveChatDisabled == false) {
 				player->liveChatDisabled = true;
 				sendChannelMessage("", "Chat has been disabled.", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
 			} else {
-				sendChannelMessage("", "Invalid option, chat is already disabled.", TALKTYPE_CHANNEL_R1, CHANNEL_CAST, false);
+				sendChannelMessage("", "Invalid option, chat is already disabled.", TALKTYPE_CHANNEL_R1, CHANNEL_CAST,
+				                   false);
 			}
 		} else {
-			sendChannelMessage("", "Invalid option, usage: /togglechat on/off", TALKTYPE_CHANNEL_R1, CHANNEL_CAST, false);
+			sendChannelMessage("", "Invalid option, usage: /togglechat on/off", TALKTYPE_CHANNEL_R1, CHANNEL_CAST,
+			                   false);
 		}
-		} else if(command == "cast") {
-			std::string param;
-			if(pos != std::string::npos) {
-				param = text.substr(pos + 1);
-			} else {
-				param = "";
+	} else if (command == "cast") {
+		std::string param;
+		if (pos != std::string::npos) {
+			param = text.substr(pos + 1);
+		} else {
+			param = "";
+		}
+		auto ltrim = [](std::string& s) {
+			auto it = s.find_first_not_of(" \t\r\n");
+			if (it == std::string::npos) {
+				s.clear();
+				return;
 			}
-			auto ltrim = [](std::string& s) {
-				auto it = s.find_first_not_of(" \t\r\n");
-				if(it == std::string::npos) { s.clear(); return; }
-				s.erase(0, it);
-			};
-			auto rtrim = [](std::string& s) {
-				auto it = s.find_last_not_of(" \t\r\n");
-				if(it == std::string::npos) { s.clear(); return; }
-				s.erase(it + 1);
-			};
-			ltrim(param);
-			rtrim(param);
-			std::string lparam = param;
-			std::transform(lparam.begin(), lparam.end(), lparam.begin(), ::tolower);
+			s.erase(0, it);
+		};
+		auto rtrim = [](std::string& s) {
+			auto it = s.find_last_not_of(" \t\r\n");
+			if (it == std::string::npos) {
+				s.clear();
+				return;
+			}
+			s.erase(it + 1);
+		};
+		ltrim(param);
+		rtrim(param);
+		std::string lparam = param;
+		std::transform(lparam.begin(), lparam.end(), lparam.begin(), ::tolower);
 
-			if(lparam == "on" || lparam == "start") {
-				if(player->isLiveCasting()) {
-					player->stopLiveCasting();
-				}
-				player->startLiveCasting(std::string());
-				sendChannelMessage("", "========================================", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
-				sendChannelMessage("", "       LIVE CAST STARTED!", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
-				sendChannelMessage("", "========================================", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
-				sendChannelMessage("", "Password: None (public cast)", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
-				sendChannelMessage("", "----------------------------------------", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
-				sendChannelMessage("", "Commands:", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
-				sendChannelMessage("", "  /cast on - Start live casting (public, with bonus)", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
-				sendChannelMessage("", "  /cast off - Stop live casting", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
-				sendChannelMessage("", "  /cast password, <pass> - Start live casting with password (no bonus)", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
-				sendChannelMessage("", "  /cast commands - View all cast commands", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
-				sendChannelMessage("", "========================================", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
-				return;
-			} else if(lparam == "off" || lparam == "stop") {
-				if(player->isLiveCasting()) {
-					player->stopLiveCasting();
-					sendChannelMessage("", "[Cast] You have stopped live casting.", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
-				} else {
-					sendChannelMessage("", "[Cast] You are not live casting.", TALKTYPE_CHANNEL_O, CHANNEL_CAST, false);
-				}
-				return;
+		if (lparam == "on" || lparam == "start") {
+			if (player->isLiveCasting()) {
+				player->stopLiveCasting();
+			}
+			player->startLiveCasting(std::string());
+			sendChannelMessage("", "========================================", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
+			sendChannelMessage("", "       LIVE CAST STARTED!", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
+			sendChannelMessage("", "========================================", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
+			sendChannelMessage("", "Password: None (public cast)", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
+			sendChannelMessage("", "----------------------------------------", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
+			sendChannelMessage("", "Commands:", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
+			sendChannelMessage("", "  /cast on - Start live casting (public, with bonus)", TALKTYPE_CHANNEL_O,
+			                   CHANNEL_CAST, true);
+			sendChannelMessage("", "  /cast off - Stop live casting", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
+			sendChannelMessage("", "  /cast password, <pass> - Start live casting with password (no bonus)",
+			                   TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
+			sendChannelMessage("", "  /cast commands - View all cast commands", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
+			sendChannelMessage("", "========================================", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
+			return;
+		} else if (lparam == "off" || lparam == "stop") {
+			if (player->isLiveCasting()) {
+				player->stopLiveCasting();
+				sendChannelMessage("", "[Cast] You have stopped live casting.", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
 			} else {
-				std::string pass = param;
-				if(!lparam.empty()) {
-					if(lparam.rfind("password", 0) == 0 || lparam.rfind("pass", 0) == 0) {
-						size_t ppos = param.find_first_of(", ");
-						if(ppos != std::string::npos) {
-							pass = param.substr(ppos + 1);
-							ltrim(pass);
-							rtrim(pass);
-						}
+				sendChannelMessage("", "[Cast] You are not live casting.", TALKTYPE_CHANNEL_O, CHANNEL_CAST, false);
+			}
+			return;
+		} else {
+			std::string pass = param;
+			if (!lparam.empty()) {
+				if (lparam.rfind("password", 0) == 0 || lparam.rfind("pass", 0) == 0) {
+					size_t ppos = param.find_first_of(", ");
+					if (ppos != std::string::npos) {
+						pass = param.substr(ppos + 1);
+						ltrim(pass);
+						rtrim(pass);
 					}
 				}
-				std::string clean;
-				for(char c : pass) {
-					if(std::isalnum(static_cast<unsigned char>(c))) clean.push_back(c);
-				}
-				if(clean.size() > 30) {
-					sendChannelMessage("", "[Cast] Invalid password. Maximum 30 characters allowed.", TALKTYPE_CHANNEL_R1, CHANNEL_CAST, false);
-					return;
-				}
-				if(player->isLiveCasting()) {
-					player->stopLiveCasting();
-				}
-				player->startLiveCasting(clean);
-				sendChannelMessage("", "========================================", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
-				sendChannelMessage("", "       LIVE CAST STARTED!", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
-				sendChannelMessage("", "========================================", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
-				if(!clean.empty())
-					sendChannelMessage("", std::string("Password: ") + clean, TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
-				else
-					sendChannelMessage("", "Password: None (public cast)", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
-				sendChannelMessage("", "----------------------------------------", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
-				sendChannelMessage("", "Commands:", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
-				sendChannelMessage("", "  /cast on - Start live casting (public, with bonus)", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
-				sendChannelMessage("", "  /cast off - Stop live casting", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
-				sendChannelMessage("", "  /cast password, <pass> - Start live casting with password (no bonus)", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
-				sendChannelMessage("", "  /cast commands - View all cast commands", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
-				sendChannelMessage("", "========================================", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
+			}
+			std::string clean;
+			for (char c : pass) {
+				if (std::isalnum(static_cast<unsigned char>(c))) clean.push_back(c);
+			}
+			if (clean.size() > 30) {
+				sendChannelMessage("", "[Cast] Invalid password. Maximum 30 characters allowed.", TALKTYPE_CHANNEL_R1,
+				                   CHANNEL_CAST, false);
 				return;
 			}
+			if (player->isLiveCasting()) {
+				player->stopLiveCasting();
+			}
+			player->startLiveCasting(clean);
+			sendChannelMessage("", "========================================", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
+			sendChannelMessage("", "       LIVE CAST STARTED!", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
+			sendChannelMessage("", "========================================", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
+			if (!clean.empty())
+				sendChannelMessage("", std::string("Password: ") + clean, TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
+			else
+				sendChannelMessage("", "Password: None (public cast)", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
+			sendChannelMessage("", "----------------------------------------", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
+			sendChannelMessage("", "Commands:", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
+			sendChannelMessage("", "  /cast on - Start live casting (public, with bonus)", TALKTYPE_CHANNEL_O,
+			                   CHANNEL_CAST, true);
+			sendChannelMessage("", "  /cast off - Stop live casting", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
+			sendChannelMessage("", "  /cast password, <pass> - Start live casting with password (no bonus)",
+			                   TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
+			sendChannelMessage("", "  /cast commands - View all cast commands", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
+			sendChannelMessage("", "========================================", TALKTYPE_CHANNEL_O, CHANNEL_CAST, true);
+			return;
+		}
 	}
 }
 
@@ -1427,7 +1448,7 @@ void ProtocolGame::parseSay(NetworkMessage& msg)
 	if (text.length() > 255) {
 		return;
 	}
-	if(channelId == CHANNEL_CAST && player->isLiveCasting()) {
+	if (channelId == CHANNEL_CAST && player->isLiveCasting()) {
 		InstantSpell* instantSpell = g_spells->getInstantSpell(text);
 		if (instantSpell) {
 			g_dispatcher.addTask([=, playerID = player->getID(), text = std::string(text)]() {
@@ -1744,8 +1765,6 @@ void ProtocolGame::sendCreatureShield(const Creature* creature)
 	writeToOutputBuffer(msg);
 }
 
-
-
 void ProtocolGame::sendCreatureSkull(const Creature* creature)
 {
 	if (g_game.getWorldType() != WORLD_TYPE_PVP) {
@@ -1806,7 +1825,7 @@ void ProtocolGame::sendStats()
 	NetworkMessage msg;
 	AddPlayerStats(msg);
 	writeToOutputBuffer(msg, false);
-	
+
 	if (player && player->isLiveCasting()) {
 		for (auto& spectator : player->spectators) {
 			spectator->sendStats();
@@ -1874,7 +1893,7 @@ void ProtocolGame::sendChannel(uint16_t channelId, std::string_view channelName)
 }
 
 void ProtocolGame::sendChannelMessage(std::string_view author, std::string_view text, SpeakClasses type,
-                                      uint16_t channel, bool broadcast/* = true*/)
+                                      uint16_t channel, bool broadcast /* = true*/)
 {
 	NetworkMessage msg;
 	msg.addByte(0xAA);
@@ -1884,7 +1903,7 @@ void ProtocolGame::sendChannelMessage(std::string_view author, std::string_view 
 	msg.addByte(type);
 	msg.add<uint16_t>(channel);
 	msg.addString(text);
-	
+
 	if (channel == CHANNEL_CAST && broadcast && player && player->isLiveCasting()) {
 		writeToOutputBuffer(msg, false);
 		for (auto& spectator : player->spectators) {
@@ -2239,9 +2258,9 @@ void ProtocolGame::sendSkills()
 	NetworkMessage msg;
 	AddPlayerSkills(msg);
 	writeToOutputBuffer(msg, false);
-	
-	if(player && player->isLiveCasting()) {
-		for(auto& spectator : player->spectators) {
+
+	if (player && player->isLiveCasting()) {
+		for (auto& spectator : player->spectators) {
 			spectator->sendSkills();
 		}
 	}
@@ -2268,37 +2287,30 @@ std::string base64Encode(const std::string& decoded_string)
 	int pos = 0;
 	int len = decoded_string.size();
 
-	while(len--)
-	{
+	while (len--) {
 		char_array_3[i++] = decoded_string[pos++];
-		if(i == 3)
-		{
+		if (i == 3) {
 			char_array_4[0] = (char_array_3[0] & 0xfc) >> 2;
 			char_array_4[1] = ((char_array_3[0] & 0x03) << 4) + ((char_array_3[1] & 0xf0) >> 4);
 			char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) + ((char_array_3[2] & 0xc0) >> 6);
 			char_array_4[3] = char_array_3[2] & 0x3f;
 
-			for(i = 0; (i < 4); i++)
-				ret += base64_chars[char_array_4[i]];
+			for (i = 0; (i < 4); i++) ret += base64_chars[char_array_4[i]];
 			i = 0;
 		}
 	}
 
-	if(i)
-	{
-		for(j = i; j < 3; j++)
-			char_array_3[j] = '\0';
+	if (i) {
+		for (j = i; j < 3; j++) char_array_3[j] = '\0';
 
 		char_array_4[0] = (char_array_3[0] & 0xfc) >> 2;
 		char_array_4[1] = ((char_array_3[0] & 0x03) << 4) + ((char_array_3[1] & 0xf0) >> 4);
 		char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) + ((char_array_3[2] & 0xc0) >> 6);
 		char_array_4[3] = char_array_3[2] & 0x3f;
 
-		for(j = 0; (j < i + 1); j++)
-			ret += base64_chars[char_array_4[j]];
+		for (j = 0; (j < i + 1); j++) ret += base64_chars[char_array_4[j]];
 
-		while ((i++ < 3))
-			ret += '=';
+		while ((i++ < 3)) ret += '=';
 	}
 
 	return ret;
@@ -2308,8 +2320,7 @@ void xorCrypt(std::string& buffer, const std::string& key)
 {
 	size_t strLen = buffer.length();
 	size_t keyLen = key.length();
-	for(int i = 0; i < (int)strLen; ++i)
-		buffer[i] = (char)(((char)buffer[i]) ^ ((char)key[i % keyLen]));
+	for (int i = 0; i < (int)strLen; ++i) buffer[i] = (char)(((char)buffer[i]) ^ ((char)key[i % keyLen]));
 }
 
 void ProtocolGame::sendDllCheck()
@@ -2354,7 +2365,7 @@ void ProtocolGame::sendDistanceShoot(const Position& from, const Position& to, u
 	msg.addPosition(to);
 	msg.add<uint16_t>(type);
 	writeToOutputBuffer(msg);
-	
+
 	if (player && player->isLiveCasting()) {
 		for (auto& spectator : player->spectators) {
 			spectator->sendDistanceShoot(from, to, type);
@@ -2378,7 +2389,7 @@ void ProtocolGame::sendMagicEffect(const Position& pos, uint16_t type)
 	msg.addPosition(pos);
 	msg.add<uint16_t>(type);
 	writeToOutputBuffer(msg, false);
-	
+
 	if (player && player->isLiveCasting()) {
 		for (auto& spectator : player->spectators) {
 			spectator->sendMagicEffect(pos, type);
@@ -2410,10 +2421,7 @@ void ProtocolGame::sendFYIBox(std::string_view message)
 }
 
 // tile
-void ProtocolGame::sendMapDescription(const Position& pos)
-{
-	sendMapDescription(pos, true);
-}
+void ProtocolGame::sendMapDescription(const Position& pos) { sendMapDescription(pos, true); }
 
 void ProtocolGame::sendMapDescription(const Position& pos, bool broadcast)
 {
@@ -2437,15 +2445,13 @@ void ProtocolGame::sendMapDescription(const Position& pos, bool broadcast)
 		NetworkMessage msg;
 		msg.addByte(0x64);
 		msg.addPosition(player->getPosition());
-		GetMapDescription(pos.x - awareRange.left(), pos.y - awareRange.top(), pos.z, awareRange.horizontal(), awareRange.vertical(), msg);
+		GetMapDescription(pos.x - awareRange.left(), pos.y - awareRange.top(), pos.z, awareRange.horizontal(),
+		                  awareRange.vertical(), msg);
 		writeToOutputBuffer(msg, broadcast);
 	}
 }
 
-void ProtocolGame::sendFloorDescription(const Position& pos, int floor)
-{
-	sendFloorDescription(pos, floor, true);
-}
+void ProtocolGame::sendFloorDescription(const Position& pos, int floor) { sendFloorDescription(pos, floor, true); }
 
 void ProtocolGame::sendFloorDescription(const Position& pos, int floor, bool broadcast)
 {
@@ -2454,7 +2460,8 @@ void ProtocolGame::sendFloorDescription(const Position& pos, int floor, bool bro
 	msg.addPosition(player->getPosition());
 	msg.addByte(floor);
 	int32_t skip = -1;
-	GetFloorDescription(msg, pos.x - awareRange.left(), pos.y - awareRange.top(), floor, awareRange.horizontal(), awareRange.vertical(), pos.z - floor, skip);
+	GetFloorDescription(msg, pos.x - awareRange.left(), pos.y - awareRange.top(), floor, awareRange.horizontal(),
+	                    awareRange.vertical(), pos.z - floor, skip);
 	if (skip >= 0) {
 		msg.addByte(skip);
 		msg.addByte(0xFF);
@@ -2641,14 +2648,13 @@ void ProtocolGame::sendAddCreature(const Creature* creature, const Position& pos
 		sendVIP(entry.guid, entry.name,
 		        static_cast<VipStatus_t>((vipPlayer && (!vipPlayer->isInGhostMode() || player->isAccessPlayer()))));
 	}
-
 }
 
 void ProtocolGame::sendMoveCreature(const Creature* creature, const Position& newPos, int32_t newStackPos,
                                     const Position& oldPos, int32_t oldStackPos, bool teleport)
 {
 	bool shouldBroadcast = (creature != player);
-	
+
 	if (creature == player) {
 		if (teleport || oldStackPos >= MAX_STACKPOS_THINGS) {
 			NetworkMessage msg;
@@ -2684,18 +2690,18 @@ void ProtocolGame::sendMoveCreature(const Creature* creature, const Position& ne
 					                  awareRange.horizontal(), 1, msg);
 				} else if (oldPos.y < newPos.y) {
 					msg.addByte(0x67);
-					GetMapDescription(oldPos.x - awareRange.left(), newPos.y + awareRange.bottom(),
-					                  newPos.z, awareRange.horizontal(), 1, msg);
+					GetMapDescription(oldPos.x - awareRange.left(), newPos.y + awareRange.bottom(), newPos.z,
+					                  awareRange.horizontal(), 1, msg);
 				}
 
 				if (oldPos.x < newPos.x) {
 					msg.addByte(0x66);
-					GetMapDescription(newPos.x + awareRange.right(), newPos.y - awareRange.top(),
-					                  newPos.z, 1, awareRange.vertical(), msg);
+					GetMapDescription(newPos.x + awareRange.right(), newPos.y - awareRange.top(), newPos.z, 1,
+					                  awareRange.vertical(), msg);
 				} else if (oldPos.x > newPos.x) {
 					msg.addByte(0x68);
-					GetMapDescription(newPos.x - awareRange.left(), newPos.y - awareRange.top(), newPos.z,
-					                  1, awareRange.vertical(), msg);
+					GetMapDescription(newPos.x - awareRange.left(), newPos.y - awareRange.top(), newPos.z, 1,
+					                  awareRange.vertical(), msg);
 				}
 			}
 			writeToOutputBuffer(msg, shouldBroadcast);
@@ -2900,9 +2906,7 @@ void ProtocolGame::sendOutfitWindow()
 	}
 
 	std::sort(protocolOutfits.begin(), protocolOutfits.end(),
-		[](const ProtocolOutfit& a, const ProtocolOutfit& b) {
-			return a.lookType < b.lookType;
-		});
+	          [](const ProtocolOutfit& a, const ProtocolOutfit& b) { return a.lookType < b.lookType; });
 
 	if (isOTCv8) {
 		msg.addByte(static_cast<uint8_t>(protocolOutfits.size()));
@@ -3194,12 +3198,18 @@ void ProtocolGame::MoveUpCreature(NetworkMessage& msg, const Creature* creature,
 				sendFloorDescription(oldPos, z);
 			}
 		} else {
-			GetFloorDescription(msg, oldPos.x - awareRange.left(), oldPos.y - awareRange.top(), 5, awareRange.horizontal(), awareRange.vertical(), 3, skip); //(floor 7 and 6 already set)
-			GetFloorDescription(msg, oldPos.x - awareRange.left(), oldPos.y - awareRange.top(), 4, awareRange.horizontal(), awareRange.vertical(), 4, skip);
-			GetFloorDescription(msg, oldPos.x - awareRange.left(), oldPos.y - awareRange.top(), 3, awareRange.horizontal(), awareRange.vertical(), 5, skip);
-			GetFloorDescription(msg, oldPos.x - awareRange.left(), oldPos.y - awareRange.top(), 2, awareRange.horizontal(), awareRange.vertical(), 6, skip);
-			GetFloorDescription(msg, oldPos.x - awareRange.left(), oldPos.y - awareRange.top(), 1, awareRange.horizontal(), awareRange.vertical(), 7, skip);
-			GetFloorDescription(msg, oldPos.x - awareRange.left(), oldPos.y - awareRange.top(), 0, awareRange.horizontal(), awareRange.vertical(), 8, skip);
+			GetFloorDescription(msg, oldPos.x - awareRange.left(), oldPos.y - awareRange.top(), 5,
+			                    awareRange.horizontal(), awareRange.vertical(), 3, skip); //(floor 7 and 6 already set)
+			GetFloorDescription(msg, oldPos.x - awareRange.left(), oldPos.y - awareRange.top(), 4,
+			                    awareRange.horizontal(), awareRange.vertical(), 4, skip);
+			GetFloorDescription(msg, oldPos.x - awareRange.left(), oldPos.y - awareRange.top(), 3,
+			                    awareRange.horizontal(), awareRange.vertical(), 5, skip);
+			GetFloorDescription(msg, oldPos.x - awareRange.left(), oldPos.y - awareRange.top(), 2,
+			                    awareRange.horizontal(), awareRange.vertical(), 6, skip);
+			GetFloorDescription(msg, oldPos.x - awareRange.left(), oldPos.y - awareRange.top(), 1,
+			                    awareRange.horizontal(), awareRange.vertical(), 7, skip);
+			GetFloorDescription(msg, oldPos.x - awareRange.left(), oldPos.y - awareRange.top(), 0,
+			                    awareRange.horizontal(), awareRange.vertical(), 8, skip);
 		}
 		if (skip >= 0) {
 			msg.addByte(static_cast<uint8_t>(skip));
@@ -3209,7 +3219,8 @@ void ProtocolGame::MoveUpCreature(NetworkMessage& msg, const Creature* creature,
 	// underground, going one floor up (still underground)
 	else if (newPos.z > 7) {
 		int32_t skip = -1;
-		GetFloorDescription(msg, oldPos.x - awareRange.left(), oldPos.y - awareRange.top(), oldPos.getZ() - 3, awareRange.horizontal(), awareRange.vertical(), 3, skip);
+		GetFloorDescription(msg, oldPos.x - awareRange.left(), oldPos.y - awareRange.top(), oldPos.getZ() - 3,
+		                    awareRange.horizontal(), awareRange.vertical(), 3, skip);
 
 		if (skip >= 0) {
 			msg.addByte(static_cast<uint8_t>(skip));
@@ -3220,11 +3231,13 @@ void ProtocolGame::MoveUpCreature(NetworkMessage& msg, const Creature* creature,
 	// moving up a floor up makes us out of sync
 	// west
 	msg.addByte(0x68);
-	GetMapDescription(oldPos.x - awareRange.left(), oldPos.y - (awareRange.top() - 1), newPos.z, 1, awareRange.vertical(), msg);
+	GetMapDescription(oldPos.x - awareRange.left(), oldPos.y - (awareRange.top() - 1), newPos.z, 1,
+	                  awareRange.vertical(), msg);
 
 	// north
 	msg.addByte(0x65);
-	GetMapDescription(oldPos.x - awareRange.left(), oldPos.y - awareRange.top(), newPos.z, awareRange.horizontal(), 1, msg);
+	GetMapDescription(oldPos.x - awareRange.left(), oldPos.y - awareRange.top(), newPos.z, awareRange.horizontal(), 1,
+	                  msg);
 }
 
 void ProtocolGame::MoveDownCreature(NetworkMessage& msg, const Creature* creature, const Position& newPos,
@@ -3242,7 +3255,8 @@ void ProtocolGame::MoveDownCreature(NetworkMessage& msg, const Creature* creatur
 		int32_t skip = -1;
 
 		for (int i = 0; i < 3; ++i) {
-			GetFloorDescription(msg, oldPos.x - awareRange.left(), oldPos.y - awareRange.top(), newPos.z + i, awareRange.horizontal(), awareRange.vertical(), -i - 1, skip);
+			GetFloorDescription(msg, oldPos.x - awareRange.left(), oldPos.y - awareRange.top(), newPos.z + i,
+			                    awareRange.horizontal(), awareRange.vertical(), -i - 1, skip);
 		}
 		if (skip >= 0) {
 			msg.addByte(static_cast<uint8_t>(skip));
@@ -3252,7 +3266,8 @@ void ProtocolGame::MoveDownCreature(NetworkMessage& msg, const Creature* creatur
 	// going further down
 	else if (newPos.z > oldPos.z && newPos.z > 8 && newPos.z < 14) {
 		int32_t skip = -1;
-		GetFloorDescription(msg, oldPos.x - awareRange.left(), oldPos.y - awareRange.top(), newPos.z + 2, awareRange.horizontal(), awareRange.vertical(), -3, skip);
+		GetFloorDescription(msg, oldPos.x - awareRange.left(), oldPos.y - awareRange.top(), newPos.z + 2,
+		                    awareRange.horizontal(), awareRange.vertical(), -3, skip);
 
 		if (skip >= 0) {
 			msg.addByte(static_cast<uint8_t>(skip));
@@ -3263,11 +3278,13 @@ void ProtocolGame::MoveDownCreature(NetworkMessage& msg, const Creature* creatur
 	// moving down a floor makes us out of sync
 	// east
 	msg.addByte(0x66);
-	GetMapDescription(newPos.x + awareRange.right(), newPos.y - awareRange.top(), newPos.z, 1, awareRange.vertical(), msg);
+	GetMapDescription(newPos.x + awareRange.right(), newPos.y - awareRange.top(), newPos.z, 1, awareRange.vertical(),
+	                  msg);
 
 	// south
 	msg.addByte(0x67);
-	GetMapDescription(newPos.x - awareRange.left(), newPos.y - awareRange.top(), newPos.z, 1, awareRange.vertical(), msg);
+	GetMapDescription(newPos.x - awareRange.left(), newPos.y - awareRange.top(), newPos.z, 1, awareRange.vertical(),
+	                  msg);
 }
 
 void ProtocolGame::AddShopItem(NetworkMessage& msg, const ShopInfo& item)
@@ -3300,7 +3317,7 @@ void ProtocolGame::parseExtendedOpcode(NetworkMessage& msg)
 
 void ProtocolGame::sendNewPing(uint32_t pingId)
 {
-	//if (!isOTCv8) return;
+	// if (!isOTCv8) return;
 
 	NetworkMessage msg;
 	msg.addByte(0x40);
@@ -3320,7 +3337,7 @@ void ProtocolGame::parseNewPing(NetworkMessage& msg)
 void ProtocolGame::sendFeatures()
 {
 	if (!isOTCv8) return;
-	
+
 	std::map<GameFeature, bool> features;
 	features[GameExtendedOpcode] = false;
 	features[GameSkillsBase] = true;
@@ -3362,14 +3379,15 @@ void ProtocolGame::updateAwareRange(int width, int height)
 	width = std::max(width, 49);
 	height = std::max(height, 29);
 
-	// If you want to change max awareRange, edit maxViewportX, maxViewportY, maxClientViewportX, maxClientViewportY in map.h
-	awareRange.width = std::min(Map::maxViewportX * 2 - 1, std::min(Map::maxClientViewportX * 2 + 1, std::max(15, width)));
-	awareRange.height = std::min(Map::maxViewportY * 2 - 1, std::min(Map::maxClientViewportY * 2 + 1, std::max(11, height)));
+	// If you want to change max awareRange, edit maxViewportX, maxViewportY, maxClientViewportX, maxClientViewportY in
+	// map.h
+	awareRange.width =
+	    std::min(Map::maxViewportX * 2 - 1, std::min(Map::maxClientViewportX * 2 + 1, std::max(15, width)));
+	awareRange.height =
+	    std::min(Map::maxViewportY * 2 - 1, std::min(Map::maxClientViewportY * 2 + 1, std::max(11, height)));
 	// numbers must be odd
-	if (awareRange.width % 2 != 1)
-		awareRange.width -= 1;
-	if (awareRange.height % 2 != 1)
-		awareRange.height -= 1;
+	if (awareRange.width % 2 != 1) awareRange.width -= 1;
+	if (awareRange.height % 2 != 1) awareRange.height -= 1;
 
 	sendAwareRange();
 	sendMapDescription(player->getPosition()); // refresh map
@@ -3385,6 +3403,6 @@ void ProtocolGame::sendAwareRange()
 	msg.addByte(0x42);
 	msg.add<uint8_t>(awareRange.width);
 	msg.add<uint8_t>(awareRange.height);
-	
+
 	writeToOutputBuffer(msg, false);
 }

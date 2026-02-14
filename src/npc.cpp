@@ -6,9 +6,9 @@
 #include "npc.h"
 
 #include "game.h"
-#include "game.h"
-#include "pugicast.h"
 #include "logger.h"
+#include "pugicast.h"
+
 #include <fmt/format.h>
 
 extern Game g_game;
@@ -18,7 +18,7 @@ uint32_t Npc::npcAutoID = 0x80000000;
 
 void Npcs::reload()
 {
-	const std::map<uint32_t, Npc*>& npcs = g_game.getNpcs();
+	const std::unordered_map<uint32_t, Npc*>& npcs = g_game.getNpcs();
 	for (const auto& it : npcs) {
 		it.second->closeAllShopWindows();
 	}

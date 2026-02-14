@@ -110,18 +110,20 @@ public:
 	static std::string getTradeErrorDescription(ReturnValue ret, Item* item);
 
 	// Struct to store damage info for a rewardboss
-	struct PlayerScoreInfo {
-		int32_t damageDone = 0;   // Damage dealt by the player to the boss
-		int32_t damageTaken = 0;  // Damage taken by the player from the boss
-		int32_t healingDone = 0;  // Healing done to players near boss
+	struct PlayerScoreInfo
+	{
+		int32_t damageDone = 0;  // Damage dealt by the player to the boss
+		int32_t damageTaken = 0; // Damage taken by the player from the boss
+		int32_t healingDone = 0; // Healing done to players near boss
 	};
 	// Struct to store contribution info for a rewardboss
-	struct RewardBossContributionInfo {
-		std::unordered_map<uint32_t, PlayerScoreInfo> playerScoreTable;  // Map of player GUIDs to PlayerScoreInfo
+	struct RewardBossContributionInfo
+	{
+		std::unordered_map<uint32_t, PlayerScoreInfo> playerScoreTable; // Map of player GUIDs to PlayerScoreInfo
 	};
 	// Map to track the contributions of players to different rewardbosses
 	std::unordered_map<uint32_t, RewardBossContributionInfo> rewardBossTracking;
-	void resetDamageTracking(uint32_t monsterId);  // Function to reset damage tracking for a specific monster
+	void resetDamageTracking(uint32_t monsterId); // Function to reset damage tracking for a specific monster
 
 	/**
 	 * Returns a creature based on the unique creature identifier
@@ -475,8 +477,8 @@ public:
 	void incrementMotdNum() { motdNum++; }
 
 	const std::unordered_map<uint32_t, Player*>& getPlayers() const { return players; }
-	const std::map<uint32_t, Npc*>& getNpcs() const { return npcs; }
-	const std::map<uint32_t, Monster*>& getMonsters() const { return monsters; }
+	const std::unordered_map<uint32_t, Npc*>& getNpcs() const { return npcs; }
+	const std::unordered_map<uint32_t, Monster*>& getMonsters() const { return monsters; }
 
 	void addPlayer(Player* player);
 	void removePlayer(Player* player);
@@ -505,11 +507,10 @@ public:
 
 	std::vector<Player*> getLiveCasters(const std::string& password);
 
-	void addLiveCaster(Player* player) {
-		liveCasters.push_back(player);
-	}
+	void addLiveCaster(Player* player) { liveCasters.push_back(player); }
 
-	void removeLiveCaster(Player* player) {
+	void removeLiveCaster(Player* player)
+	{
 		liveCasters.erase(std::remove(liveCasters.begin(), liveCasters.end(), player), liveCasters.end());
 	}
 
@@ -563,8 +564,8 @@ private:
 
 	WildcardTreeNode wildcardTree{false};
 
-	std::map<uint32_t, Npc*> npcs;
-	std::map<uint32_t, Monster*> monsters;
+	std::unordered_map<uint32_t, Npc*> npcs;
+	std::unordered_map<uint32_t, Monster*> monsters;
 
 	// list of items that are in trading state, mapped to the player
 	std::map<Item*, uint32_t> tradeItems;
@@ -573,7 +574,8 @@ private:
 
 	std::unordered_set<Tile*> tilesToClean;
 
-	ModalWindow offlineTrainingWindow { std::numeric_limits<uint32_t>::max(), "Train while you sleep", "Please choose a skill to train:" };
+	ModalWindow offlineTrainingWindow{std::numeric_limits<uint32_t>::max(), "Train while you sleep",
+	                                  "Please choose a skill to train:"};
 
 	static constexpr uint8_t LIGHT_DAY = 250;
 	static constexpr uint8_t LIGHT_NIGHT = 40;
