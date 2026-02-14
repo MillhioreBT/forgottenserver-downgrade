@@ -11,6 +11,8 @@
 #include "monster.h"
 #include "scheduler.h"
 
+#include <cstring>
+
 extern CreatureEvents* g_creatureEvents;
 extern Events* g_events;
 extern Game g_game;
@@ -94,10 +96,7 @@ void Creature::setGuildEmblem(GuildEmblems_t newEmblem)
 	g_game.updateCreatureEmblem(this);
 }
 
-void Creature::setSkillLoss(bool _skillLoss)
-{
-	skillLoss = _skillLoss;
-}
+void Creature::setSkillLoss(bool _skillLoss) { skillLoss = _skillLoss; }
 
 int64_t Creature::getTimeSinceLastMove() const
 {
@@ -132,6 +131,11 @@ int32_t Creature::getWalkDelay() const
 
 void Creature::onThink(uint32_t interval)
 {
+	if (!isMapLoaded && useCacheMap()) {
+		isMapLoaded = true;
+		updateMapCache();
+	}
+
 	if (followCreature && master != followCreature && !canSeeCreature(followCreature)) {
 		onCreatureDisappear(followCreature, false);
 	}
@@ -323,7 +327,8 @@ void Creature::addEventWalk(bool firstStep)
 		g_game.checkCreatureWalk(getID());
 	}
 
-	eventWalk = g_scheduler.addEvent(createSchedulerTask(std::max<int64_t>(SCHEDULER_MINTICKS, ticks), [id = getID()]() { g_game.checkCreatureWalk(id); }));
+	eventWalk = g_scheduler.addEvent(createSchedulerTask(std::max<int64_t>(SCHEDULER_MINTICKS, ticks),
+	                                                     [id = getID()]() { g_game.checkCreatureWalk(id); }));
 }
 
 void Creature::stopEventWalk()
@@ -337,13 +342,31 @@ void Creature::stopEventWalk()
 void Creature::onCreatureAppear(Creature* creature, bool isLogin)
 {
 	if (creature == this) {
+		if (useCacheMap()) {
+			isMapLoaded = true;
+			updateMapCache();
+		}
+
 		if (isLogin) {
 			setLastPosition(getPosition());
+		}
+	} else if (isMapLoaded) {
+		if (creature->getPosition().z == getPosition().z) {
+			updateTileCache(creature->getTile(), creature->getPosition());
 		}
 	}
 }
 
-void Creature::onRemoveCreature(Creature* creature, bool) { onCreatureDisappear(creature, true); }
+void Creature::onRemoveCreature(Creature* creature, bool isLogout)
+{
+	(void)isLogout;
+	onCreatureDisappear(creature, true);
+	if (creature != this && isMapLoaded) {
+		if (creature->getPosition().z == getPosition().z) {
+			updateTileCache(creature->getTile(), creature->getPosition());
+		}
+	}
+}
 
 void Creature::onCreatureDisappear(const Creature* creature, bool isLogout)
 {
@@ -384,8 +407,8 @@ void Creature::onCreatureMove(Creature* creature, const Tile* newTile, const Pos
 				// floor change extra cost
 				lastStepCost = 2;
 			} else if (newPos.getDistanceX(oldPos) >= 1 && newPos.getDistanceY(oldPos) >= 1) {
-					// diagonal extra cost
-					lastStepCost = 3;
+				// diagonal extra cost
+				lastStepCost = 3;
 				if (getPlayer()) {
 					lastStepCost -= 1;
 				}
@@ -413,6 +436,107 @@ void Creature::onCreatureMove(Creature* creature, const Tile* newTile, const Pos
 			g_events->eventCreatureOnChangeZone(this, oldTile->getZone(), newTile->getZone());
 			onChangeZone(getZone());
 		}
+
+		// update map cache
+		if (isMapLoaded) {
+			if (teleport || oldPos.z != newPos.z) {
+				updateMapCache();
+			} else {
+				const Position& myPos = getPosition();
+
+				if (oldPos.y > newPos.y) { // north
+					// shift y south
+					for (int32_t y = mapWalkHeight - 1; --y >= 0;) {
+						std::memcpy(localMapCache[y + 1], localMapCache[y], sizeof(localMapCache[y]));
+					}
+
+					// update 0
+					for (int32_t x = -maxWalkCacheWidth; x <= maxWalkCacheWidth; ++x) {
+						int32_t cacheX = myPos.getX() + x;
+						int32_t cacheY = myPos.getY() - maxWalkCacheHeight;
+						Tile* cacheTile = g_game.map.getTile(cacheX, cacheY, myPos.z);
+						updateTileCache(cacheTile, x, -maxWalkCacheHeight);
+					}
+				} else if (oldPos.y < newPos.y) { // south
+					// shift y north
+					for (int32_t y = 0; y <= mapWalkHeight - 2; ++y) {
+						std::memcpy(localMapCache[y], localMapCache[y + 1], sizeof(localMapCache[y]));
+					}
+
+					// update mapWalkHeight - 1
+					for (int32_t x = -maxWalkCacheWidth; x <= maxWalkCacheWidth; ++x) {
+						int32_t cacheX = myPos.getX() + x;
+						int32_t cacheY = myPos.getY() + maxWalkCacheHeight;
+						Tile* cacheTile = g_game.map.getTile(cacheX, cacheY, myPos.z);
+						updateTileCache(cacheTile, x, maxWalkCacheHeight);
+					}
+				}
+
+				if (oldPos.x < newPos.x) { // east
+					// shift y west
+					int32_t starty = 0;
+					int32_t endy = mapWalkHeight - 1;
+					int32_t dy = oldPos.y - newPos.y;
+
+					if (dy < 0) {
+						endy += dy;
+					} else if (dy > 0) {
+						starty = dy;
+					}
+
+					for (int32_t y = starty; y <= endy; ++y) {
+						for (int32_t x = 0; x <= mapWalkWidth - 2; ++x) {
+							localMapCache[y][x] = localMapCache[y][x + 1];
+						}
+					}
+
+					// update mapWalkWidth - 1
+					for (int32_t y = -maxWalkCacheHeight; y <= maxWalkCacheHeight; ++y) {
+						int32_t cacheX = myPos.getX() + maxWalkCacheWidth;
+						int32_t cacheY = myPos.getY() + y;
+						Tile* cacheTile = g_game.map.getTile(cacheX, cacheY, myPos.z);
+						updateTileCache(cacheTile, maxWalkCacheWidth, y);
+					}
+				} else if (oldPos.x > newPos.x) { // west
+					// shift y east
+					int32_t starty = 0;
+					int32_t endy = mapWalkHeight - 1;
+					int32_t dy = oldPos.y - newPos.y;
+
+					if (dy < 0) {
+						endy += dy;
+					} else if (dy > 0) {
+						starty = dy;
+					}
+
+					for (int32_t y = starty; y <= endy; ++y) {
+						for (int32_t x = mapWalkWidth - 1; --x >= 0;) {
+							localMapCache[y][x + 1] = localMapCache[y][x];
+						}
+					}
+
+					// update 0
+					for (int32_t y = -maxWalkCacheHeight; y <= maxWalkCacheHeight; ++y) {
+						int32_t cacheX = myPos.getX() - maxWalkCacheWidth;
+						int32_t cacheY = myPos.getY() + y;
+						Tile* cacheTile = g_game.map.getTile(cacheX, cacheY, myPos.z);
+						updateTileCache(cacheTile, -maxWalkCacheWidth, y);
+					}
+				}
+
+				updateTileCache(const_cast<Tile*>(oldTile), oldPos);
+			}
+		}
+	} else if (isMapLoaded) {
+		const Position& myPos = getPosition();
+
+		if (newPos.z == myPos.z) {
+			updateTileCache(const_cast<Tile*>(newTile), newPos);
+		}
+
+		if (oldPos.z == myPos.z) {
+			updateTileCache(const_cast<Tile*>(oldTile), oldPos);
+		}
 	}
 
 	if (creature == followCreature || (creature == this && followCreature)) {
@@ -432,7 +556,7 @@ void Creature::onCreatureMove(Creature* creature, const Tile* newTile, const Pos
 		} else {
 			if (hasExtraSwing()) {
 				// our target is moving lets see if we can get in hit
-				g_dispatcher.addTask([id = getID()]() { g_game.checkCreatureAttack(id); });
+				g_dispatcher.addTask(createTask([id = getID()]() { g_game.checkCreatureAttack(id); }));
 			}
 
 			if (newTile->getZone() != oldTile->getZone()) {
@@ -524,7 +648,6 @@ void Creature::onDeath()
 
 	if (master) {
 		setMaster(nullptr);
-
 	}
 
 	if (droppedCorpse) {
@@ -1507,4 +1630,106 @@ std::optional<int64_t> Creature::getStorageValue(uint32_t key) const
 		return std::nullopt;
 	}
 	return std::make_optional(it->second);
+}
+
+void Creature::updateMapCache()
+{
+	const Position& myPos = getPosition();
+	Position pos(0, 0, myPos.z);
+
+	for (int32_t y = -maxWalkCacheHeight; y <= maxWalkCacheHeight; ++y) {
+		for (int32_t x = -maxWalkCacheWidth; x <= maxWalkCacheWidth; ++x) {
+			pos.x = myPos.getX() + x;
+			pos.y = myPos.getY() + y;
+			Tile* tile = g_game.map.getTile(pos);
+			updateTileCache(tile, x, y);
+		}
+	}
+}
+
+void Creature::updateTileCache(Tile* tile, int32_t dx, int32_t dy)
+{
+	if (std::abs(dx) <= maxWalkCacheWidth && std::abs(dy) <= maxWalkCacheHeight) {
+		const Thing& thing = *getCreature();
+		localMapCache[maxWalkCacheHeight + dy][maxWalkCacheWidth + dx] =
+		    tile && tile->queryAdd(INDEX_WHEREEVER, thing, 1, FLAG_PATHFINDING | FLAG_IGNOREFIELDDAMAGE,
+		                           getCreature()) == RETURNVALUE_NOERROR;
+	}
+}
+
+void Creature::updateTileCache(Tile* tile, const Position& pos)
+{
+	const Position& myPos = getPosition();
+	if (pos.z == myPos.z) {
+		int32_t dx = pos.getOffsetX(myPos);
+		int32_t dy = pos.getOffsetY(myPos);
+		updateTileCache(tile, dx, dy);
+	}
+}
+
+int32_t Creature::getWalkCache(const Position& pos) const
+{
+	if (!useCacheMap()) {
+		return 2;
+	}
+
+	const Position& myPos = getPosition();
+	if (myPos.z != pos.z) {
+		return 0;
+	}
+
+	if (pos == myPos) {
+		return 1;
+	}
+
+	int32_t dx = pos.getOffsetX(myPos);
+	if (std::abs(dx) <= maxWalkCacheWidth) {
+		int32_t dy = pos.getOffsetY(myPos);
+		if (std::abs(dy) <= maxWalkCacheHeight) {
+			if (localMapCache[maxWalkCacheHeight + dy][maxWalkCacheWidth + dx]) {
+				return 1;
+			} else {
+				return 0;
+			}
+		}
+	}
+
+	// out of range
+	return 2;
+}
+
+void Creature::onAddTileItem(const Tile* tile, const Position& pos)
+{
+	if (isMapLoaded && pos.z == getPosition().z) {
+		// Const cast necessary because updateTileCache takes non-const Tile*
+		// This follows the pattern in other parts of the codebase or we should update updateTileCache signature
+		updateTileCache(const_cast<Tile*>(tile), pos);
+	}
+}
+
+void Creature::onUpdateTileItem(const Tile* tile, const Position& pos, const Item*, const ItemType& oldType,
+                                const Item*, const ItemType& newType)
+{
+	if (!isMapLoaded) {
+		return;
+	}
+
+	if (oldType.blockSolid || oldType.blockPathFind || newType.blockPathFind || newType.blockSolid) {
+		if (pos.z == getPosition().z) {
+			updateTileCache(const_cast<Tile*>(tile), pos);
+		}
+	}
+}
+
+void Creature::onRemoveTileItem(const Tile* tile, const Position& pos, const ItemType& iType, const Item*)
+{
+	if (!isMapLoaded) {
+		return;
+	}
+
+	if (iType.blockSolid || iType.blockPathFind || iType.isGroundTile()) {
+		if (pos.z == getPosition().z) {
+			updateTileCache(const_cast<Tile*>(tile), pos);
+		}
+	}
 }

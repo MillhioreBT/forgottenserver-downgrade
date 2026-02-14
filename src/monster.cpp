@@ -9,8 +9,9 @@
 #include "events.h"
 #include "game.h"
 #include "iologindata.h"
-#include "spells.h"
 #include "logger.h"
+#include "spells.h"
+
 #include <fmt/format.h>
 
 extern Game g_game;
@@ -41,6 +42,7 @@ Monster::Monster(MonsterType* mType) : Creature(), nameDescription(mType->nameDe
 	baseSpeed = mType->info.baseSpeed;
 	internalLight = mType->info.light;
 	hiddenHealth = mType->info.hiddenHealth;
+	targetList.reserve(24);
 
 	// register creature events
 	for (std::string_view scriptName : mType->info.scripts) {
@@ -230,7 +232,11 @@ void Monster::onCreatureMove(Creature* creature, const Tile* newTile, const Posi
 			isMasterInRange = canSee(getMaster()->getPosition());
 		}
 
-		updateTargetList();
+		// OTIMIZAÇÃO: Só summons fazem rebuild completo da target list ao mover.
+		// Monstros normais confiam em onCreatureEnter/onCreatureLeave.
+		if (isSummon()) {
+			updateTargetList();
+		}
 		updateIdleStatus();
 	} else {
 		bool canSeeNewPos = canSee(newPos);
@@ -246,7 +252,11 @@ void Monster::onCreatureMove(Creature* creature, const Tile* newTile, const Posi
 			isMasterInRange = true; // Follow master again
 		}
 
-		updateIdleStatus();
+		// OTIMIZAÇÃO: Só verifica idle status se já estava idle.
+		// O despertar acontece via onCreatureEnter -> onCreatureFound -> updateIdleStatus.
+		if (isIdle) {
+			updateIdleStatus();
+		}
 
 		if (!isSummon()) {
 			if (followCreature) {
@@ -268,7 +278,7 @@ void Monster::onCreatureMove(Creature* creature, const Tile* newTile, const Posi
 					}
 				}
 			} else if (isOpponent(creature)) {
-				// we have no target lets try pick this one
+				// Sem alvo? Tenta pegar esta criatura
 				selectTarget(creature);
 			}
 		}
@@ -386,7 +396,7 @@ void Monster::addTarget(Creature* creature, bool pushFront /* = false*/)
 	if (std::find(targetList.begin(), targetList.end(), creature) == targetList.end()) {
 		creature->incrementReferenceCounter();
 		if (pushFront) {
-			targetList.push_front(creature);
+			targetList.insert(targetList.begin(), creature);
 		} else {
 			targetList.push_back(creature);
 		}
@@ -662,7 +672,7 @@ void Monster::onFollowCreatureComplete(const Creature* creature)
 			targetList.erase(it);
 
 			if (hasFollowPath) {
-				targetList.push_front(target);
+				targetList.insert(targetList.begin(), target);
 			} else if (!isSummon()) {
 				targetList.push_back(target);
 			} else {
@@ -858,6 +868,13 @@ void Monster::doAttacking(uint32_t interval)
 		return;
 	}
 
+	// Early exit: no target means no attacking — check this first to avoid
+	// unnecessary work evaluating spell lists and summon state.
+	if (!attackedCreature || attackedCreature == this) {
+		attackedCreature = nullptr;
+		return;
+	}
+
 	if (!mType || mType->info.attackSpells.empty()) {
 		return;
 	}
@@ -870,8 +887,7 @@ void Monster::doAttacking(uint32_t interval)
 		}
 	}
 
-	if (!attackedCreature || attackedCreature->isRemoved() || attackedCreature->isDead() ||
-	    attackedCreature == this) {
+	if (attackedCreature->isRemoved() || attackedCreature->isDead()) {
 		attackedCreature = nullptr;
 		return;
 	}
@@ -1451,27 +1467,196 @@ bool Monster::getDanceStep(const Position& creaturePos, Direction& direction, bo
 	return false;
 }
 
+enum CommonIndex
+{
+	FIRST_ENTRY,
+	SECOND_ENTRY,
+	THIRD_ENTRY,
+	FOURTH_ENTRY,
+	FIFTH_ENTRY
+};
+
+using _FleeList = std::array<Direction, 5>;
+static constexpr std::array<_FleeList, 8> FleeMap = {
+    {// Index = direction of target relative to monster
+     // NORTH(0): flee south, or west/east, or SW/SE
+     {DIRECTION_SOUTH, DIRECTION_WEST, DIRECTION_EAST, DIRECTION_SOUTHWEST, DIRECTION_SOUTHEAST},
+     // EAST(1): flee west, or north/south, or NW/SW
+     {DIRECTION_WEST, DIRECTION_NORTH, DIRECTION_SOUTH, DIRECTION_NORTHWEST, DIRECTION_SOUTHWEST},
+     // SOUTH(2): flee north, or west/east, or NW/NE
+     {DIRECTION_NORTH, DIRECTION_WEST, DIRECTION_EAST, DIRECTION_NORTHWEST, DIRECTION_NORTHEAST},
+     // WEST(3): flee east, or north/south, or NE/SE
+     {DIRECTION_EAST, DIRECTION_NORTH, DIRECTION_SOUTH, DIRECTION_NORTHEAST, DIRECTION_SOUTHEAST},
+     // SOUTHWEST(4): flee NE direction
+     {DIRECTION_NORTH, DIRECTION_EAST, DIRECTION_NORTHEAST, DIRECTION_NORTHWEST, DIRECTION_SOUTHEAST},
+     // SOUTHEAST(5): flee NW direction
+     {DIRECTION_NORTH, DIRECTION_WEST, DIRECTION_NORTHWEST, DIRECTION_SOUTHWEST, DIRECTION_NORTHEAST},
+     // NORTHWEST(6): flee SE direction
+     {DIRECTION_SOUTH, DIRECTION_EAST, DIRECTION_SOUTHEAST, DIRECTION_SOUTHWEST, DIRECTION_NORTHEAST},
+     // NORTHEAST(7): flee SW direction
+     {DIRECTION_SOUTH, DIRECTION_WEST, DIRECTION_SOUTHWEST, DIRECTION_NORTHWEST, DIRECTION_SOUTHEAST}}};
+
+using _ChargeList = std::array<Direction, 3>;
+static constexpr std::array<_ChargeList, 8> ChaseMap = {{// NORTH(0): chase north, or west/east
+                                                         {DIRECTION_NORTH, DIRECTION_WEST, DIRECTION_EAST},
+                                                         // EAST(1): chase east, or north/south
+                                                         {DIRECTION_EAST, DIRECTION_NORTH, DIRECTION_SOUTH},
+                                                         // SOUTH(2): chase south, or west/east
+                                                         {DIRECTION_SOUTH, DIRECTION_WEST, DIRECTION_EAST},
+                                                         // WEST(3): chase west, or north/south
+                                                         {DIRECTION_WEST, DIRECTION_NORTH, DIRECTION_SOUTH},
+                                                         // SOUTHWEST(4): chase SW, or south/west
+                                                         {DIRECTION_SOUTH, DIRECTION_WEST, DIRECTION_SOUTHWEST},
+                                                         // SOUTHEAST(5): chase SE, or south/east
+                                                         {DIRECTION_SOUTH, DIRECTION_EAST, DIRECTION_SOUTHEAST},
+                                                         // NORTHWEST(6): chase NW, or north/west
+                                                         {DIRECTION_NORTH, DIRECTION_WEST, DIRECTION_NORTHWEST},
+                                                         // NORTHEAST(7): chase NE, or north/east
+                                                         {DIRECTION_NORTH, DIRECTION_EAST, DIRECTION_NORTHEAST}}};
+
+using _EscapeList = std::array<Direction, 3>;
+static constexpr std::array<_EscapeList, 8> EscapeMap = {{{DIRECTION_NORTH, DIRECTION_NORTHWEST, DIRECTION_NORTHEAST},
+                                                          {DIRECTION_EAST, DIRECTION_NORTHEAST, DIRECTION_SOUTHEAST},
+                                                          {DIRECTION_SOUTH, DIRECTION_SOUTHWEST, DIRECTION_SOUTHEAST},
+                                                          {DIRECTION_WEST, DIRECTION_NORTHWEST, DIRECTION_SOUTHWEST},
+                                                          {DIRECTION_SOUTHWEST, DIRECTION_WEST, DIRECTION_SOUTH},
+                                                          {DIRECTION_SOUTHEAST, DIRECTION_EAST, DIRECTION_SOUTH},
+                                                          {DIRECTION_NORTHWEST, DIRECTION_WEST, DIRECTION_NORTH},
+                                                          {DIRECTION_NORTHEAST, DIRECTION_EAST, DIRECTION_NORTH}}};
+
+// Converts (offsetX, offsetY) to a Direction using a 3x3 lookup table.
+inline static constexpr Direction getTargetDirection(int32_t x_offset, int32_t y_offset) noexcept
+{
+	int32_t x_norm = (x_offset > 0) - (x_offset < 0);
+	int32_t y_norm = (y_offset > 0) - (y_offset < 0);
+
+	constexpr Direction lookup[3][3] = {{DIRECTION_SOUTHEAST, DIRECTION_SOUTH, DIRECTION_SOUTHWEST},
+	                                    {DIRECTION_EAST, DIRECTION_NONE, DIRECTION_WEST},
+	                                    {DIRECTION_NORTHEAST, DIRECTION_NORTH, DIRECTION_NORTHWEST}};
+
+	return lookup[y_norm + 1][x_norm + 1];
+}
+
+// Flee from target using lookup tables.
+void Monster::fleeFromTarget(const Position& targetPos, Direction& direction)
+{
+	const Position& creaturePos = getPosition();
+	int32_t offsetx = creaturePos.getOffsetX(targetPos);
+	int32_t offsety = creaturePos.getOffsetY(targetPos);
+	Direction target_direction = getTargetDirection(offsetx, offsety);
+
+	if ((offsetx == 0 && offsety == 0) || target_direction == DIRECTION_NONE) {
+		getRandomStep(creaturePos, direction);
+		return;
+	}
+
+	const auto& flee_list = FleeMap[target_direction];
+	const bool diagonal = (offsetx != 0) && (offsety != 0);
+	const int random_number = (rand() % 3);
+	const bool chance = ((random_number + 1) > 1);
+
+	if (!diagonal) {
+		// Non-diagonal: primary direction has highest priority
+		if (canWalkTo(creaturePos, flee_list[FIRST_ENTRY])) {
+			direction = flee_list[FIRST_ENTRY];
+			return;
+		}
+
+		// Secondary: 2nd and 3rd directions randomized
+		auto secondary_first = chance ? flee_list[THIRD_ENTRY] : flee_list[SECOND_ENTRY];
+		auto secondary_backup = chance ? flee_list[SECOND_ENTRY] : flee_list[THIRD_ENTRY];
+
+		if (canWalkTo(creaturePos, secondary_first)) {
+			direction = secondary_first;
+			return;
+		}
+		if (canWalkTo(creaturePos, secondary_backup)) {
+			direction = secondary_backup;
+			return;
+		}
+
+		// Tertiary: 4th and 5th fallback directions
+		auto tertiary_first = chance ? flee_list[FOURTH_ENTRY] : flee_list[FIFTH_ENTRY];
+		auto tertiary_backup = chance ? flee_list[FIFTH_ENTRY] : flee_list[FOURTH_ENTRY];
+
+		if (canWalkTo(creaturePos, tertiary_first)) {
+			direction = tertiary_first;
+			return;
+		}
+		if (canWalkTo(creaturePos, tertiary_backup)) {
+			direction = tertiary_backup;
+			return;
+		}
+	}
+
+	if (diagonal) {
+		// Diagonal: first two directions share primary priority
+		auto primary_first = chance ? flee_list[SECOND_ENTRY] : flee_list[FIRST_ENTRY];
+		auto primary_backup = chance ? flee_list[FIRST_ENTRY] : flee_list[SECOND_ENTRY];
+
+		if (canWalkTo(creaturePos, primary_first)) {
+			direction = primary_first;
+			return;
+		}
+		if (canWalkTo(creaturePos, primary_backup)) {
+			direction = primary_backup;
+			return;
+		}
+
+		// Secondary: 3rd entry
+		if (canWalkTo(creaturePos, flee_list[THIRD_ENTRY])) {
+			direction = flee_list[THIRD_ENTRY];
+			return;
+		}
+
+		// Tertiary fallback: 4th and 5th
+		auto final_first = chance ? flee_list[FOURTH_ENTRY] : flee_list[FIFTH_ENTRY];
+		auto final_last = chance ? flee_list[FIFTH_ENTRY] : flee_list[FOURTH_ENTRY];
+
+		if (canWalkTo(creaturePos, final_first)) {
+			direction = final_first;
+			return;
+		}
+		if (canWalkTo(creaturePos, final_last)) {
+			direction = final_last;
+			return;
+		}
+	}
+
+	const auto& escape_list = EscapeMap[target_direction];
+	auto escape_one = escape_list[random_number];
+	auto escape_two = escape_list[(random_number + 1) % 3];
+	auto escape_three = escape_list[(random_number + 2) % 3];
+
+	if (canWalkTo(creaturePos, escape_one)) {
+		direction = escape_one;
+		return;
+	}
+	if (canWalkTo(creaturePos, escape_two)) {
+		direction = escape_two;
+		return;
+	}
+	if (canWalkTo(creaturePos, escape_three)) {
+		direction = escape_three;
+		return;
+	}
+}
+
 bool Monster::getDistanceStep(const Position& targetPos, Direction& direction, bool flee /* = false */)
 {
 	const Position& creaturePos = getPosition();
 
 	int32_t dx = creaturePos.getDistanceX(targetPos);
 	int32_t dy = creaturePos.getDistanceY(targetPos);
-
 	int32_t distance = std::max(dx, dy);
 
 	if (!flee && (distance > mType->info.targetDistance || !g_game.isSightClear(creaturePos, targetPos, true))) {
 		return false; // let the A* calculate it
 	} else if (!flee && distance == mType->info.targetDistance) {
-		return true; // we don't really care here, since it's what we wanted to reach (a dance-step will take of dancing
-		             // in that position)
+		return true; // already at target distance, dance step handles position
 	}
 
-	int32_t offsetx = creaturePos.getOffsetX(targetPos);
-	int32_t offsety = creaturePos.getOffsetY(targetPos);
-
 	if (dx <= 1 && dy <= 1) {
-		// seems like a target is near, it this case we need to slow down our movements (as a monster)
 		if (stepDuration < 2) {
 			stepDuration++;
 		}
@@ -1479,475 +1664,68 @@ bool Monster::getDistanceStep(const Position& targetPos, Direction& direction, b
 		stepDuration--;
 	}
 
-	if (offsetx == 0 && offsety == 0) {
-		return getRandomStep(
-		    creaturePos,
-		    direction); // player is "on" the monster so let's get some random step and rest will be taken care later.
+	if (flee) {
+		fleeFromTarget(targetPos, direction);
+		return true;
 	}
 
-	if (dx == dy) {
-		// player is diagonal to the monster
-		if (offsetx >= 1 && offsety >= 1) {
-			// player is NW
-			// escape to SE, S or E [and some extra]
-			bool s = canWalkTo(creaturePos, DIRECTION_SOUTH);
-			bool e = canWalkTo(creaturePos, DIRECTION_EAST);
+	if (distance < mType->info.targetDistance) {
+		fleeFromTarget(targetPos, direction);
+		return true;
+	}
 
-			if (s && e) {
-				direction = boolean_random() ? DIRECTION_SOUTH : DIRECTION_EAST;
-				return true;
-			} else if (s) {
-				direction = DIRECTION_SOUTH;
-				return true;
-			} else if (e) {
-				direction = DIRECTION_EAST;
-				return true;
-			} else if (canWalkTo(creaturePos, DIRECTION_SOUTHEAST)) {
-				direction = DIRECTION_SOUTHEAST;
-				return true;
-			}
+	int32_t offsetx = creaturePos.getOffsetX(targetPos);
+	int32_t offsety = creaturePos.getOffsetY(targetPos);
+	Direction target_direction = getTargetDirection(offsetx, offsety);
 
-			/* fleeing */
-			bool n = canWalkTo(creaturePos, DIRECTION_NORTH);
-			bool w = canWalkTo(creaturePos, DIRECTION_WEST);
+	if ((offsetx == 0 && offsety == 0) || target_direction == DIRECTION_NONE) {
+		return getRandomStep(creaturePos, direction);
+	}
 
-			if (flee) {
-				if (n && w) {
-					direction = boolean_random() ? DIRECTION_NORTH : DIRECTION_WEST;
-					return true;
-				} else if (n) {
-					direction = DIRECTION_NORTH;
-					return true;
-				} else if (w) {
-					direction = DIRECTION_WEST;
-					return true;
-				}
-			}
+	const auto& chase_list = ChaseMap[target_direction];
+	const bool diagonal = (offsetx != 0) && (offsety != 0);
+	const bool chance = boolean_random();
 
-			/* end of fleeing */
-
-			if (w && canWalkTo(creaturePos, DIRECTION_SOUTHWEST)) {
-				direction = DIRECTION_WEST;
-			} else if (n && canWalkTo(creaturePos, DIRECTION_NORTHEAST)) {
-				direction = DIRECTION_NORTH;
-			}
-
+	if (!diagonal) {
+		// Primary: single best direction
+		if (canWalkTo(creaturePos, chase_list[FIRST_ENTRY])) {
+			direction = chase_list[FIRST_ENTRY];
 			return true;
-		} else if (offsetx <= -1 && offsety <= -1) {
-			// player is SE
-			// escape to NW , W or N [and some extra]
-			bool w = canWalkTo(creaturePos, DIRECTION_WEST);
-			bool n = canWalkTo(creaturePos, DIRECTION_NORTH);
+		}
 
-			if (w && n) {
-				direction = boolean_random() ? DIRECTION_WEST : DIRECTION_NORTH;
-				return true;
-			} else if (w) {
-				direction = DIRECTION_WEST;
-				return true;
-			} else if (n) {
-				direction = DIRECTION_NORTH;
-				return true;
-			}
+		// Secondary: randomized fallback
+		auto secondary_one = chance ? chase_list[SECOND_ENTRY] : chase_list[THIRD_ENTRY];
+		auto secondary_two = chance ? chase_list[THIRD_ENTRY] : chase_list[SECOND_ENTRY];
 
-			if (canWalkTo(creaturePos, DIRECTION_NORTHWEST)) {
-				direction = DIRECTION_NORTHWEST;
-				return true;
-			}
-
-			/* fleeing */
-			bool s = canWalkTo(creaturePos, DIRECTION_SOUTH);
-			bool e = canWalkTo(creaturePos, DIRECTION_EAST);
-
-			if (flee) {
-				if (s && e) {
-					direction = boolean_random() ? DIRECTION_SOUTH : DIRECTION_EAST;
-					return true;
-				} else if (s) {
-					direction = DIRECTION_SOUTH;
-					return true;
-				} else if (e) {
-					direction = DIRECTION_EAST;
-					return true;
-				}
-			}
-
-			/* end of fleeing */
-
-			if (s && canWalkTo(creaturePos, DIRECTION_SOUTHWEST)) {
-				direction = DIRECTION_SOUTH;
-			} else if (e && canWalkTo(creaturePos, DIRECTION_NORTHEAST)) {
-				direction = DIRECTION_EAST;
-			}
-
+		if (canWalkTo(creaturePos, secondary_one)) {
+			direction = secondary_one;
 			return true;
-		} else if (offsetx >= 1 && offsety <= -1) {
-			// player is SW
-			// escape to NE, N, E [and some extra]
-			bool n = canWalkTo(creaturePos, DIRECTION_NORTH);
-			bool e = canWalkTo(creaturePos, DIRECTION_EAST);
-			if (n && e) {
-				direction = boolean_random() ? DIRECTION_NORTH : DIRECTION_EAST;
-				return true;
-			} else if (n) {
-				direction = DIRECTION_NORTH;
-				return true;
-			} else if (e) {
-				direction = DIRECTION_EAST;
-				return true;
-			}
-
-			if (canWalkTo(creaturePos, DIRECTION_NORTHEAST)) {
-				direction = DIRECTION_NORTHEAST;
-				return true;
-			}
-
-			/* fleeing */
-			bool s = canWalkTo(creaturePos, DIRECTION_SOUTH);
-			bool w = canWalkTo(creaturePos, DIRECTION_WEST);
-
-			if (flee) {
-				if (s && w) {
-					direction = boolean_random() ? DIRECTION_SOUTH : DIRECTION_WEST;
-					return true;
-				} else if (s) {
-					direction = DIRECTION_SOUTH;
-					return true;
-				} else if (w) {
-					direction = DIRECTION_WEST;
-					return true;
-				}
-			}
-
-			/* end of fleeing */
-
-			if (w && canWalkTo(creaturePos, DIRECTION_NORTHWEST)) {
-				direction = DIRECTION_WEST;
-			} else if (s && canWalkTo(creaturePos, DIRECTION_SOUTHEAST)) {
-				direction = DIRECTION_SOUTH;
-			}
-
-			return true;
-		} else if (offsetx <= -1 && offsety >= 1) {
-			// player is NE
-			// escape to SW, S, W [and some extra]
-			bool w = canWalkTo(creaturePos, DIRECTION_WEST);
-			bool s = canWalkTo(creaturePos, DIRECTION_SOUTH);
-			if (w && s) {
-				direction = boolean_random() ? DIRECTION_WEST : DIRECTION_SOUTH;
-				return true;
-			} else if (w) {
-				direction = DIRECTION_WEST;
-				return true;
-			} else if (s) {
-				direction = DIRECTION_SOUTH;
-				return true;
-			} else if (canWalkTo(creaturePos, DIRECTION_SOUTHWEST)) {
-				direction = DIRECTION_SOUTHWEST;
-				return true;
-			}
-
-			/* fleeing */
-			bool n = canWalkTo(creaturePos, DIRECTION_NORTH);
-			bool e = canWalkTo(creaturePos, DIRECTION_EAST);
-
-			if (flee) {
-				if (n && e) {
-					direction = boolean_random() ? DIRECTION_NORTH : DIRECTION_EAST;
-					return true;
-				} else if (n) {
-					direction = DIRECTION_NORTH;
-					return true;
-				} else if (e) {
-					direction = DIRECTION_EAST;
-					return true;
-				}
-			}
-
-			/* end of fleeing */
-
-			if (e && canWalkTo(creaturePos, DIRECTION_SOUTHEAST)) {
-				direction = DIRECTION_EAST;
-			} else if (n && canWalkTo(creaturePos, DIRECTION_NORTHWEST)) {
-				direction = DIRECTION_NORTH;
-			}
-
+		}
+		if (canWalkTo(creaturePos, secondary_two)) {
+			direction = secondary_two;
 			return true;
 		}
 	}
 
-	// Now let's decide where the player is located to the monster (what direction) so we can decide where to escape.
-	if (dy > dx) {
-		Direction playerDir = offsety < 0 ? DIRECTION_SOUTH : DIRECTION_NORTH;
-		switch (playerDir) {
-			case DIRECTION_NORTH: {
-				// Player is to the NORTH, so obviously we need to check if we can go SOUTH, if not then let's choose
-				// WEST or EAST and again if we can't we need to decide about some diagonal movements.
-				if (canWalkTo(creaturePos, DIRECTION_SOUTH)) {
-					direction = DIRECTION_SOUTH;
-					return true;
-				}
+	// Diagonal: two primary options
+	auto primary_one = chance ? chase_list[SECOND_ENTRY] : chase_list[FIRST_ENTRY];
+	auto primary_two = chance ? chase_list[FIRST_ENTRY] : chase_list[SECOND_ENTRY];
 
-				bool w = canWalkTo(creaturePos, DIRECTION_WEST);
-				bool e = canWalkTo(creaturePos, DIRECTION_EAST);
-				if (w && e && offsetx == 0) {
-					direction = boolean_random() ? DIRECTION_WEST : DIRECTION_EAST;
-					return true;
-				} else if (w && offsetx <= 0) {
-					direction = DIRECTION_WEST;
-					return true;
-				} else if (e && offsetx >= 0) {
-					direction = DIRECTION_EAST;
-					return true;
-				}
-
-				/* fleeing */
-				if (flee) {
-					if (w && e) {
-						direction = boolean_random() ? DIRECTION_WEST : DIRECTION_EAST;
-						return true;
-					} else if (w) {
-						direction = DIRECTION_WEST;
-						return true;
-					} else if (e) {
-						direction = DIRECTION_EAST;
-						return true;
-					}
-				}
-
-				/* end of fleeing */
-
-				bool sw = canWalkTo(creaturePos, DIRECTION_SOUTHWEST);
-				bool se = canWalkTo(creaturePos, DIRECTION_SOUTHEAST);
-				if (sw || se) {
-					// we can move both dirs
-					if (sw && se) {
-						direction = boolean_random() ? DIRECTION_SOUTHWEST : DIRECTION_SOUTHEAST;
-					} else if (w) {
-						direction = DIRECTION_WEST;
-					} else if (sw) {
-						direction = DIRECTION_SOUTHWEST;
-					} else if (e) {
-						direction = DIRECTION_EAST;
-					} else if (se) {
-						direction = DIRECTION_SOUTHEAST;
-					}
-					return true;
-				}
-
-				/* fleeing */
-				if (flee && canWalkTo(creaturePos, DIRECTION_NORTH)) {
-					// towards player, yea
-					direction = DIRECTION_NORTH;
-					return true;
-				}
-
-				/* end of fleeing */
-				break;
-			}
-
-			case DIRECTION_SOUTH: {
-				if (canWalkTo(creaturePos, DIRECTION_NORTH)) {
-					direction = DIRECTION_NORTH;
-					return true;
-				}
-
-				bool w = canWalkTo(creaturePos, DIRECTION_WEST);
-				bool e = canWalkTo(creaturePos, DIRECTION_EAST);
-				if (w && e && offsetx == 0) {
-					direction = boolean_random() ? DIRECTION_WEST : DIRECTION_EAST;
-					return true;
-				} else if (w && offsetx <= 0) {
-					direction = DIRECTION_WEST;
-					return true;
-				} else if (e && offsetx >= 0) {
-					direction = DIRECTION_EAST;
-					return true;
-				}
-
-				/* fleeing */
-				if (flee) {
-					if (w && e) {
-						direction = boolean_random() ? DIRECTION_WEST : DIRECTION_EAST;
-						return true;
-					} else if (w) {
-						direction = DIRECTION_WEST;
-						return true;
-					} else if (e) {
-						direction = DIRECTION_EAST;
-						return true;
-					}
-				}
-
-				/* end of fleeing */
-
-				bool nw = canWalkTo(creaturePos, DIRECTION_NORTHWEST);
-				bool ne = canWalkTo(creaturePos, DIRECTION_NORTHEAST);
-				if (nw || ne) {
-					// we can move both dirs
-					if (nw && ne) {
-						direction = boolean_random() ? DIRECTION_NORTHWEST : DIRECTION_NORTHEAST;
-					} else if (w) {
-						direction = DIRECTION_WEST;
-					} else if (nw) {
-						direction = DIRECTION_NORTHWEST;
-					} else if (e) {
-						direction = DIRECTION_EAST;
-					} else if (ne) {
-						direction = DIRECTION_NORTHEAST;
-					}
-					return true;
-				}
-
-				/* fleeing */
-				if (flee && canWalkTo(creaturePos, DIRECTION_SOUTH)) {
-					// towards player, yea
-					direction = DIRECTION_SOUTH;
-					return true;
-				}
-
-				/* end of fleeing */
-				break;
-			}
-
-			default:
-				break;
-		}
-	} else {
-		Direction playerDir = offsetx < 0 ? DIRECTION_EAST : DIRECTION_WEST;
-		switch (playerDir) {
-			case DIRECTION_WEST: {
-				if (canWalkTo(creaturePos, DIRECTION_EAST)) {
-					direction = DIRECTION_EAST;
-					return true;
-				}
-
-				bool n = canWalkTo(creaturePos, DIRECTION_NORTH);
-				bool s = canWalkTo(creaturePos, DIRECTION_SOUTH);
-				if (n && s && offsety == 0) {
-					direction = boolean_random() ? DIRECTION_NORTH : DIRECTION_SOUTH;
-					return true;
-				} else if (n && offsety <= 0) {
-					direction = DIRECTION_NORTH;
-					return true;
-				} else if (s && offsety >= 0) {
-					direction = DIRECTION_SOUTH;
-					return true;
-				}
-
-				/* fleeing */
-				if (flee) {
-					if (n && s) {
-						direction = boolean_random() ? DIRECTION_NORTH : DIRECTION_SOUTH;
-						return true;
-					} else if (n) {
-						direction = DIRECTION_NORTH;
-						return true;
-					} else if (s) {
-						direction = DIRECTION_SOUTH;
-						return true;
-					}
-				}
-
-				/* end of fleeing */
-
-				bool se = canWalkTo(creaturePos, DIRECTION_SOUTHEAST);
-				bool ne = canWalkTo(creaturePos, DIRECTION_NORTHEAST);
-				if (se || ne) {
-					if (se && ne) {
-						direction = boolean_random() ? DIRECTION_SOUTHEAST : DIRECTION_NORTHEAST;
-					} else if (s) {
-						direction = DIRECTION_SOUTH;
-					} else if (se) {
-						direction = DIRECTION_SOUTHEAST;
-					} else if (n) {
-						direction = DIRECTION_NORTH;
-					} else if (ne) {
-						direction = DIRECTION_NORTHEAST;
-					}
-					return true;
-				}
-
-				/* fleeing */
-				if (flee && canWalkTo(creaturePos, DIRECTION_WEST)) {
-					// towards player, yea
-					direction = DIRECTION_WEST;
-					return true;
-				}
-
-				/* end of fleeing */
-				break;
-			}
-
-			case DIRECTION_EAST: {
-				if (canWalkTo(creaturePos, DIRECTION_WEST)) {
-					direction = DIRECTION_WEST;
-					return true;
-				}
-
-				bool n = canWalkTo(creaturePos, DIRECTION_NORTH);
-				bool s = canWalkTo(creaturePos, DIRECTION_SOUTH);
-				if (n && s && offsety == 0) {
-					direction = boolean_random() ? DIRECTION_NORTH : DIRECTION_SOUTH;
-					return true;
-				} else if (n && offsety <= 0) {
-					direction = DIRECTION_NORTH;
-					return true;
-				} else if (s && offsety >= 0) {
-					direction = DIRECTION_SOUTH;
-					return true;
-				}
-
-				/* fleeing */
-				if (flee) {
-					if (n && s) {
-						direction = boolean_random() ? DIRECTION_NORTH : DIRECTION_SOUTH;
-						return true;
-					} else if (n) {
-						direction = DIRECTION_NORTH;
-						return true;
-					} else if (s) {
-						direction = DIRECTION_SOUTH;
-						return true;
-					}
-				}
-
-				/* end of fleeing */
-
-				bool nw = canWalkTo(creaturePos, DIRECTION_NORTHWEST);
-				bool sw = canWalkTo(creaturePos, DIRECTION_SOUTHWEST);
-				if (nw || sw) {
-					if (nw && sw) {
-						direction = boolean_random() ? DIRECTION_NORTHWEST : DIRECTION_SOUTHWEST;
-					} else if (n) {
-						direction = DIRECTION_NORTH;
-					} else if (nw) {
-						direction = DIRECTION_NORTHWEST;
-					} else if (s) {
-						direction = DIRECTION_SOUTH;
-					} else if (sw) {
-						direction = DIRECTION_SOUTHWEST;
-					}
-					return true;
-				}
-
-				/* fleeing */
-				if (flee && canWalkTo(creaturePos, DIRECTION_EAST)) {
-					// towards player, yea
-					direction = DIRECTION_EAST;
-					return true;
-				}
-
-				/* end of fleeing */
-				break;
-			}
-
-			default:
-				break;
-		}
+	if (canWalkTo(creaturePos, primary_one)) {
+		direction = primary_one;
+		return true;
+	}
+	if (canWalkTo(creaturePos, primary_two)) {
+		direction = primary_two;
+		return true;
 	}
 
-	return true;
+	if (canWalkTo(creaturePos, chase_list[THIRD_ENTRY])) {
+		direction = chase_list[THIRD_ENTRY];
+		return true;
+	}
+
+	return false;
 }
 
 bool Monster::canWalkTo(Position pos, Direction direction) const
@@ -1965,7 +1743,6 @@ bool Monster::canWalkTo(Position pos, Direction direction) const
 
 void Monster::death(Creature*)
 {
-
 	// rewardboss
 	if (getMonster()->isRewardBoss()) {
 		uint32_t monsterId = getMonster()->getID();
@@ -1983,7 +1760,8 @@ void Monster::death(Creature*)
 		int32_t totalDamageTaken = 0;
 		int32_t totalHealingDone = 0;
 		for (const auto& [playerId, playerScoreInfo] : scoreInfo.playerScoreTable) {
-			int32_t playerScore = playerScoreInfo.damageDone + playerScoreInfo.damageTaken + playerScoreInfo.healingDone;
+			int32_t playerScore =
+			    playerScoreInfo.damageDone + playerScoreInfo.damageTaken + playerScoreInfo.healingDone;
 			totalScore += playerScore;
 			totalDamageDone += playerScoreInfo.damageDone;
 			totalDamageTaken += playerScoreInfo.damageTaken;
@@ -2065,13 +1843,13 @@ void Monster::death(Creature*)
 						lootString += (*lootIt)->getNameDescription();
 					}
 					player->getRewardChest().internalAddThing(rewardContainer);
-					player->sendTextMessage(
-						MESSAGE_STATUS_DEFAULT,
-						"The following items dropped by " + getMonster()->getName() +
-						" are available in your reward chest: Reward Container (" + lootString + ").");
-					} else {
-						DBInsert rewardQuery(
-							"INSERT INTO `player_rewarditems` (`player_id`, `pid`, `sid`, `itemtype`, `count`, `attributes`) VALUES ");
+					player->sendTextMessage(MESSAGE_STATUS_DEFAULT,
+					                        "The following items dropped by " + getMonster()->getName() +
+					                            " are available in your reward chest: Reward Container (" + lootString +
+					                            ").");
+				} else {
+					DBInsert rewardQuery(
+					    "INSERT INTO `player_rewarditems` (`player_id`, `pid`, `sid`, `itemtype`, `count`, `attributes`) VALUES ");
 					PropWriteStream propWriteStream;
 					ItemBlockList itemList;
 					int32_t currentPid = 1;

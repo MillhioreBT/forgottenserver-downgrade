@@ -12,7 +12,7 @@ class Game;
 class Spawn;
 
 using CreatureHashSet = std::unordered_set<Creature*>;
-using CreatureList = std::list<Creature*>;
+using CreatureList = std::vector<Creature*>;
 
 enum TargetSearchType_t
 {
@@ -147,6 +147,8 @@ public:
 	void removeTarget(Creature* creature);
 
 private:
+	bool useCacheMap() const override { return true; }
+
 	CreatureHashSet friendList;
 	CreatureList targetList;
 
@@ -201,6 +203,7 @@ private:
 	bool getDanceStep(const Position& creaturePos, Direction& direction, bool keepAttack = true,
 	                  bool keepDistance = true);
 	bool canWalkTo(Position pos, Direction direction) const;
+	void fleeFromTarget(const Position& targetPos, Direction& direction);
 
 	static bool pushItem(Item* item);
 	static void pushItems(Tile* tile);
