@@ -2720,14 +2720,6 @@ void ProtocolGame::sendMoveCreature(const Creature* creature, const Position& ne
 		}
 	} else if (canSee(oldPos)) {
 		sendRemoveTileThing(oldPos, oldStackPos);
-		removeKnownCreature(creature->getID());
-		if (player && player->isLiveCasting()) {
-			for (auto& spectator : player->spectators) {
-				if (spectator && spectator->isAcceptingPackets()) {
-					spectator->removeKnownCreature(creature->getID());
-				}
-			}
-		}
 	} else if (canSee(creature->getPosition())) {
 		sendAddCreature(creature, newPos, newStackPos);
 	}
