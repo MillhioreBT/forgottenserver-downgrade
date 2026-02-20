@@ -896,19 +896,23 @@ void Creature::getPathSearchParams(const Creature*, FindPathParams& fpp) const
 
 void Creature::goToFollowCreature()
 {
-	if (followCreature) {
-		FindPathParams fpp;
-		getPathSearchParams(followCreature, fpp);
+    if (followCreature)
+    {
+        FindPathParams fpp;
+        getPathSearchParams(followCreature, fpp);
 
-		if (getPathTo(followCreature->getPosition(), listWalkDir, fpp)) {
-			hasFollowPath = true;
-			startAutoWalk(listWalkDir);
-		} else {
-			hasFollowPath = false;
-		}
-	}
+        listWalkDir.clear();
 
-	onFollowCreatureComplete(followCreature);
+        if (getPathTo(followCreature->getPosition(), listWalkDir, fpp))
+        {
+            hasFollowPath = true;
+            startAutoWalk(listWalkDir);
+        }
+        else
+            hasFollowPath = false;
+    }
+
+    onFollowCreatureComplete(followCreature);
 }
 
 bool Creature::setFollowCreature(Creature* creature)
