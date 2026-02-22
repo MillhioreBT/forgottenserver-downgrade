@@ -37,159 +37,168 @@ extern Game g_game;
 
 class ProtocolSpectator final : public ProtocolGame
 {
-	public:
-		// static protocol information
-		enum {server_sends_first = true};
-		enum {protocol_identifier = 0}; // Not required as we send first
-		enum {use_checksum = true};
-		static const char* protocol_name() {
-			return "live caster protocol";
-		}
+public:
+	// static protocol information
+	enum
+	{
+		server_sends_first = true
+	};
+	enum
+	{
+		protocol_identifier = 0
+	}; // Not required as we send first
+	enum
+	{
+		use_checksum = true
+	};
+	static const char* protocol_name() { return "live caster protocol"; }
 
-		explicit ProtocolSpectator(Connection_ptr connection) : ProtocolGame(connection) {}
+	explicit ProtocolSpectator(Connection_ptr connection) : ProtocolGame(connection) {}
 
-		void login(const std::string& name, const std::string& password, OperatingSystem_t operatingSystem);
-		void logout(bool displayEffect = false, bool forced = false);
+	void login(const std::string& name, const std::string& password, OperatingSystem_t operatingSystem);
+	void logout(bool displayEffect = false, bool forced = false);
 
-		uint16_t getVersion() const {
-			return version;
-		}
+	uint16_t getVersion() const { return version; }
 
-		// Known creature management - fix for creature desync bug
-		void removeKnownCreature(uint32_t creatureId);
-		
-		bool isAcceptingPackets() const {
-			return acceptPackets;
-		}
+	// Known creature management - fix for creature desync bug
+	void removeKnownCreature(uint32_t creatureId);
 
-	private:
-		ProtocolSpectator_ptr getThis() {
-			return std::static_pointer_cast<ProtocolSpectator>(shared_from_this());
-		}
-		void syncOpenContainers();
-		void connect(uint32_t playerId, OperatingSystem_t operatingSystem);
-		void disconnectClient(const std::string& message) const;
-		void writeToOutputBuffer(const NetworkMessage& msg);
-		void sendPingBack();
-		void sendPing();
-		void sendDllCheck();
+	bool isAcceptingPackets() const { return acceptPackets; }
 
-		void release() final;
+private:
+	ProtocolSpectator_ptr getThis() { return std::static_pointer_cast<ProtocolSpectator>(shared_from_this()); }
+	void syncOpenContainers();
+	void connect(uint32_t playerId, OperatingSystem_t operatingSystem);
+	void disconnectClient(const std::string& message) const;
+	void writeToOutputBuffer(const NetworkMessage& msg);
+	void sendPingBack();
+	void sendPing();
+	void sendDllCheck();
 
-		void checkCreatureAsKnown(uint32_t id, bool& known, uint32_t& removedKnown);
+	void release() final;
 
-		bool canSee(int32_t x, int32_t y, int32_t z) const;
-		bool canSee(const Creature*) const;
-		bool canSee(const Position& pos) const;
+	void checkCreatureAsKnown(uint32_t id, bool& known, uint32_t& removedKnown);
 
-		// we have all the parse methods
-		void parsePacket(NetworkMessage& msg) final;
-		void onRecvFirstMessage(NetworkMessage& msg) final;
-		void onConnect() final;
+	bool canSee(int32_t x, int32_t y, int32_t z) const;
+	bool canSee(const Creature*) const;
+	bool canSee(const Position& pos) const;
 
-		//Parse methods
-		void parseExecuteCommand(const std::string& text);
-		void parseSay(NetworkMessage& msg);
-		void parseCloseChannel(NetworkMessage& msg);
-		void parseLookAt(NetworkMessage& msg);
-		void parseSwitchCast(uint8_t direction); // 0 = previous, 1 = next
+	// we have all the parse methods
+	void parsePacket(NetworkMessage& msg) final;
+	void onRecvFirstMessage(NetworkMessage& msg) final;
+	void onConnect() final;
 
-		//Send functions
-		void sendChannelMessage(const std::string& author, const std::string& text, SpeakClasses type, uint16_t channel);
-		void sendChannel(uint16_t channelId, const std::string& channelName, const UsersMap* channelUsers, const InvitedMap* invitedUsers);
-		void sendWelcomeMessage();
-		void sendTextMessage(MessageClasses mclass, const std::string& message);
+	// Parse methods
+	void parseExecuteCommand(const std::string& text);
+	void parseSay(NetworkMessage& msg);
+	void parseCloseChannel(NetworkMessage& msg);
+	void parseLookAt(NetworkMessage& msg);
+	void parseSwitchCast(uint8_t direction); // 0 = previous, 1 = next
 
-		void sendFeatures();
-		void sendFloorDescription(const Position& pos, int floor);
-		void parseChangeAwareRange(NetworkMessage& msg);
-		void updateAwareRange(int width, int height);
-		void sendAwareRange();
+	// Send functions
+	void sendChannelMessage(const std::string& author, const std::string& text, SpeakClasses type, uint16_t channel);
+	void sendChannel(uint16_t channelId, const std::string& channelName, const UsersMap* channelUsers,
+	                 const InvitedMap* invitedUsers);
+	void sendWelcomeMessage();
+	void sendTextMessage(MessageClasses mclass, const std::string& message);
 
-		void sendSkills();
-		void sendCreatureTurn(const Creature* creature, uint32_t stackpos);
+	void sendFeatures();
+	void sendFloorDescription(const Position& pos, int floor);
+	void parseChangeAwareRange(NetworkMessage& msg);
+	void updateAwareRange(int width, int height);
+	void sendAwareRange();
 
-		void sendCancelWalk();
-		void sendStats();
-		void sendBasicData();
+	void sendSkills();
+	void sendCreatureTurn(const Creature* creature, uint32_t stackpos);
 
-		void sendPendingStateEntered();
-		void sendEnterWorld();
+	void sendCancelWalk();
+	void sendStats();
+	void sendBasicData();
 
-		void sendCreatureLight(const Creature* creature);
-		void sendWorldLight(const LightInfo& lightInfo);
-		void sendMagicEffect(const Position& pos, uint16_t type);
-		void sendDistanceShoot(const Position& from, const Position& to, uint16_t type);
+	void sendPendingStateEntered();
+	void sendEnterWorld();
 
-		//tiles
-		void sendMapDescription(const Position& pos);
+	void sendCreatureLight(const Creature* creature);
+	void sendWorldLight(const LightInfo& lightInfo);
+	void sendMagicEffect(const Position& pos, uint16_t type);
+	void sendDistanceShoot(const Position& from, const Position& to, uint16_t type);
 
-		void sendAddCreature(const Creature* creature, const Position& pos, int32_t stackpos, bool isLogin);
-		void sendMoveCreature(const Creature* creature, const Position& newPos, int32_t newStackPos,
-		                      const Position& oldPos, int32_t oldStackPos, bool teleport);
+	// tiles
+	void sendMapDescription(const Position& pos);
 
-		void sendContainer(uint8_t cid, const Container* container, bool hasParent, uint16_t firstIndex);
+	void sendAddCreature(const Creature* creature, const Position& pos, int32_t stackpos, bool isLogin);
+	void sendAddTileCreature(const Creature* creature, const Position& pos, int32_t stackpos);
+	void sendMoveCreature(const Creature* creature, const Position& newPos, int32_t newStackPos, const Position& oldPos,
+	                      int32_t oldStackPos, bool teleport);
 
-		//inventory
-		void sendInventoryItem(slots_t slot, const Item* item);
+	void sendContainer(uint8_t cid, const Container* container, bool hasParent, uint16_t firstIndex);
 
-		//Help functions
+	// inventory
+	void sendInventoryItem(slots_t slot, const Item* item);
 
-		// translate a tile to clientreadable format
-		void GetTileDescription(const Tile* tile, NetworkMessage& msg);
+	// Help functions
 
-		// translate a floor to clientreadable format
-		void GetFloorDescription(NetworkMessage& msg, int32_t x, int32_t y, int32_t z,
-		                         int32_t width, int32_t height, int32_t offset, int32_t& skip);
+	// translate a tile to clientreadable format
+	void GetTileDescription(const Tile* tile, NetworkMessage& msg);
 
-		// translate a map area to clientreadable format
-		void GetMapDescription(int32_t x, int32_t y, int32_t z,
-		                       int32_t width, int32_t height, NetworkMessage& msg);
+	// translate a floor to clientreadable format
+	void GetFloorDescription(NetworkMessage& msg, int32_t x, int32_t y, int32_t z, int32_t width, int32_t height,
+	                         int32_t offset, int32_t& skip);
 
-		void AddCreature(NetworkMessage& msg, const Creature* creature, bool known, uint32_t remove);
-		void AddPlayerStats(NetworkMessage& msg);
-		void AddOutfit(NetworkMessage& msg, const Outfit_t& outfit);
-		void AddPlayerSkills(NetworkMessage& msg);
-		void AddCreatureLight(NetworkMessage& msg, const Creature* creature);
+	// translate a map area to clientreadable format
+	void GetMapDescription(int32_t x, int32_t y, int32_t z, int32_t width, int32_t height, NetworkMessage& msg);
 
-		friend class Player;
-		friend class ProtocolGame;
+	void AddCreature(NetworkMessage& msg, const Creature* creature, bool known, uint32_t remove);
+	void AddPlayerStats(NetworkMessage& msg);
+	void AddOutfit(NetworkMessage& msg, const Outfit_t& outfit);
+	void AddPlayerSkills(NetworkMessage& msg);
+	void AddCreatureLight(NetworkMessage& msg, const Creature* creature);
 
-		// Helpers so we don't need to bind every time
-		template <typename Callable, typename... Args>
-		void addGameTaskWithStats(Callable function, const std::string& description, const std::string& caller, Args&&... args) {
-			g_dispatcher.addTask(createTaskWithStats(std::bind(function, &g_game, std::forward<Args>(args)...), description, caller));
-		}
+	friend class Player;
+	friend class ProtocolGame;
 
-		template <typename Callable, typename... Args>
-		void addGameTaskTimedWithStats(uint32_t delay, Callable function, const std::string& description, const std::string& caller, Args&&... args) {
-			g_dispatcher.addTask(createTaskWithStats(delay, std::bind(function, &g_game, std::forward<Args>(args)...), description, caller));
-		}
+	// Helpers so we don't need to bind every time
+	template <typename Callable, typename... Args>
+	void addGameTaskWithStats(Callable function, const std::string& description, const std::string& caller,
+	                          Args&&... args)
+	{
+		g_dispatcher.addTask(
+		    createTaskWithStats(std::bind(function, &g_game, std::forward<Args>(args)...), description, caller));
+	}
 
-		std::unordered_set<uint32_t> knownCreatureSet;
-		Player* caster = nullptr;
+	template <typename Callable, typename... Args>
+	void addGameTaskTimedWithStats(uint32_t delay, Callable function, const std::string& description,
+	                               const std::string& caller, Args&&... args)
+	{
+		g_dispatcher.addTask(
+		    createTaskWithStats(delay, std::bind(function, &g_game, std::forward<Args>(args)...), description, caller));
+	}
 
-		uint32_t eventConnect = 0;
-		uint32_t challengeTimestamp = 0;
-		uint32_t dllCheckSequence = 0;
-		uint16_t version = CLIENT_VERSION_MIN;
+	std::unordered_set<uint32_t> knownCreatureSet;
+	Player* caster = nullptr;
 
-		uint8_t challengeRandom = 0;
+	uint32_t eventConnect = 0;
+	uint32_t challengeTimestamp = 0;
+	uint32_t dllCheckSequence = 0;
+	uint16_t version = CLIENT_VERSION_MIN;
 
-		bool isOTCv8 = false;
-		bool debugAssertSent = false;
-		bool acceptPackets = false;
-		struct AwareRange {
-			int width = 17;
-			int height = 13;
+	uint8_t challengeRandom = 0;
 
-			int left() const { return width / 2; }
-			int right() const { return 1 + width / 2; }
-			int top() const { return height / 2; }
-			int bottom() const { return 1 + height / 2; }
-			int horizontal() const { return width + 1; }
-			int vertical() const { return height + 1; }
-		} awareRange;
+	bool isOTCv8 = false;
+	bool debugAssertSent = false;
+	bool acceptPackets = false;
+	struct AwareRange
+	{
+		int width = 17;
+		int height = 13;
+
+		int left() const { return width / 2; }
+		int right() const { return 1 + width / 2; }
+		int top() const { return height / 2; }
+		int bottom() const { return 1 + height / 2; }
+		int horizontal() const { return width + 1; }
+		int vertical() const { return height + 1; }
+	} awareRange;
 };
 
 #endif

@@ -500,12 +500,40 @@ void ProtocolGame::disconnectClient(std::string_view message) const
 void ProtocolGame::writeToOutputBuffer(const NetworkMessage& msg, bool broadcast /* = true*/)
 {
 	const uint8_t opcode = msg.getBuffer()[NetworkMessage::INITIAL_BUFFER_POSITION];
-	const bool isMapOrMoveOpcode = (opcode == 0x64 || opcode == 0x4B || opcode == 0x6C || opcode == 0x6D ||
-	                                opcode == 0x65 || opcode == 0x66 || opcode == 0x67 || opcode == 0x68);
+	const bool isOldSpectatorBlocked =
+	    (opcode == 0x64 || opcode == 0x4B || opcode == 0x65 || opcode == 0x66 || opcode == 0x67 || opcode == 0x68 ||
+	     opcode == 0x42 || opcode == 0x43 || opcode == 0x69 || opcode == 0x6D || opcode == 0xFA);
+
+	// Old clients cannot handle stackpos >= 10. For map opcodes, check the stackpos byte.
+	bool hasInvalidStackpos = false;
+	bool isOutOfBounds = false;
+	if (opcode == 0x6A || opcode == 0x6B || opcode == 0x6C) {
+		if (msg.getLength() > 6) {
+			uint8_t stackpos = msg.getBuffer()[NetworkMessage::INITIAL_BUFFER_POSITION + 6];
+			if (stackpos >= 10) {
+				hasInvalidStackpos = true;
+			}
+
+			if (player) {
+				uint16_t x = msg.getBuffer()[NetworkMessage::INITIAL_BUFFER_POSITION + 1] |
+				             (msg.getBuffer()[NetworkMessage::INITIAL_BUFFER_POSITION + 2] << 8);
+				uint16_t y = msg.getBuffer()[NetworkMessage::INITIAL_BUFFER_POSITION + 3] |
+				             (msg.getBuffer()[NetworkMessage::INITIAL_BUFFER_POSITION + 4] << 8);
+				uint8_t z = msg.getBuffer()[NetworkMessage::INITIAL_BUFFER_POSITION + 5];
+
+				int32_t offsetz = player->getPosition().z - z;
+				if (!(x >= player->getPosition().x - 8 + offsetz && x <= player->getPosition().x + 9 + offsetz &&
+				      y >= player->getPosition().y - 6 + offsetz && y <= player->getPosition().y + 7 + offsetz)) {
+					isOutOfBounds = true;
+				}
+			}
+		}
+	}
+
 	if (player && broadcast && player->isLiveCasting()) {
 		for (auto& spectator : player->spectators) {
 			if (spectator && spectator->acceptPackets) {
-				if (!spectator->isOTCv8 && isMapOrMoveOpcode) {
+				if (!spectator->isOTCv8 && (isOldSpectatorBlocked || hasInvalidStackpos || isOutOfBounds)) {
 					continue;
 				}
 				spectator->writeToOutputBuffer(msg);
@@ -2653,14 +2681,12 @@ void ProtocolGame::sendAddCreature(const Creature* creature, const Position& pos
 void ProtocolGame::sendMoveCreature(const Creature* creature, const Position& newPos, int32_t newStackPos,
                                     const Position& oldPos, int32_t oldStackPos, bool teleport)
 {
-	bool shouldBroadcast = (creature != player);
-
 	if (creature == player) {
 		if (teleport || oldStackPos >= MAX_STACKPOS_THINGS) {
 			NetworkMessage msg;
 			RemoveTileThing(msg, oldPos, oldStackPos);
-			writeToOutputBuffer(msg, shouldBroadcast);
-			sendMapDescription(newPos, shouldBroadcast);
+			writeToOutputBuffer(msg, false);
+			sendMapDescription(newPos, false);
 		} else {
 			NetworkMessage msg;
 			if (oldPos.z == 7 && newPos.z >= 8) {
@@ -2704,24 +2730,50 @@ void ProtocolGame::sendMoveCreature(const Creature* creature, const Position& ne
 					                  awareRange.vertical(), msg);
 				}
 			}
-			writeToOutputBuffer(msg, shouldBroadcast);
+			writeToOutputBuffer(msg, false);
 		}
 	} else if (canSee(oldPos) && canSee(creature->getPosition())) {
 		if (teleport || (oldPos.z == 7 && newPos.z >= 8) || oldStackPos >= MAX_STACKPOS_THINGS) {
-			sendRemoveTileThing(oldPos, oldStackPos);
-			sendAddCreature(creature, newPos, newStackPos);
+			// Don't broadcast — spectators get this via player.h dedicated loop
+			if (canSee(oldPos)) {
+				NetworkMessage rmMsg;
+				RemoveTileThing(rmMsg, oldPos, oldStackPos);
+				writeToOutputBuffer(rmMsg, false);
+			}
+			// Add creature to new position (host only)
+			if (newStackPos != -1 && newStackPos < MAX_STACKPOS_THINGS) {
+				NetworkMessage addMsg;
+				addMsg.addByte(0x6A);
+				addMsg.addPosition(newPos);
+				addMsg.addByte(static_cast<uint8_t>(newStackPos));
+				auto [known, removedKnown] = isKnownCreature(creature->getID());
+				AddCreature(addMsg, creature, known, removedKnown);
+				writeToOutputBuffer(addMsg, false);
+			}
 		} else {
 			NetworkMessage msg;
 			msg.addByte(0x6D);
 			msg.addPosition(oldPos);
 			msg.addByte(static_cast<uint8_t>(oldStackPos));
 			msg.addPosition(creature->getPosition());
-			writeToOutputBuffer(msg);
+			writeToOutputBuffer(msg, false);
 		}
 	} else if (canSee(oldPos)) {
-		sendRemoveTileThing(oldPos, oldStackPos);
+		// Don't broadcast — spectators handle this in their own sendMoveCreature
+		NetworkMessage rmMsg;
+		RemoveTileThing(rmMsg, oldPos, oldStackPos);
+		writeToOutputBuffer(rmMsg, false);
 	} else if (canSee(creature->getPosition())) {
-		sendAddCreature(creature, newPos, newStackPos);
+		// Don't broadcast — spectators handle this in their own sendMoveCreature
+		if (newStackPos != -1 && newStackPos < MAX_STACKPOS_THINGS) {
+			NetworkMessage addMsg;
+			addMsg.addByte(0x6A);
+			addMsg.addPosition(newPos);
+			addMsg.addByte(static_cast<uint8_t>(newStackPos));
+			auto [known, removedKnown] = isKnownCreature(creature->getID());
+			AddCreature(addMsg, creature, known, removedKnown);
+			writeToOutputBuffer(addMsg, false);
+		}
 	}
 }
 

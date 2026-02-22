@@ -654,15 +654,13 @@ public:
 	                      int32_t oldStackPos, bool teleport)
 	{
 		if (client) {
-			if (creature == this && isLiveCasting()) {
-				client->sendMoveCreature(creature, newPos, newStackPos, oldPos, oldStackPos, teleport);
+			client->sendMoveCreature(creature, newPos, newStackPos, oldPos, oldStackPos, teleport);
+			if (isLiveCasting()) {
 				for (auto& spectator : spectators) {
 					if (spectator && spectator->isAcceptingPackets()) {
 						spectator->sendMoveCreature(creature, newPos, newStackPos, oldPos, oldStackPos, teleport);
 					}
 				}
-			} else {
-				client->sendMoveCreature(creature, newPos, newStackPos, oldPos, oldStackPos, teleport);
 			}
 		}
 	}

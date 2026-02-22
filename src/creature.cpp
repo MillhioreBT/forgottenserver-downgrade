@@ -35,14 +35,6 @@ Creature::~Creature()
 
 bool Creature::canSee(const Position& myPos, const Position& pos, int32_t viewRangeX, int32_t viewRangeY)
 {
-	if (viewRangeX <= 0) {
-		viewRangeX = Map::maxViewportX;
-	}
-
-	if (viewRangeY <= 0) {
-		viewRangeY = Map::maxViewportY;
-	}
-
 	if (myPos.z <= 7) {
 		// we are on ground level or above (7 -> 0)
 		// view is from 7 -> 0
@@ -896,23 +888,20 @@ void Creature::getPathSearchParams(const Creature*, FindPathParams& fpp) const
 
 void Creature::goToFollowCreature()
 {
-    if (followCreature)
-    {
-        FindPathParams fpp;
-        getPathSearchParams(followCreature, fpp);
+	if (followCreature) {
+		FindPathParams fpp;
+		getPathSearchParams(followCreature, fpp);
 
-        listWalkDir.clear();
+		listWalkDir.clear();
 
-        if (getPathTo(followCreature->getPosition(), listWalkDir, fpp))
-        {
-            hasFollowPath = true;
-            startAutoWalk(listWalkDir);
-        }
-        else
-            hasFollowPath = false;
-    }
+		if (getPathTo(followCreature->getPosition(), listWalkDir, fpp)) {
+			hasFollowPath = true;
+			startAutoWalk(listWalkDir);
+		} else
+			hasFollowPath = false;
+	}
 
-    onFollowCreatureComplete(followCreature);
+	onFollowCreatureComplete(followCreature);
 }
 
 bool Creature::setFollowCreature(Creature* creature)

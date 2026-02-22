@@ -19,22 +19,20 @@
 
 #include "otpch.h"
 
-#include <boost/range/adaptor/reversed.hpp>
-
 #include "protocolspectator.h"
 
-#include "outputmessage.h"
-
-#include "player.h"
-
-#include "configmanager.h"
 #include "actions.h"
-#include "game.h"
 #include "ban.h"
+#include "configmanager.h"
+#include "game.h"
+#include "items.h"
+#include "outputmessage.h"
+#include "player.h"
 #include "scheduler.h"
 #include "spells.h"
-#include "items.h"
 #include "tile.h"
+
+#include <boost/range/adaptor/reversed.hpp>
 
 extern Actions actions;
 extern CreatureEvents* g_creatureEvents;
@@ -44,16 +42,16 @@ extern Spells* g_spells;
 void ProtocolSpectator::release()
 {
 	acceptPackets = false;
-	
+
 	if (caster) {
 		caster->removeSpectator(this);
-		if (player && caster->isLiveCasting()) {
+		if (player && caster->isLiveCasting() && acceptPackets) {
 			std::stringstream ss;
 			ss << player->getName() << " has left the cast.";
 			caster->sendChannelMessage("", ss.str(), TALKTYPE_CHANNEL_O, CHANNEL_CAST);
 		}
 	}
-	
+
 	if (player && player->client == shared_from_this()) {
 		player->client.reset();
 		player = nullptr;
@@ -73,20 +71,20 @@ void ProtocolSpectator::login(const std::string& name, const std::string& passwo
 	Player* foundPlayer = g_game.getPlayerByName(realName);
 
 	if (foundPlayer && foundPlayer->isLiveCasting()) {
-
-		if(foundPlayer->castPassword != password) {
+		if (foundPlayer->castPassword != password) {
 			disconnectClient("The password you have entered is incorrect.");
 			return;
 		}
 
-		for(auto it : foundPlayer->spectatorBans) {
-			if(it.second == getIP()) {
+		for (auto it : foundPlayer->spectatorBans) {
+			if (it.second == getIP()) {
 				disconnectClient("You have been banned from this live cast.");
 				return;
 			}
 		}
 
-		if ((int32_t)foundPlayer->spectatorCount >= ConfigManager::getInteger(ConfigManager::LIVE_CAST_MAX) && ConfigManager::getInteger(ConfigManager::LIVE_CAST_MAX) != 0) {
+		if ((int32_t)foundPlayer->spectatorCount >= ConfigManager::getInteger(ConfigManager::LIVE_CAST_MAX) &&
+		    ConfigManager::getInteger(ConfigManager::LIVE_CAST_MAX) != 0) {
 			disconnectClient("This live cast is full, please try again later.");
 			return;
 		}
@@ -95,7 +93,8 @@ void ProtocolSpectator::login(const std::string& name, const std::string& passwo
 		uint16_t spectatorCount = foundPlayer->spectatorCount;
 		std::stringstream ss;
 		ss << "Spectator " << (spectatorCount + 1);
-		while(g_game.getPlayerByName(ss.str()) != nullptr || foundPlayer->spectatorBans.find(name) != foundPlayer->spectatorBans.end()) {
+		while (g_game.getPlayerByName(ss.str()) != nullptr ||
+		       foundPlayer->spectatorBans.find(name) != foundPlayer->spectatorBans.end()) {
 			ss.str(std::string());
 			ss << "Spectator " << (++spectatorCount);
 		}
@@ -144,12 +143,13 @@ void ProtocolSpectator::login(const std::string& name, const std::string& passwo
 	OutputMessagePool::getInstance().addProtocolToAutosend(shared_from_this());
 }
 
-void ProtocolSpectator::syncOpenContainers() {
+void ProtocolSpectator::syncOpenContainers()
+{
 	for (const auto& it : caster->openContainers) {
-			Container* container = it.second.container;
-			if(container) {
-				sendContainer(it.first, container, container->getParent() != nullptr, caster->getContainerIndex(it.first));
-			}
+		Container* container = it.second.container;
+		if (container) {
+			sendContainer(it.first, container, container->getParent() != nullptr, caster->getContainerIndex(it.first));
+		}
 	}
 }
 
@@ -194,15 +194,12 @@ void ProtocolSpectator::connect(uint32_t playerId, OperatingSystem_t operatingSy
 	ss << player->getName() << " has joined the cast.";
 	caster->sendChannelMessage("", ss.str(), TALKTYPE_CHANNEL_O, CHANNEL_CAST);
 	syncOpenContainers();
-	
+
 	// Send welcome message with MOTD
 	sendWelcomeMessage();
 }
 
-void ProtocolSpectator::logout(bool, bool)
-{
-	disconnect();
-}
+void ProtocolSpectator::logout(bool, bool) { disconnect(); }
 
 void ProtocolSpectator::onRecvFirstMessage(NetworkMessage& msg)
 {
@@ -276,12 +273,15 @@ void ProtocolSpectator::onRecvFirstMessage(NetworkMessage& msg)
 		}
 
 		std::ostringstream ss;
-		ss << "Your IP has been banned until " << formatDateShort(banInfo.expiresAt) << " by " << banInfo.bannedBy << ".\n\nReason specified:\n" << banInfo.reason;
+		ss << "Your IP has been banned until " << formatDateShort(banInfo.expiresAt) << " by " << banInfo.bannedBy
+		   << ".\n\nReason specified:\n"
+		   << banInfo.reason;
 		disconnectClient(ss.str());
 		return;
 	}
 
-	g_dispatcher.addTask(createTask(std::bind(&ProtocolSpectator::login, getThis(), characterName, password, operatingSystem)));
+	g_dispatcher.addTask(
+	    createTask(std::bind(&ProtocolSpectator::login, getThis(), characterName, password, operatingSystem)));
 }
 
 void ProtocolSpectator::onConnect()
@@ -321,7 +321,8 @@ void ProtocolSpectator::disconnectClient(const std::string& message) const
 	disconnect();
 }
 
-void ProtocolSpectator::writeToOutputBuffer(const NetworkMessage& msg) {
+void ProtocolSpectator::writeToOutputBuffer(const NetworkMessage& msg)
+{
 	if (!acceptPackets) {
 		return;
 	}
@@ -377,7 +378,9 @@ void ProtocolSpectator::sendDllCheck()
 
 void ProtocolSpectator::sendFeatures()
 {
-	if (!isOTCv8) return;
+	if (!isOTCv8) {
+		return;
+	}
 
 	std::map<GameFeature, bool> features;
 	// place for non-standard OTCv8 features
@@ -406,6 +409,10 @@ void ProtocolSpectator::sendFeatures()
 
 void ProtocolSpectator::parseChangeAwareRange(NetworkMessage& msg)
 {
+	if (!isOTCv8) {
+		return;
+	}
+
 	uint8_t width = msg.get<uint8_t>();
 	uint8_t height = msg.get<uint8_t>();
 
@@ -421,14 +428,15 @@ void ProtocolSpectator::updateAwareRange(int width, int height)
 	width = std::max(width, 49);
 	height = std::max(height, 29);
 
-	// If you want to change max awareRange, edit maxViewportX, maxViewportY, maxClientViewportX, maxClientViewportY in map.h
-	awareRange.width = std::min(Map::maxViewportX * 2 - 1, std::min(Map::maxClientViewportX * 2 + 1, std::max(15, width)));
-	awareRange.height = std::min(Map::maxViewportY * 2 - 1, std::min(Map::maxClientViewportY * 2 + 1, std::max(11, height)));
+	// If you want to change max awareRange, edit maxViewportX, maxViewportY, maxClientViewportX, maxClientViewportY in
+	// map.h
+	awareRange.width =
+	    std::min(Map::maxViewportX * 2 - 1, std::min(Map::maxClientViewportX * 2 + 1, std::max(15, width)));
+	awareRange.height =
+	    std::min(Map::maxViewportY * 2 - 1, std::min(Map::maxClientViewportY * 2 + 1, std::max(11, height)));
 	// numbers must be odd
-	if (awareRange.width % 2 != 1)
-		awareRange.width -= 1;
-	if (awareRange.height % 2 != 1)
-		awareRange.height -= 1;
+	if (awareRange.width % 2 != 1) awareRange.width -= 1;
+	if (awareRange.height % 2 != 1) awareRange.height -= 1;
 
 	sendAwareRange();
 	sendMapDescription(caster->getPosition()); // refresh map
@@ -464,7 +472,7 @@ void ProtocolSpectator::parsePacket(NetworkMessage& msg)
 		return;
 	}
 
-	//a dead player can not performs actions
+	// a dead player can not performs actions
 	if (caster->isRemoved() || caster->getHealth() <= 0) {
 		if (recvbyte == 0x0F) {
 			disconnect();
@@ -477,9 +485,14 @@ void ProtocolSpectator::parsePacket(NetworkMessage& msg)
 	}
 
 	switch (recvbyte) {
-		case 0x14: g_dispatcher.addTask(createTask(std::bind(&ProtocolSpectator::logout, getThis(), true, false))); break;
-		case 0x1D: sendPingBack(); break;
-		case 0x1E: break;
+		case 0x14:
+			g_dispatcher.addTask(createTask(std::bind(&ProtocolSpectator::logout, getThis(), true, false)));
+			break;
+		case 0x1D:
+			sendPingBack();
+			break;
+		case 0x1E:
+			break;
 		case 0x42:
 			if (isOTCv8) {
 				parseChangeAwareRange(msg);
@@ -502,10 +515,18 @@ void ProtocolSpectator::parsePacket(NetworkMessage& msg)
 		case 0x72: // Turn West - used for Prev Cast (CTRL + LEFT)
 			g_dispatcher.addTask(createTask(std::bind(&ProtocolSpectator::parseSwitchCast, getThis(), uint8_t(0))));
 			break;
-		case 0x8C: parseLookAt(msg); break; // Look at tile/item
-		case 0x96: parseSay(msg); break;
-		case 0x99: parseCloseChannel(msg); break;
-		case 0xAC: msg.getString(); break;
+		case 0x8C:
+			parseLookAt(msg);
+			break; // Look at tile/item
+		case 0x96:
+			parseSay(msg);
+			break;
+		case 0x99:
+			parseCloseChannel(msg);
+			break;
+		case 0xAC:
+			msg.getString();
+			break;
 
 		default:
 			break;
@@ -580,7 +601,8 @@ void ProtocolSpectator::GetTileDescription(const Tile* tile, NetworkMessage& msg
 	}
 }
 
-void ProtocolSpectator::GetMapDescription(int32_t x, int32_t y, int32_t z, int32_t width, int32_t height, NetworkMessage& msg)
+void ProtocolSpectator::GetMapDescription(int32_t x, int32_t y, int32_t z, int32_t width, int32_t height,
+                                          NetworkMessage& msg)
 {
 	int32_t skip = -1;
 	int32_t startz, endz, zstep;
@@ -605,7 +627,8 @@ void ProtocolSpectator::GetMapDescription(int32_t x, int32_t y, int32_t z, int32
 	}
 }
 
-void ProtocolSpectator::GetFloorDescription(NetworkMessage& msg, int32_t x, int32_t y, int32_t z, int32_t width, int32_t height, int32_t offset, int32_t& skip)
+void ProtocolSpectator::GetFloorDescription(NetworkMessage& msg, int32_t x, int32_t y, int32_t z, int32_t width,
+                                            int32_t height, int32_t offset, int32_t& skip)
 {
 	for (int32_t nx = 0; nx < width; nx++) {
 		for (int32_t ny = 0; ny < height; ny++) {
@@ -663,10 +686,7 @@ void ProtocolSpectator::checkCreatureAsKnown(uint32_t id, bool& known, uint32_t&
 	}
 }
 
-void ProtocolSpectator::removeKnownCreature(uint32_t creatureId)
-{
-	knownCreatureSet.erase(creatureId);
-}
+void ProtocolSpectator::removeKnownCreature(uint32_t creatureId) { knownCreatureSet.erase(creatureId); }
 
 bool ProtocolSpectator::canSee(const Creature* c) const
 {
@@ -681,10 +701,7 @@ bool ProtocolSpectator::canSee(const Creature* c) const
 	return canSee(c->getPosition());
 }
 
-bool ProtocolSpectator::canSee(const Position& pos) const
-{
-	return canSee(pos.x, pos.y, pos.z);
-}
+bool ProtocolSpectator::canSee(const Position& pos) const { return canSee(pos.x, pos.y, pos.z); }
 
 bool ProtocolSpectator::canSee(int32_t x, int32_t y, int32_t z) const
 {
@@ -694,25 +711,23 @@ bool ProtocolSpectator::canSee(int32_t x, int32_t y, int32_t z) const
 
 	const Position& myPos = caster->getPosition();
 	if (myPos.z <= 7) {
-		//we are on ground level or above (7 -> 0)
-		//view is from 7 -> 0
+		// we are on ground level or above (7 -> 0)
+		// view is from 7 -> 0
 		if (z > 7) {
 			return false;
 		}
 	} else if (myPos.z >= 8) {
-		//we are underground (8 -> 15)
-		//view is +/- 2 from the floor we stand on
+		// we are underground (8 -> 15)
+		// view is +/- 2 from the floor we stand on
 		if (std::abs(myPos.getZ() - z) > 2) {
 			return false;
 		}
 	}
 
-	//negative offset means that the action taken place is on a lower floor than ourself
+	// negative offset means that the action taken place is on a lower floor than ourself
 	int32_t offsetz = myPos.getZ() - z;
-	if ((x >= myPos.getX() - awareRange.left() + offsetz) &&
-	    (x <= myPos.getX() + awareRange.right() + offsetz) &&
-	    (y >= myPos.getY() - awareRange.top() + offsetz) &&
-	    (y <= myPos.getY() + awareRange.bottom() + offsetz)) {
+	if ((x >= myPos.getX() - awareRange.left() + offsetz) && (x <= myPos.getX() + awareRange.right() + offsetz) &&
+	    (y >= myPos.getY() - awareRange.top() + offsetz) && (y <= myPos.getY() + awareRange.bottom() + offsetz)) {
 		return true;
 	}
 	return false;
@@ -724,14 +739,15 @@ void ProtocolSpectator::parseCloseChannel(NetworkMessage& msg)
 	addGameTask(&Game::playerCloseChannel, caster->getID(), channelId);
 }
 
-void ProtocolSpectator::parseExecuteCommand(const std::string& text) {
+void ProtocolSpectator::parseExecuteCommand(const std::string& text)
+{
 	size_t pos = text.find(' ');
 	std::string command = text.substr(1, pos - 1);
 	if (command.empty()) {
 		return;
 	}
 
-	if(command == "commands") {
+	if (command == "commands") {
 		sendChannelMessage("", "========================================", TALKTYPE_CHANNEL_O, CHANNEL_CAST);
 		sendChannelMessage("", "       SPECTATOR COMMANDS", TALKTYPE_CHANNEL_O, CHANNEL_CAST);
 		sendChannelMessage("", "========================================", TALKTYPE_CHANNEL_O, CHANNEL_CAST);
@@ -739,35 +755,38 @@ void ProtocolSpectator::parseExecuteCommand(const std::string& text) {
 		sendChannelMessage("", "/spectators - View all spectators", TALKTYPE_CHANNEL_O, CHANNEL_CAST);
 		sendChannelMessage("", "/commands - Show this help", TALKTYPE_CHANNEL_O, CHANNEL_CAST);
 		sendChannelMessage("", "========================================", TALKTYPE_CHANNEL_O, CHANNEL_CAST);
-	} else if(command == "name") {
+	} else if (command == "name") {
 		std::string name = text.substr(pos + 1);
-		int i = std::count_if(name.begin(),name.end(),[](char c){ return (!(std::isalpha(c)) && c !=  ' '); });
-		if(name.empty() || name.length() < 2 || name.length() > 30 || name == "/name" || i > 0) {
-			sendChannelMessage("", "[Error] Invalid name. Must be 2-30 characters, letters only.", TALKTYPE_CHANNEL_R1, CHANNEL_CAST);
+		int i = std::count_if(name.begin(), name.end(), [](char c) { return (!(std::isalpha(c)) && c != ' '); });
+		if (name.empty() || name.length() < 2 || name.length() > 30 || name == "/name" || i > 0) {
+			sendChannelMessage("", "[Error] Invalid name. Must be 2-30 characters, letters only.", TALKTYPE_CHANNEL_R1,
+			                   CHANNEL_CAST);
 			sendChannelMessage("", "Example: /name Marksman Jack", TALKTYPE_CHANNEL_R1, CHANNEL_CAST);
 			return;
 		}
-		if (name == player->getName() || name == caster->getName() || caster->spectatorBans.find(name) != caster->spectatorBans.end()) {
+		if (name == player->getName() || name == caster->getName() ||
+		    caster->spectatorBans.find(name) != caster->spectatorBans.end()) {
 			sendChannelMessage("", "[Error] This name is already in use.", TALKTYPE_CHANNEL_R1, CHANNEL_CAST);
 			return;
 		}
-		for(ProtocolSpectator* Spectator : caster->getSpectators()) {
-			if(Spectator->player->getName() == name) {
+		for (ProtocolSpectator* Spectator : caster->getSpectators()) {
+			if (Spectator->player->getName() == name) {
 				sendChannelMessage("", "[Error] This name is already in use.", TALKTYPE_CHANNEL_R1, CHANNEL_CAST);
 				return;
 			}
 		}
 
-		caster->sendChannelMessage("", player->getName() + " changed name to " + name, TALKTYPE_CHANNEL_O, CHANNEL_CAST);
+		caster->sendChannelMessage("", player->getName() + " changed name to " + name, TALKTYPE_CHANNEL_O,
+		                           CHANNEL_CAST);
 		player->setName(name);
 
-	} else if(command == "spectators") {
+	} else if (command == "spectators") {
 		sendChannelMessage("", "========================================", TALKTYPE_CHANNEL_O, CHANNEL_CAST);
 		std::stringstream ss;
 		ss << "       SPECTATORS (" << caster->getSpectatorCount() << ")";
 		sendChannelMessage("", ss.str(), TALKTYPE_CHANNEL_O, CHANNEL_CAST);
 		sendChannelMessage("", "========================================", TALKTYPE_CHANNEL_O, CHANNEL_CAST);
-		for(ProtocolSpectator* Spectator : caster->getSpectators()) {
+		for (ProtocolSpectator* Spectator : caster->getSpectators()) {
 			sendChannelMessage("", "  - " + Spectator->player->getName(), TALKTYPE_CHANNEL_O, CHANNEL_CAST);
 		}
 		sendChannelMessage("", "========================================", TALKTYPE_CHANNEL_O, CHANNEL_CAST);
@@ -776,12 +795,13 @@ void ProtocolSpectator::parseExecuteCommand(const std::string& text) {
 
 void ProtocolSpectator::parseSay(NetworkMessage& msg)
 {
-	if(std::find(caster->spectatorMutes.begin(), caster->spectatorMutes.end(), player) != caster->spectatorMutes.end()) {
+	if (std::find(caster->spectatorMutes.begin(), caster->spectatorMutes.end(), player) !=
+	    caster->spectatorMutes.end()) {
 		sendChannelMessage("", "You are muted.", TALKTYPE_CHANNEL_R1, CHANNEL_CAST);
 		return;
 	}
 
-	if(caster->liveChatDisabled) {
+	if (caster->liveChatDisabled) {
 		sendChannelMessage("", "The live cast chat is currently disabled.", TALKTYPE_CHANNEL_R1, CHANNEL_CAST);
 		return;
 	}
@@ -790,7 +810,7 @@ void ProtocolSpectator::parseSay(NetworkMessage& msg)
 	switch (type) {
 		case TALKTYPE_PRIVATE_PN:
 		case TALKTYPE_PRIVATE_RED:
-			msg.getString();//reciever
+			msg.getString(); // reciever
 			break;
 
 		case TALKTYPE_CHANNEL_Y:
@@ -829,7 +849,13 @@ void ProtocolSpectator::sendCreatureLight(const Creature* creature)
 void ProtocolSpectator::sendWorldLight(const LightInfo& lightInfo)
 {
 	NetworkMessage msg;
-	AddWorldLight(msg, lightInfo);
+	msg.addByte(0x82);
+	if (caster && caster->isAccessPlayer()) {
+		msg.addByte(0xFF);
+	} else {
+		msg.addByte(lightInfo.level);
+	}
+	msg.addByte(lightInfo.color);
 	writeToOutputBuffer(msg);
 }
 
@@ -869,7 +895,9 @@ void ProtocolSpectator::sendBasicData()
 	msg.addByte(0x9F);
 	if (caster->isPremium()) {
 		msg.addByte(1);
-		msg.add<uint32_t>(time(nullptr) + (caster->premiumEndsAt > time(nullptr) ? (caster->premiumEndsAt - time(nullptr)) / 86400 : 0));
+		msg.add<uint32_t>(time(nullptr) + (caster->premiumEndsAt > time(nullptr)
+		                                       ? (caster->premiumEndsAt - time(nullptr)) / 86400
+		                                       : 0));
 	} else {
 		msg.addByte(0);
 		msg.add<uint32_t>(0);
@@ -901,7 +929,8 @@ void ProtocolSpectator::AddOutfit(NetworkMessage& msg, const Outfit_t& outfit)
 	}
 }
 
-void ProtocolSpectator::sendChannel(uint16_t channelId, const std::string& channelName, const UsersMap* channelUsers, const InvitedMap* invitedUsers)
+void ProtocolSpectator::sendChannel(uint16_t channelId, const std::string& channelName, const UsersMap* channelUsers,
+                                    const InvitedMap* invitedUsers)
 {
 	NetworkMessage msg;
 	msg.addByte(0xAC);
@@ -929,7 +958,8 @@ void ProtocolSpectator::sendChannel(uint16_t channelId, const std::string& chann
 	writeToOutputBuffer(msg);
 }
 
-void ProtocolSpectator::sendChannelMessage(const std::string& author, const std::string& text, SpeakClasses type, uint16_t channel)
+void ProtocolSpectator::sendChannelMessage(const std::string& author, const std::string& text, SpeakClasses type,
+                                           uint16_t channel)
 {
 	NetworkMessage msg;
 	msg.addByte(0xAA);
@@ -960,7 +990,8 @@ void ProtocolSpectator::sendContainer(uint8_t cid, const Container* container, b
 
 	uint32_t i = 0;
 	const ItemDeque& itemList = container->getItemList();
-	for (ItemDeque::const_iterator cit = itemList.begin() + firstIndex, end = itemList.end(); i < 0xFF && cit != end; ++cit, ++i) {
+	for (ItemDeque::const_iterator cit = itemList.begin() + firstIndex, end = itemList.end(); i < 0xFF && cit != end;
+	     ++cit, ++i) {
 		msg.addItem(*cit);
 	}
 	writeToOutputBuffer(msg);
@@ -996,7 +1027,6 @@ void ProtocolSpectator::sendSkills()
 
 void ProtocolSpectator::sendMapDescription(const Position& pos)
 {
-
 	if (isOTCv8) {
 		int32_t startz, endz, zstep;
 
@@ -1017,7 +1047,8 @@ void ProtocolSpectator::sendMapDescription(const Position& pos)
 		NetworkMessage msg;
 		msg.addByte(0x64);
 		msg.addPosition(pos);
-		GetMapDescription(pos.x - awareRange.left(), pos.y - awareRange.top(), pos.z, awareRange.horizontal(), awareRange.vertical(), msg);
+		GetMapDescription(pos.x - awareRange.left(), pos.y - awareRange.top(), pos.z, awareRange.horizontal(),
+		                  awareRange.vertical(), msg);
 		writeToOutputBuffer(msg);
 	}
 }
@@ -1032,7 +1063,8 @@ void ProtocolSpectator::sendFloorDescription(const Position& pos, int floor)
 	msg.addPosition(caster->getPosition());
 	msg.addByte(floor);
 	int32_t skip = -1;
-	GetFloorDescription(msg, pos.x - awareRange.left(), pos.y - awareRange.top(), floor, awareRange.horizontal(), awareRange.vertical(), pos.z - floor, skip);
+	GetFloorDescription(msg, pos.x - awareRange.left(), pos.y - awareRange.top(), floor, awareRange.horizontal(),
+	                    awareRange.vertical(), pos.z - floor, skip);
 	if (skip >= 0) {
 		msg.addByte(skip);
 		msg.addByte(0xFF);
@@ -1070,10 +1102,10 @@ void ProtocolSpectator::sendAddCreature(const Creature* creature, const Position
 		const int width = std::max(awareRange.width, 49);
 		const int height = std::max(awareRange.height, 29);
 
-		awareRange.width = std::min(Map::maxViewportX * 2 - 1,
-		                            std::min(Map::maxClientViewportX * 2 + 1, std::max(15, width)));
-		awareRange.height = std::min(Map::maxViewportY * 2 - 1,
-		                             std::min(Map::maxClientViewportY * 2 + 1, std::max(11, height)));
+		awareRange.width =
+		    std::min(Map::maxViewportX * 2 - 1, std::min(Map::maxClientViewportX * 2 + 1, std::max(15, width)));
+		awareRange.height =
+		    std::min(Map::maxViewportY * 2 - 1, std::min(Map::maxClientViewportY * 2 + 1, std::max(11, height)));
 
 		// numbers must be odd
 		if (awareRange.width % 2 != 1) {
@@ -1102,34 +1134,124 @@ void ProtocolSpectator::sendAddCreature(const Creature* creature, const Position
 	sendStats();
 	sendSkills();
 
-	//gameworld light-settings
+	// gameworld light-settings
 	LightInfo lightInfo = g_game.getWorldLightInfo();
 	sendWorldLight(lightInfo);
 
-	//player light level
+	// player light level
 	sendCreatureLight(creature);
 
 	// sendBasicData(); // Not needed for 8.60 or might be incorrect
 }
 
-void ProtocolSpectator::sendMoveCreature(const Creature* creature, const Position& newPos, int32_t /*newStackPos*/, const Position& oldPos, int32_t oldStackPos, bool teleport)
+void ProtocolSpectator::sendAddTileCreature(const Creature* creature, const Position& pos, int32_t stackpos)
 {
+	if (!canSee(pos)) {
+		return;
+	}
+
+	if (stackpos >= 0 && stackpos < MAX_STACKPOS_THINGS) {
+		NetworkMessage msg;
+		msg.addByte(0x6A);
+		msg.addPosition(pos);
+		msg.addByte(static_cast<uint8_t>(stackpos));
+
+		bool known;
+		uint32_t removedKnown;
+		checkCreatureAsKnown(creature->getID(), known, removedKnown);
+		AddCreature(msg, creature, known, removedKnown);
+		writeToOutputBuffer(msg);
+	}
+}
+
+void ProtocolSpectator::sendMoveCreature(const Creature* creature, const Position& newPos, int32_t newStackPos,
+                                         const Position& oldPos, int32_t oldStackPos, bool teleport)
+{
+	if (!caster || !player) return;
+
 	if (creature != caster) {
+		int32_t specOldStackPos = oldStackPos;
+		int32_t specNewStackPos = newStackPos;
+
+		// The creature has ALREADY moved in Map, so getClientIndexOfCreature fails (returns 255).
+		// Fortunately, oldStackPos < 10 maps 1:1 perfectly with the Old Client's stackpos!
+		if (canSee(oldPos) && canSee(newPos)) {
+			if (teleport || (oldPos.z == 7 && newPos.z >= 8) || specOldStackPos < 0 ||
+			    specOldStackPos >= MAX_STACKPOS_THINGS) {
+				if (specOldStackPos >= 0 && specOldStackPos < MAX_STACKPOS_THINGS) {
+					NetworkMessage msg;
+					msg.addByte(0x6C);
+					msg.addPosition(oldPos);
+					msg.addByte(static_cast<uint8_t>(specOldStackPos));
+					writeToOutputBuffer(msg);
+				}
+				sendAddTileCreature(creature, newPos, specNewStackPos);
+			} else {
+				NetworkMessage msg;
+				msg.addByte(0x6D);
+				msg.addPosition(oldPos);
+				msg.addByte(static_cast<uint8_t>(specOldStackPos));
+				msg.addPosition(newPos);
+				writeToOutputBuffer(msg);
+			}
+		} else if (canSee(oldPos)) {
+			if (specOldStackPos >= 0 && specOldStackPos < MAX_STACKPOS_THINGS) {
+				NetworkMessage msg;
+				msg.addByte(0x6C);
+				msg.addPosition(oldPos);
+				msg.addByte(static_cast<uint8_t>(specOldStackPos));
+				writeToOutputBuffer(msg);
+			}
+		} else if (canSee(newPos)) {
+			sendAddTileCreature(creature, newPos, specNewStackPos);
+		}
 		return;
 	}
 
 	if (!isOTCv8) {
-		NetworkMessage msg;
-		if (oldStackPos >= 0 && oldStackPos < MAX_STACKPOS_THINGS) {
-			msg.addByte(0x6C);
-			msg.addPosition(oldPos);
-			msg.addByte(static_cast<uint8_t>(oldStackPos));
-			writeToOutputBuffer(msg);
+		int32_t specOldStackPos = oldStackPos;
+
+		if (teleport || oldPos.z != newPos.z || specOldStackPos >= MAX_STACKPOS_THINGS) {
+			if (specOldStackPos >= 0 && specOldStackPos < MAX_STACKPOS_THINGS) {
+				NetworkMessage msg;
+				msg.addByte(0x6C);
+				msg.addPosition(oldPos);
+				msg.addByte(static_cast<uint8_t>(specOldStackPos));
+				writeToOutputBuffer(msg);
+			}
+			sendMapDescription(newPos);
+			return;
 		}
-		sendMapDescription(newPos);
+
+		NetworkMessage msg;
+		msg.addByte(0x6D);
+		msg.addPosition(oldPos);
+		msg.addByte(static_cast<uint8_t>(specOldStackPos));
+		msg.addPosition(newPos);
+
+		if (oldPos.y > newPos.y) {
+			msg.addByte(0x65);
+			GetMapDescription(oldPos.x - awareRange.left(), newPos.y - awareRange.top(), newPos.z,
+			                  awareRange.horizontal(), 1, msg);
+		} else if (oldPos.y < newPos.y) {
+			msg.addByte(0x67);
+			GetMapDescription(oldPos.x - awareRange.left(), newPos.y + awareRange.bottom(), newPos.z,
+			                  awareRange.horizontal(), 1, msg);
+		}
+		if (oldPos.x < newPos.x) {
+			msg.addByte(0x66);
+			GetMapDescription(newPos.x + awareRange.right(), newPos.y - awareRange.top(), newPos.z, 1,
+			                  awareRange.vertical(), msg);
+		} else if (oldPos.x > newPos.x) {
+			msg.addByte(0x68);
+			GetMapDescription(newPos.x - awareRange.left(), newPos.y - awareRange.top(), newPos.z, 1,
+			                  awareRange.vertical(), msg);
+		}
+		writeToOutputBuffer(msg);
 		return;
 	}
 
+	// OTCv8
 	if (teleport || oldPos.z != newPos.z || oldStackPos >= MAX_STACKPOS_THINGS) {
 		NetworkMessage msg;
 		msg.addByte(0x6C);
@@ -1148,22 +1270,21 @@ void ProtocolSpectator::sendMoveCreature(const Creature* creature, const Positio
 
 	if (oldPos.y > newPos.y) {
 		msg.addByte(0x65);
-		GetMapDescription(oldPos.x - awareRange.left(), newPos.y - awareRange.top(), newPos.z,
-		                  awareRange.horizontal(), 1, msg);
+		GetMapDescription(oldPos.x - awareRange.left(), newPos.y - awareRange.top(), newPos.z, awareRange.horizontal(),
+		                  1, msg);
 	} else if (oldPos.y < newPos.y) {
 		msg.addByte(0x67);
-		GetMapDescription(oldPos.x - awareRange.left(), newPos.y + awareRange.bottom(),
-		                  newPos.z, awareRange.horizontal(), 1, msg);
+		GetMapDescription(oldPos.x - awareRange.left(), newPos.y + awareRange.bottom(), newPos.z,
+		                  awareRange.horizontal(), 1, msg);
 	}
-
 	if (oldPos.x < newPos.x) {
 		msg.addByte(0x66);
-		GetMapDescription(newPos.x + awareRange.right(), newPos.y - awareRange.top(),
-		                  newPos.z, 1, awareRange.vertical(), msg);
+		GetMapDescription(newPos.x + awareRange.right(), newPos.y - awareRange.top(), newPos.z, 1,
+		                  awareRange.vertical(), msg);
 	} else if (oldPos.x > newPos.x) {
 		msg.addByte(0x68);
-		GetMapDescription(newPos.x - awareRange.left(), newPos.y - awareRange.top(), newPos.z,
-		                  1, awareRange.vertical(), msg);
+		GetMapDescription(newPos.x - awareRange.left(), newPos.y - awareRange.top(), newPos.z, 1, awareRange.vertical(),
+		                  msg);
 	}
 	writeToOutputBuffer(msg);
 }
@@ -1199,7 +1320,8 @@ void ProtocolSpectator::AddCreature(NetworkMessage& msg, const Creature* creatur
 	if (creature->isHealthHidden()) {
 		msg.addByte(0x00);
 	} else {
-		msg.addByte(std::ceil((static_cast<double>(creature->getHealth()) / std::max<int32_t>(creature->getMaxHealth(), 1)) * 100));
+		msg.addByte(std::ceil(
+		    (static_cast<double>(creature->getHealth()) / std::max<int32_t>(creature->getMaxHealth(), 1)) * 100));
 	}
 
 	msg.addByte(creature->getDirection());
@@ -1224,7 +1346,7 @@ void ProtocolSpectator::AddCreature(NetworkMessage& msg, const Creature* creatur
 	if (!known) {
 		msg.addByte(caster->getGuildEmblem(otherPlayer));
 	}
-	
+
 	msg.addByte(caster->canWalkthroughEx(creature) ? 0x00 : 0x01);
 }
 
@@ -1254,7 +1376,7 @@ void ProtocolSpectator::AddPlayerStats(NetworkMessage& msg)
 	msg.addByte(caster->getMagicLevelPercent());
 
 	msg.addByte(caster->getSoul());
-	
+
 	msg.add<uint16_t>(caster->getStaminaMinutes());
 
 	if (isOTCv8) {
@@ -1269,7 +1391,7 @@ void ProtocolSpectator::AddPlayerStats(NetworkMessage& msg)
 void ProtocolSpectator::AddPlayerSkills(NetworkMessage& msg)
 {
 	msg.addByte(0xA1);
-	
+
 	if (!isOTCv8) {
 		for (uint8_t i = SKILL_FIRST; i <= SKILL_LAST; ++i) {
 			msg.addByte(std::min<int32_t>(caster->getSkillLevel(i), std::numeric_limits<uint8_t>::max()));
@@ -1335,14 +1457,16 @@ void ProtocolSpectator::parseSwitchCast(uint8_t direction)
 			Player* newCaster = casters[0];
 			if (newCaster && newCaster != caster) {
 				caster->removeSpectator(this);
-				caster->sendChannelMessage("", player->getName() + " has left the cast.", TALKTYPE_CHANNEL_O, CHANNEL_CAST);
+				caster->sendChannelMessage("", player->getName() + " has left the cast.", TALKTYPE_CHANNEL_O,
+				                           CHANNEL_CAST);
 
 				knownCreatureSet.clear();
 				caster = newCaster;
 				caster->addSpectator(this);
 				sendAddCreature(caster, caster->getPosition(), 0, false);
 				syncOpenContainers();
-				caster->sendChannelMessage("", player->getName() + " has joined the cast.", TALKTYPE_CHANNEL_O, CHANNEL_CAST);
+				caster->sendChannelMessage("", player->getName() + " has joined the cast.", TALKTYPE_CHANNEL_O,
+				                           CHANNEL_CAST);
 				sendMagicEffect(caster->getPosition(), CONST_ME_TELEPORT);
 			}
 		}
@@ -1386,12 +1510,12 @@ void ProtocolSpectator::parseSwitchCast(uint8_t direction)
 
 void ProtocolSpectator::sendWelcomeMessage()
 {
-	std::string message = 
-		"Welcome to the Live Cast System!\n\n"
-		"Do you know you can use CTRL + ARROWS to switch casts?\n\n"
-		"Voce sabia que pode usar CTRL + SETAS para alternar casts?\n\n"
-		"Type /commands in the cast channel to see available commands.";
-	
+	std::string message =
+	    "Welcome to the Live Cast System!\n\n"
+	    "Do you know you can use CTRL + ARROWS to switch casts?\n\n"
+	    "Voce sabia que pode usar CTRL + SETAS para alternar casts?\n\n"
+	    "Type /commands in the cast channel to see available commands.";
+
 	sendTextMessage(MESSAGE_EVENT_ADVANCE, message);
 }
 
