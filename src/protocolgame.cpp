@@ -3426,9 +3426,9 @@ void ProtocolGame::updateAwareRange(int width, int height)
 	// If you want to change max awareRange, edit maxViewportX, maxViewportY, maxClientViewportX, maxClientViewportY in
 	// map.h
 	awareRange.width =
-	    std::min(Map::maxViewportX * 2 - 1, std::min(Map::maxClientViewportX * 2 + 1, std::max(15, width)));
+	    std::min(Map::maxViewportX * 2 - 1, std::min(Map::maxClientViewportX_OTCv8 * 2 + 1, std::max(15, width)));
 	awareRange.height =
-	    std::min(Map::maxViewportY * 2 - 1, std::min(Map::maxClientViewportY * 2 + 1, std::max(11, height)));
+	    std::min(Map::maxViewportY * 2 - 1, std::min(Map::maxClientViewportY_OTCv8 * 2 + 1, std::max(11, height)));
 	// numbers must be odd
 	if (awareRange.width % 2 != 1) awareRange.width -= 1;
 	if (awareRange.height % 2 != 1) awareRange.height -= 1;
