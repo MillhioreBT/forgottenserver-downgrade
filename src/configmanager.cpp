@@ -7,10 +7,11 @@
 #include "configmanager.h"
 
 #include "game.h"
+#include "logger.h"
 #include "lua.hpp"
 #include "monster.h"
 #include "pugicast.h"
-#include "logger.h"
+
 #include <fmt/format.h>
 
 #if LUA_VERSION_NUM >= 502
@@ -126,44 +127,6 @@ ExperienceStages loadLuaStages(lua_State* L)
 		lua_pop(L, 4);
 	}
 	lua_pop(L, 1);
-
-	std::sort(stages.begin(), stages.end());
-	return stages;
-}
-
-ExperienceStages loadXMLStages()
-{
-	pugi::xml_document doc;
-	pugi::xml_parse_result result = doc.load_file("data/XML/stages.xml");
-	if (!result) {
-		printXMLError("Error - loadXMLStages", "data/XML/stages.xml", result);
-		return {};
-	}
-
-	ExperienceStages stages;
-	for (const auto& stageNode : doc.child("stages").children()) {
-		if (caseInsensitiveEqual(stageNode.name(), "config")) {
-			if (!stageNode.attribute("enabled").as_bool()) {
-				return {};
-			}
-		} else {
-			uint32_t minLevel = 1, maxLevel = std::numeric_limits<uint32_t>::max(), multiplier = 1;
-
-			if (auto minLevelAttribute = stageNode.attribute("minlevel")) {
-				minLevel = pugi::cast<uint32_t>(minLevelAttribute.value());
-			}
-
-			if (auto maxLevelAttribute = stageNode.attribute("maxlevel")) {
-				maxLevel = pugi::cast<uint32_t>(maxLevelAttribute.value());
-			}
-
-			if (auto multiplierAttribute = stageNode.attribute("multiplier")) {
-				multiplier = pugi::cast<uint32_t>(multiplierAttribute.value());
-			}
-
-			stages.emplace_back(minLevel, maxLevel, multiplier);
-		}
-	}
 
 	std::sort(stages.begin(), stages.end());
 	return stages;
@@ -339,7 +302,7 @@ bool ConfigManager::load()
 	booleans[Boolean::NPCS_USING_BANK_MONEY] = getGlobalBoolean(L, "npcsUsingBankMoney", false);
 	booleans[Boolean::STAMINA_TRAINER] = getGlobalBoolean(L, "staminaTrainer", false);
 	booleans[Boolean::STAMINA_PZ] = getGlobalBoolean(L, "staminaPz", false);
-	
+
 	// Admin Config
 	booleans[Boolean::ADMIN_LOCALHOST_ONLY] = getGlobalBoolean(L, "adminLocalhostOnly", true);
 	booleans[Boolean::ADMIN_REQUIRE_LOGIN] = getGlobalBoolean(L, "adminRequireLogin", true);
@@ -411,17 +374,17 @@ bool ConfigManager::load()
 	integers[Integer::MAX_PROTOCOL_OUTFITS] = getGlobalInteger(L, "maxProtocolOutfits", 50);
 	integers[Integer::MOVE_CREATURE_INTERVAL] = getGlobalInteger(L, "MOVE_CREATURE_INTERVAL", MOVE_CREATURE_INTERVAL);
 	integers[Integer::RANGE_MOVE_CREATURE_INTERVAL] =
-		getGlobalInteger(L, "RANGE_MOVE_CREATURE_INTERVAL", RANGE_MOVE_CREATURE_INTERVAL);
+	    getGlobalInteger(L, "RANGE_MOVE_CREATURE_INTERVAL", RANGE_MOVE_CREATURE_INTERVAL);
 	integers[Integer::RANGE_USE_WITH_CREATURE_INTERVAL] =
-		getGlobalInteger(L, "RANGE_USE_WITH_CREATURE_INTERVAL", RANGE_USE_WITH_CREATURE_INTERVAL);
+	    getGlobalInteger(L, "RANGE_USE_WITH_CREATURE_INTERVAL", RANGE_USE_WITH_CREATURE_INTERVAL);
 	integers[Integer::RANGE_MOVE_ITEM_INTERVAL] =
-		getGlobalInteger(L, "RANGE_MOVE_ITEM_INTERVAL", RANGE_MOVE_ITEM_INTERVAL);
+	    getGlobalInteger(L, "RANGE_MOVE_ITEM_INTERVAL", RANGE_MOVE_ITEM_INTERVAL);
 	integers[Integer::RANGE_USE_ITEM_INTERVAL] =
-		getGlobalInteger(L, "RANGE_USE_ITEM_INTERVAL", RANGE_USE_ITEM_INTERVAL);
+	    getGlobalInteger(L, "RANGE_USE_ITEM_INTERVAL", RANGE_USE_ITEM_INTERVAL);
 	integers[Integer::RANGE_USE_ITEM_EX_INTERVAL] =
-		getGlobalInteger(L, "RANGE_USE_ITEM_EX_INTERVAL", RANGE_USE_ITEM_EX_INTERVAL);
+	    getGlobalInteger(L, "RANGE_USE_ITEM_EX_INTERVAL", RANGE_USE_ITEM_EX_INTERVAL);
 	integers[Integer::RANGE_ROTATE_ITEM_INTERVAL] =
-		getGlobalInteger(L, "RANGE_ROTATE_ITEM_INTERVAL", RANGE_ROTATE_ITEM_INTERVAL);
+	    getGlobalInteger(L, "RANGE_ROTATE_ITEM_INTERVAL", RANGE_ROTATE_ITEM_INTERVAL);
 	integers[Integer::PLAYER_SPEED_PER_LEVEL] = getGlobalInteger(L, "playerSpeedPerLevel", 2);
 	integers[Integer::PLAYER_MIN_SPEED] = getGlobalInteger(L, "playerMinSpeed", 120);
 	integers[Integer::PLAYER_MAX_SPEED] = getGlobalInteger(L, "playerMaxSpeed", 900);
@@ -457,12 +420,7 @@ bool ConfigManager::load()
 	integers[Integer::STATS_SLOW_LOG_TIME] = getGlobalInteger(L, "statsSlowLogTime", 10);
 	integers[Integer::STATS_VERY_SLOW_LOG_TIME] = getGlobalInteger(L, "statsVerySlowLogTime", 50);
 
-	expStages = loadXMLStages();
-	if (expStages.empty()) {
-		expStages = loadLuaStages(L);
-	} else {
-		LOG_WARN("[Warning - ConfigManager::load] XML stages are deprecated, consider moving to config.lua.");
-	}
+	expStages = loadLuaStages(L);
 	expStages.shrink_to_fit();
 
 	fastPotionIds = loadLuaFastPotionIds(L);
@@ -490,7 +448,8 @@ bool ConfigManager::load()
 bool ConfigManager::getBoolean(Boolean what)
 {
 	if (what >= Boolean::LAST_BOOLEAN) {
-		LOG_WARN(fmt::format("[Warning - ConfigManager::getBoolean] Accessing invalid index: {}", static_cast<int>(what)));
+		LOG_WARN(
+		    fmt::format("[Warning - ConfigManager::getBoolean] Accessing invalid index: {}", static_cast<int>(what)));
 		return false;
 	}
 	return booleans[what];
@@ -499,7 +458,8 @@ bool ConfigManager::getBoolean(Boolean what)
 std::string_view ConfigManager::getString(String what)
 {
 	if (what >= String::LAST_STRING) {
-		LOG_WARN(fmt::format("[Warning - ConfigManager::getString] Accessing invalid index: {}", static_cast<int>(what)));
+		LOG_WARN(
+		    fmt::format("[Warning - ConfigManager::getString] Accessing invalid index: {}", static_cast<int>(what)));
 		return "";
 	}
 	return strings[what];
@@ -508,7 +468,8 @@ std::string_view ConfigManager::getString(String what)
 int64_t ConfigManager::getInteger(Integer what)
 {
 	if (what >= Integer::LAST_INTEGER) {
-		LOG_WARN(fmt::format("[Warning - ConfigManager::getInteger] Accessing invalid index: {}", static_cast<int>(what)));
+		LOG_WARN(
+		    fmt::format("[Warning - ConfigManager::getInteger] Accessing invalid index: {}", static_cast<int>(what)));
 		return 0;
 	}
 	return integers[what];
@@ -531,7 +492,8 @@ float ConfigManager::getExperienceStage(uint32_t level)
 bool ConfigManager::setBoolean(Boolean what, bool value)
 {
 	if (what >= Boolean::LAST_BOOLEAN) {
-		LOG_WARN(fmt::format("[Warning - ConfigManager::setBoolean] Accessing invalid index: {}", static_cast<int>(what)));
+		LOG_WARN(
+		    fmt::format("[Warning - ConfigManager::setBoolean] Accessing invalid index: {}", static_cast<int>(what)));
 		return false;
 	}
 
@@ -542,7 +504,8 @@ bool ConfigManager::setBoolean(Boolean what, bool value)
 bool ConfigManager::setString(String what, std::string_view value)
 {
 	if (what >= String::LAST_STRING) {
-		LOG_WARN(fmt::format("[Warning - ConfigManager::setString] Accessing invalid index: {}", static_cast<int>(what)));
+		LOG_WARN(
+		    fmt::format("[Warning - ConfigManager::setString] Accessing invalid index: {}", static_cast<int>(what)));
 		return false;
 	}
 
@@ -553,7 +516,8 @@ bool ConfigManager::setString(String what, std::string_view value)
 bool ConfigManager::setInteger(Integer what, int64_t value)
 {
 	if (what >= Integer::LAST_INTEGER) {
-		LOG_WARN(fmt::format("[Warning - ConfigManager::setInteger] Accessing invalid index: {}", static_cast<int>(what)));
+		LOG_WARN(
+		    fmt::format("[Warning - ConfigManager::setInteger] Accessing invalid index: {}", static_cast<int>(what)));
 		return false;
 	}
 
@@ -564,7 +528,8 @@ bool ConfigManager::setInteger(Integer what, int64_t value)
 float ConfigManager::getFloat(float_config_t what)
 {
 	if (what >= LAST_FLOAT_CONFIG) {
-		LOG_WARN(fmt::format("[Warning - ConfigManager::getFloat] Accessing invalid index: {}", static_cast<int>(what)));
+		LOG_WARN(
+		    fmt::format("[Warning - ConfigManager::getFloat] Accessing invalid index: {}", static_cast<int>(what)));
 		return 0.0f;
 	}
 	return floats[what];
@@ -573,7 +538,8 @@ float ConfigManager::getFloat(float_config_t what)
 bool ConfigManager::setFloat(float_config_t what, float value)
 {
 	if (what >= LAST_FLOAT_CONFIG) {
-		LOG_WARN(fmt::format("[Warning - ConfigManager::setFloat] Accessing invalid index: {}", static_cast<int>(what)));
+		LOG_WARN(
+		    fmt::format("[Warning - ConfigManager::setFloat] Accessing invalid index: {}", static_cast<int>(what)));
 		return false;
 	}
 	floats[what] = value;
