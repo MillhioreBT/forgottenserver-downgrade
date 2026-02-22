@@ -49,6 +49,11 @@ std::unique_ptr<Tile> IOMap::createTile(Item*& ground, Item* item, uint16_t x, u
 
 bool IOMap::loadMap(Map* map, const std::filesystem::path& fileName) {
     int64_t start = OTSYS_TIME();
+    if (!std::filesystem::exists(fileName)) {
+        setLastErrorString(fmt::format("Map file not found at: {}. Please check 'mapName' in config.lua and ensure the file exists in data/world/.", fileName.string()));
+        return false;
+    }
+
     try {
         OTB::Loader loader{fileName.string(), OTB::Identifier{{'O', 'T', 'B', 'M'}}};
         auto& root = loader.parseTree();
@@ -129,8 +134,11 @@ bool IOMap::loadMap(Map* map, const std::filesystem::path& fileName) {
                 return false;
             }
         }
-    } catch (const OTB::InvalidOTBFormat& err) {
+    } catch (const OTB::LoadError& err) {
         setLastErrorString(err.what());
+        return false;
+    } catch (const std::exception& err) {
+        setLastErrorString(fmt::format("Failed to open map file [{}]: {}", fileName.string(), err.what()));
         return false;
     }
 
