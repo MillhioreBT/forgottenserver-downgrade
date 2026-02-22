@@ -84,11 +84,18 @@ This custom version includes several enhanced systems and fully integrated featu
 
 ### 🐧 Ubuntu 22.04 / 24.04
 
-```bash
-# Install dependencies
-sudo apt install git cmake build-essential libluajit-5.1-dev libmysqlclient-dev libboost-system-dev libboost-iostreams-dev libboost-filesystem-dev libboost-locale-dev libpugixml-dev libfmt-dev libssl-dev libspdlog-dev -y
+> [!IMPORTANT]
+> This project requires **Boost 1.75+** and **Lua 5.4**.
+> - **Ubuntu 24.04**: Recommended (comes with required versions).
+> - **Ubuntu 22.04**: You may need to manually update Boost, as the default version is 1.74.
 
-# Clone and compile
+#### 1. Install dependencies
+```bash
+sudo apt install git cmake build-essential liblua5.4-dev libmysqlclient-dev libboost-system-dev libboost-iostreams-dev libboost-filesystem-dev libboost-locale-dev libboost-regex-dev libpugixml-dev libfmt-dev libssl-dev libspdlog-dev -y
+```
+
+#### 2. Clone and compile
+```bash
 git clone -b Revscrypt-full --single-branch https://github.com/Mateuzkl/forgottenserver-downgrade-1.7-8.60.git
 cd forgottenserver-downgrade-1.7-8.60
 mkdir build && cd build
