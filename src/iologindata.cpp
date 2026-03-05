@@ -345,7 +345,7 @@ bool IOLoginData::loadPlayer(Player* player, DBResult_ptr result)
 	}
 
 	player->manaSpent = manaSpent;
-	player->magLevelPercent = Player::getBasisPointLevel(player->manaSpent, nextManaCount);
+	player->magLevelPercent = Player::getBasisPointLevel(player->manaSpent, nextManaCount) / 100;
 
 	player->health = result->getNumber<int32_t>("health");
 	player->healthMax = result->getNumber<int32_t>("healthmax");
@@ -415,7 +415,7 @@ bool IOLoginData::loadPlayer(Player* player, DBResult_ptr result)
 
 		player->skills[i].level = skillLevel;
 		player->skills[i].tries = skillTries;
-		player->skills[i].percent = Player::getBasisPointLevel(skillTries, nextSkillTries);
+		player->skills[i].percent = Player::getBasisPointLevel(skillTries, nextSkillTries) / 100;
 	}
 
 	if ((result = db.storeQuery(

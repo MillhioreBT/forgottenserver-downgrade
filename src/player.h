@@ -73,7 +73,7 @@ struct Skill
 {
 	uint64_t tries = 0;
 	uint16_t level = MINIMUM_SKILL_LEVEL;
-	uint16_t percent = 0;
+	uint8_t percent = 0;
 };
 
 using MuteCountMap = std::map<uint32_t, uint32_t>;
@@ -261,7 +261,7 @@ public:
 	}
 	int32_t getExperienceRate(ExperienceRateType type) const { return experienceRate[static_cast<size_t>(type)]; }
 	uint32_t getBaseMagicLevel() const { return magLevel; }
-	uint16_t getMagicLevelPercent() const { return magLevelPercent; }
+	uint8_t getMagicLevelPercent() const { return magLevelPercent; }
 	uint8_t getSoul() const { return soul; }
 	bool isAccessPlayer() const { return group->access; }
 	bool isPremium() const;
@@ -443,7 +443,7 @@ public:
 		return static_cast<uint16_t>(std::max<int32_t>(0, specialMagicLevelSkill[combatTypeToIndex(type)]));
 	}
 	uint16_t getBaseSkill(uint8_t skill) const { return skills[skill].level; }
-	uint16_t getSkillPercent(uint8_t skill) const { return skills[skill].percent; }
+	uint8_t getSkillPercent(uint8_t skill) const { return skills[skill].percent; }
 	uint64_t getSkillTries(uint8_t skill) const { return skills[skill].tries; }
 
 	bool getAddAttackSkill() const { return addAttackSkillPoint; }
@@ -1117,7 +1117,7 @@ private:
 	uint8_t soul = 0;
 	std::bitset<PLAYER_MAX_BLESSINGS + 1> blessings;
 	uint8_t levelPercent = 0;
-	uint16_t magLevelPercent = 0;
+	uint8_t magLevelPercent = 0;
 
 	PlayerSex_t sex = PLAYERSEX_FEMALE;
 	OperatingSystem_t operatingSystem = CLIENTOS_NONE;
