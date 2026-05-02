@@ -1888,7 +1888,9 @@ void Monster::updateLookDirection()
 {
 	if (attackedCreature) {
 		Direction newDir = getDirectionTo(getPosition(), attackedCreature->getPosition(), false);
-		g_game.internalCreatureTurn(this, newDir);
+		if ((newDir & DIRECTION_DIAGONAL_MASK) == 0) {
+			g_game.internalCreatureTurn(this, newDir);
+		}
 	}
 }
 

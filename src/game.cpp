@@ -2027,7 +2027,11 @@ void Game::playerAutoWalk(uint32_t playerId, const std::vector<Direction>& listD
 			return player->sendCancelWalk();
 		}
 
-		internalCreatureTurn(player, getDirectionTo(playerPos, nextPos, false));
+		auto newDir = getDirectionTo(playerPos, nextPos, false);
+		if ((newDir & DIRECTION_DIAGONAL_MASK) == 0) {
+			internalCreatureTurn(player, newDir);
+		}
+
 		internalTeleport(player, nextPos, true);
 		return;
 	}
