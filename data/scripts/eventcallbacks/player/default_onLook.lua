@@ -5,10 +5,7 @@ local event = Event()
 event.onLook = function(player, thing, position, distance, description)
 	description = "You see " .. thing:getDescription(distance)
 	if player:getGroup():getAccess() then
-		local item = thing:getItem()
-		if item and thing:isContainer() then
-			item = thing
-		end
+		local item = thing:isItem() and thing
 		if item then
 			description = fmt("%s\nItem ID: %d", description, item:getId())
 

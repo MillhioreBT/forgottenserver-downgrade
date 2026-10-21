@@ -38,12 +38,11 @@ function Tile:relocateTo(toPosition)
 	for i = self:getThingCount() - 1, 0, -1 do
 		local thing = self:getThing(i)
 		if thing then
-			local item = thing:getItem()
-			if item then
-				if item:getFluidType() ~= 0 then
-					item:remove()
-				elseif ItemType(item:getId()):isMovable() then
-					item:moveTo(toPosition)
+			if thing:isItem() then
+				if thing:getFluidType() ~= 0 then
+					thing:remove()
+				elseif ItemType(thing:getId()):isMovable() then
+					thing:moveTo(toPosition)
 				end
 			else
 				local creature = thing:getCreature()
