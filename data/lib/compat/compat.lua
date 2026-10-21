@@ -1570,9 +1570,8 @@ function doRelocate(fromPos, toPos)
 	for i = fromTile:getThingCount() - 1, 0, -1 do
 		local thing = fromTile:getThing(i)
 		if thing then
-			local item = thing:getItem()
-			if item then
-				if ItemType(item:getId()):isMovable() then item:moveTo(toPos) end
+			if thing:isItem() then
+				if ItemType(thing:getId()):isMovable() then thing:moveTo(toPos) end
 			else
 				local creature = thing:getCreature()
 				if creature then creature:teleportTo(toPos) end

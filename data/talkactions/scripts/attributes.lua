@@ -57,7 +57,7 @@ function onSay(player, words, param)
 		return false
 	end
 
-	local item = thing:getItem()
+	local item = thing:isItem() and thing
 	if item then
 		local response = setAttribute(player, item, attribute, value)
 		if response == true then return true end
