@@ -11,7 +11,14 @@ ENV PATH="${VCPKG_ROOT}:${PATH}"
 # Instalar dependencias del proyecto
 WORKDIR /usr/src/forgottenserver-downgrade
 COPY vcpkg.json ./
-RUN /opt/vcpkg/vcpkg install --triplet x64-linux
+# Reintentar: un fallo de red puntual (p. ej. DNS al bajar un port de GitHub) no debe tumbar el build.
+# Los paquetes ya compilados quedan en la caché binaria local de vcpkg, así que cada reintento continúa donde quedó.
+RUN for attempt in 1 2 3; do \
+        /opt/vcpkg/vcpkg install --triplet x64-linux && exit 0; \
+        echo "vcpkg install falló (intento ${attempt}/3), reintentando en 30s..."; \
+        sleep 30; \
+    done; \
+    exit 1
 # Copiar el resto del código
 COPY cmake /usr/src/forgottenserver-downgrade/cmake/
 COPY src /usr/src/forgottenserver-downgrade/src/
