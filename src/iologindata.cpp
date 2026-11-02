@@ -925,14 +925,15 @@ bool IOLoginData::savePlayer(Player* player)
 	return transaction.commit();
 }
 
-std::string_view IOLoginData::getNameByGuid(uint32_t guid)
+std::string IOLoginData::getNameByGuid(uint32_t guid)
 {
 	DBResult_ptr result =
 	    Database::getInstance().storeQuery(fmt::format("SELECT `name` FROM `players` WHERE `id` = {:d}", guid));
 	if (!result) {
 		return {};
 	}
-	return result->getString("name");
+	// a copy: the view getString returns points into the result, which is freed when this returns
+	return std::string{result->getString("name")};
 }
 
 uint32_t IOLoginData::getGuidByName(std::string_view name)
