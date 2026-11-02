@@ -55,6 +55,8 @@ maxPacketsPerSecond = 25
 -- NOTE: maxConnectionsPerIp caps the open connections of one IP (0 = no limit)
 -- Players sharing one IP (same household, LAN, carrier-grade NAT) share this limit, so raise it for shared networks
 maxConnectionsPerIp = 10
+-- NOTE: maxLoginFailures failed logins from one IP within 5 minutes block its logins for 5 minutes (0 = off)
+maxLoginFailures = 5
 
 -- Deaths
 -- NOTE: Leave deathLosePercent as -1 if you want to use the default
