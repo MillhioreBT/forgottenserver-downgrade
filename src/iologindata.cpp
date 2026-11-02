@@ -932,7 +932,6 @@ std::string IOLoginData::getNameByGuid(uint32_t guid)
 	if (!result) {
 		return {};
 	}
-	// a copy: the view getString returns points into the result, which is freed when this returns
 	return std::string{result->getString("name")};
 }
 
