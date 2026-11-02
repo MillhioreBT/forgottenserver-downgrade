@@ -1567,7 +1567,9 @@ void ConditionDamage::addCondition(Creature* creature, const Condition* conditio
 
 		if (!delayed) {
 			int32_t damage;
-			if (getNextDamage(damage)) {
+			if (conditionDamage.initDamage != 0) {
+				doDamage(creature, conditionDamage.initDamage);
+			} else if (getNextDamage(damage)) {
 				doDamage(creature, damage);
 			}
 		}
