@@ -52,6 +52,8 @@ serverName = "Forgotten"
 statusTimeout = 5000
 replaceKickOnLogin = true
 maxPacketsPerSecond = 25
+-- NOTE: maxConnectionsPerIp caps the open connections of one IP (0 = no limit)
+maxConnectionsPerIp = 10
 
 -- Deaths
 -- NOTE: Leave deathLosePercent as -1 if you want to use the default
