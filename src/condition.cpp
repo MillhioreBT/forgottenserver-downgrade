@@ -339,7 +339,7 @@ Condition_ptr Condition::createCondition(PropStream& propStream)
 
 bool Condition::startCondition(Creature*)
 {
-	if (ticks > 0 && endTime == 0) {
+	if (ticks > 0 && (!constant || endTime == 0)) {
 		setEndTime(ticks + OTSYS_TIME());
 	}
 	return true;
