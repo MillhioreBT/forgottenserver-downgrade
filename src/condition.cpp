@@ -1474,7 +1474,8 @@ bool ConditionDamage::executeCondition(Creature* creature, int32_t interval)
 		}
 	}
 
-	return Condition::executeCondition(creature, interval);
+	const bool keep = Condition::executeCondition(creature, interval);
+	return keep || (periodDamage == 0 && !damageList.empty());
 }
 
 bool ConditionDamage::getNextDamage(int32_t& damage)
