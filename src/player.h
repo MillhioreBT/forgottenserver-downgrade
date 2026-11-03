@@ -976,6 +976,9 @@ public:
 
 	static uint32_t playerAutoID;
 
+	// progress from count towards nextLevelCount in basis points (0-10000); 0 without a next level or past it
+	static uint16_t getBasisPointLevel(uint64_t count, uint64_t nextLevelCount);
+
 private:
 	std::forward_list<Condition*> getMuteConditions() const;
 
@@ -1154,7 +1157,6 @@ private:
 
 	uint32_t getAttackSpeed() const;
 
-	static uint16_t getBasisPointLevel(uint64_t count, uint64_t nextLevelCount);
 	uint64_t getLostExperience() const override
 	{
 		return skillLoss ? static_cast<uint64_t>(experience * getLostPercent()) : 0;

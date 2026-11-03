@@ -1711,15 +1711,12 @@ void Player::removeExperience(uint64_t exp, bool sendText /* = false*/)
 
 uint16_t Player::getBasisPointLevel(uint64_t count, uint64_t nextLevelCount)
 {
-	if (nextLevelCount == 0) {
+	// past the next level the value would not fit in 0-10000 (nor, from 6.5 times, in a uint16_t: converting it was
+	// undefined behavior, which on x86 wrapped and gave a percent between 0 and 100)
+	if (nextLevelCount == 0 || count > nextLevelCount) {
 		return 0;
 	}
-
-	uint16_t result = ((count * 10000.) / nextLevelCount);
-	if (result > 10000) {
-		return 0;
-	}
-	return result;
+	return static_cast<uint16_t>((count * 10000.) / nextLevelCount);
 }
 
 void Player::onBlockHit()

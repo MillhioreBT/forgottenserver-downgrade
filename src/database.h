@@ -138,14 +138,24 @@ public:
 		if (row[it->second] == nullptr) {
 			return static_cast<T>(0);
 		}
+		return parseNumber<T>(row[it->second]);
+	}
 
-		T data;
-		try {
-			data = boost::lexical_cast<T>(row[it->second]);
-		} catch (boost::bad_lexical_cast&) {
-			data = 0;
+	// Converts a column value to T; a value that is not a number or does not fit in T gives 0. One-byte integers are
+	// read as numbers: boost::lexical_cast reads them as a character, so "0" would be 48 and "10" an error.
+	template <typename T>
+	static T parseNumber(const char* value)
+	{
+		if constexpr (std::is_integral_v<T> && sizeof(T) == 1 && !std::is_same_v<T, bool>) {
+			const auto number = parseNumber<std::conditional_t<std::is_signed_v<T>, int32_t, uint32_t>>(value);
+			return std::in_range<T>(number) ? static_cast<T>(number) : static_cast<T>(0);
+		} else {
+			try {
+				return boost::lexical_cast<T>(value);
+			} catch (boost::bad_lexical_cast&) {
+				return static_cast<T>(0);
+			}
 		}
-		return data;
 	}
 
 	std::string_view getString(std::string_view column) const;

@@ -17,6 +17,15 @@ struct Account
 	uint64_t tibiaCoins = 0;
 
 	Account() = default;
+
+	// Premium days left as the character list shows them: whole days, at most 0xFFFE (0xFFFF means free premium)
+	uint16_t getPremiumDaysLeft(time_t now) const
+	{
+		if (premiumEndsAt <= now) {
+			return 0;
+		}
+		return static_cast<uint16_t>(std::min<time_t>((premiumEndsAt - now) / 86400, 0xFFFE));
+	}
 };
 
 #endif
