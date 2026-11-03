@@ -3,27 +3,52 @@ name: Build Docker Image (Linux)
 on:
   push:
     branches: [ main ]
+    paths:
+      - .dockerignore
+      - .github/workflows/docker-image.yml
+      - CMakeLists.txt
+      - Dockerfile
+      - cmake/**
+      - src/**
+      - vcpkg.json
+
   pull_request:
     branches: [ main ]
+    paths:
+      - .dockerignore
+      - .github/workflows/docker-image.yml
+      - CMakeLists.txt
+      - Dockerfile
+      - cmake/**
+      - src/**
+      - vcpkg.json
+
   workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: actions/checkout@v5
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Build Docker image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: ./Dockerfile
           push: false
           tags: tfs-linux:latest
+          # Docker layer cache in the GitHub Actions cache: while the Dockerfile up to the vcpkg install and vcpkg.json
+          # do not change, the dependency layers are reused and only the server is compiled. Written from main only:
+          # pull requests read it, and a cache written from a pull request is only usable by that pull request.
+          # mode=max: the dependency layers are in the build stage, which mode=min does not export.
+          cache-from: type=gha,scope=docker-linux
+          cache-to: ${{ github.event_name != 'pull_request' && 'type=gha,scope=docker-linux,mode=max,ignore-error=true' || '' }}
