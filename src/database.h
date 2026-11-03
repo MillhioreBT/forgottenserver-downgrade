@@ -141,8 +141,6 @@ public:
 		return parseNumber<T>(row[it->second]);
 	}
 
-	// Converts a column value to T; a value that is not a number or does not fit in T gives 0. One-byte integers are
-	// read as numbers: boost::lexical_cast reads them as a character, so "0" would be 48 and "10" an error.
 	template <typename T>
 	static T parseNumber(const char* value)
 	{

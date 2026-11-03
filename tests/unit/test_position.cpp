@@ -84,8 +84,6 @@ BOOST_AUTO_TEST_CASE(getDirectionTo_diagonals_only_when_extended)
 	BOOST_TEST(getDirectionTo(from, {95, 105, 7}, false) == DIRECTION_WEST);
 }
 
-// Creatures only turn to the four main directions: player auto walk and monsters turning to their target rely on the
-// non-extended form never returning a diagonal (#56)
 BOOST_AUTO_TEST_CASE(getDirectionTo_without_extended_never_returns_a_diagonal)
 {
 	const Position from{100, 100, 7};

@@ -6,8 +6,6 @@
 
 BOOST_AUTO_TEST_SUITE(test_database)
 
-// Regression: getNumber<uint8_t>("randomizemount") read the column as a character, so "0" was 48 and randomizeMount
-// was always true (#62). One-byte integers must be read as numbers.
 BOOST_AUTO_TEST_CASE(parseNumber_reads_one_byte_integers_as_numbers)
 {
 	BOOST_TEST(DBResult::parseNumber<uint8_t>("0") == 0);

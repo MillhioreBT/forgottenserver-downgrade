@@ -20,8 +20,6 @@ Account premiumUntil(time_t premiumEndsAt)
 
 BOOST_AUTO_TEST_SUITE(test_account)
 
-// Regression: the character list sent premiumEndsAt - now / 86400 (operator precedence), a timestamp, as the days
-// left (#59)
 BOOST_AUTO_TEST_CASE(premium_days_left_counts_whole_days)
 {
 	BOOST_TEST(premiumUntil(now + 30 * day).getPremiumDaysLeft(now) == 30);
@@ -39,7 +37,6 @@ BOOST_AUTO_TEST_CASE(no_premium_days_once_it_ended)
 
 BOOST_AUTO_TEST_CASE(premium_days_left_stay_below_the_free_premium_marker)
 {
-	// 0xFFFF tells the client the server has free premium
 	BOOST_TEST(premiumUntil(now + 70000 * day).getPremiumDaysLeft(now) == 0xFFFE);
 	BOOST_TEST(premiumUntil(now + 65534 * day).getPremiumDaysLeft(now) == 65534);
 }
