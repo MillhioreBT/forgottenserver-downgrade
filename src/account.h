@@ -18,7 +18,6 @@ struct Account
 
 	Account() = default;
 
-	// Premium days left as the character list shows them: whole days, at most 0xFFFE (0xFFFF means free premium)
 	uint16_t getPremiumDaysLeft(time_t now) const
 	{
 		if (premiumEndsAt <= now) {
