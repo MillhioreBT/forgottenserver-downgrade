@@ -10,12 +10,14 @@ on:
       - .clang-format
       - .github/workflows/clang-format.yml
       - src/**
+      - tests/**
 
   pull_request:
     paths:
       - .clang-format
       - .github/workflows/clang-format.yml
       - src/**
+      - tests/**
 
   workflow_dispatch:
 
@@ -41,4 +43,4 @@ jobs:
         run: |
           clang-format --version
           clang-format --version | grep -qF "version ${CLANG_FORMAT_VERSION}"
-          clang-format -n -style=file --Werror src/*.{cpp,h}
+          git ls-files -z 'src/*.cpp' 'src/*.h' 'tests/*.cpp' 'tests/*.h' | xargs -0 clang-format -n -style=file --Werror

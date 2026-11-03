@@ -1,0 +1,122 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - .github/workflows/tests.yml
+      - CMakeLists.txt
+      - CMakePresets.json
+      - cmake/**
+      - src/**
+      - tests/**
+      - vcpkg.json
+
+  pull_request:
+    branches: [ main ]
+    paths:
+      - .github/workflows/tests.yml
+      - CMakeLists.txt
+      - CMakePresets.json
+      - cmake/**
+      - src/**
+      - tests/**
+      - vcpkg.json
+
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+env:
+  CCACHE_DIR: ${{ github.workspace }}/.ccache
+  CCACHE_MAXSIZE: 500M
+
+jobs:
+  unit:
+    name: Unit tests (Linux)
+    # Pinned: the apt package names below are the ones of Ubuntu 24.04. Bump it on purpose.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v5
+
+      # Same dependencies as the vcpkg manifest, from apt: much faster than building them, and enough to test the code
+      # (the Docker, Windows and macOS workflows build with the vcpkg versions)
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends ninja-build ccache \
+            libboost-system-dev libboost-iostreams-dev libboost-locale-dev libboost-json-dev libboost-test-dev \
+            libfmt-dev libmariadb-dev libmariadb-dev-compat libpugixml-dev liblua5.4-dev libssl-dev zlib1g-dev
+
+      - name: Restore compiler cache
+        id: cache
+        uses: actions/cache/restore@v5
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-tests-${{ github.sha }}
+          restore-keys: ccache-tests-
+
+      - name: Build
+        run: |
+          ccache --zero-stats
+          cmake --preset test -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          cmake --build --preset test
+          ccache --show-stats
+
+      # Saved from main only: pull requests restore it, and a cache saved from a pull request is only usable by it.
+      - name: Save compiler cache
+        if: github.event_name != 'pull_request'
+        uses: actions/cache/save@v5
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ steps.cache.outputs.cache-primary-key }}
+
+      - name: Run tests
+        run: ctest --preset test --output-junit "$RUNNER_TEMP/tests.xml"
+
+      - name: Summary
+        if: success() || failure()
+        run: |
+          python3 - "$RUNNER_TEMP/tests.xml" >> "$GITHUB_STEP_SUMMARY" <<'EOF'
+          import re
+          import sys
+          import xml.etree.ElementTree as ET
+
+          try:
+              cases = ET.parse(sys.argv[1]).getroot().iter("testcase")
+          except (OSError, ET.ParseError):
+              print("## Unit tests\n\nThe tests did not run: see the job log.")
+              sys.exit(0)
+
+          def count(output, what):
+              # Boost.Test's short report: "4 test cases out of 51 passed"; each CTest test runs only its own suite,
+              # so the cases of the other suites are reported as skipped
+              match = re.search(rf"(\d+) test cases? out of (\d+) {what}", output)
+              return (int(match.group(1)), int(match.group(2))) if match else (0, 0)
+
+          rows, failures = [], []
+          for case in cases:
+              output = case.findtext("system-out") or ""
+              passed_cases, total = count(output, "passed")
+              skipped_cases, _ = count(output, "skipped")
+              passed = case.get("status") == "run" and case.find("failure") is None
+              rows.append(f"| {'✅' if passed else '❌'} | `{case.get('name')}` | "
+                          f"{passed_cases}/{total - skipped_cases} | {float(case.get('time', 0)):.2f}s |")
+              if not passed:
+                  failures.append(f"<details open><summary><code>{case.get('name')}</code></summary>\n\n"
+                                  f"```\n{output.strip()}\n```\n</details>")
+
+          print("## Unit tests\n")
+          print("| | Suite | Test cases passed | Time |\n|---|---|---|---|")
+          print("\n".join(rows))
+          if failures:
+              print("\n### Failures\n")
+              print("\n\n".join(failures))
+          EOF
