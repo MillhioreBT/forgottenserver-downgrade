@@ -64,7 +64,7 @@ void ProtocolLogin::getCharacterList(std::string_view accountName, std::string_v
 	} else {
 		auto currentTime = time(nullptr);
 		if (account.premiumEndsAt > currentTime) {
-			output->add<uint16_t>(account.premiumEndsAt - currentTime / 86400);
+			output->add<uint16_t>((account.premiumEndsAt - currentTime) / 86400);
 		} else {
 			output->add<uint16_t>(0);
 		}
