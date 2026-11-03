@@ -36,7 +36,7 @@ public:
 	static bool savePlayer(Player* player);
 	static uint32_t getGuidByName(std::string_view name);
 	static bool getGuidByNameEx(uint32_t& guid, bool& specialVip, std::string& name);
-	static std::string_view getNameByGuid(uint32_t guid);
+	static std::string getNameByGuid(uint32_t guid);
 	static bool formatPlayerName(std::string& name);
 	static void increaseBankBalance(uint32_t guid, uint64_t bankBalance);
 	static bool hasBiddedOnHouse(uint32_t guid);
