@@ -50,13 +50,26 @@ static bool isLostConnectionError(const unsigned error)
 	       error == 1053 /*ER_SERVER_SHUTDOWN*/ || error == CR_CONNECTION_ERROR;
 }
 
-static bool executeQuery(MYSQL*& handle, const std::string_view query, const bool retryIfLostConnection)
+// a query that keeps failing right after reconnecting is the problem, not the connection
+static constexpr int MAX_QUERY_RETRIES = 3;
+
+static bool executeQuery(MYSQL*& handle, const std::string_view query, const uint64_t maxQueryLength,
+                         const bool retryIfLostConnection)
 {
-	while (mysql_real_query(handle, query.data(), query.length()) != 0) {
+	// the server drops the connection on a packet over max_allowed_packet and the client reports it as a lost
+	// connection, so sending it would only reconnect and resend it
+	if (query.length() > maxQueryLength) {
+		std::cout << "[Error - mysql_real_query] Query: " << query.substr(0, 256) << std::endl
+		          << "Message: query of " << query.length() << " bytes, max_allowed_packet allows " << maxQueryLength
+		          << std::endl;
+		return false;
+	}
+
+	for (int retries = 0; mysql_real_query(handle, query.data(), query.length()) != 0; ++retries) {
 		std::cout << "[Error - mysql_real_query] Query: " << query.substr(0, 256) << std::endl
 		          << "Message: " << mysql_error(handle) << std::endl;
 		const unsigned error = mysql_errno(handle);
-		if (!isLostConnectionError(error) || !retryIfLostConnection) {
+		if (!isLostConnectionError(error) || !retryIfLostConnection || retries == MAX_QUERY_RETRIES) {
 			return false;
 		}
 		connectToDatabase(handle, true);
@@ -109,7 +122,7 @@ bool Database::commit()
 bool Database::executeQuery(std::string_view query)
 {
 	std::lock_guard<std::recursive_mutex> lockGuard(databaseLock);
-	auto success = ::executeQuery(handle, query, retryQueries);
+	auto success = ::executeQuery(handle, query, getMaxQueryLength(), retryQueries);
 
 	// executeQuery can be called with command that produces result (e.g. SELECT)
 	// we have to store that result, even though we do not need it, otherwise handle will get blocked
@@ -123,8 +136,9 @@ DBResult_ptr Database::storeQuery(std::string_view query)
 {
 	std::lock_guard<std::recursive_mutex> lockGuard(databaseLock);
 
+	int retries = 0;
 retry:
-	if (!::executeQuery(handle, query, retryQueries) && !retryQueries) {
+	if (!::executeQuery(handle, query, getMaxQueryLength(), retryQueries)) {
 		return nullptr;
 	}
 
@@ -135,7 +149,7 @@ retry:
 		std::cout << "[Error - mysql_store_result] Query: " << query << std::endl
 		          << "Message: " << mysql_error(handle) << std::endl;
 		const unsigned error = mysql_errno(handle);
-		if (!isLostConnectionError(error) || !retryQueries) {
+		if (!isLostConnectionError(error) || !retryQueries || retries++ == MAX_QUERY_RETRIES) {
 			return nullptr;
 		}
 		goto retry;
@@ -239,7 +253,7 @@ bool DBInsert::addRow(std::string_view row)
 	// adds new row to buffer; "(", ")" and the "," separator count towards max_allowed_packet too, and a flush
 	// resets length to the bare query, so this row is added after it
 	const size_t rowLength = row.length() + 3;
-	if (length + rowLength > Database::getInstance().getMaxPacketSize() && !execute()) {
+	if (length + rowLength > Database::getInstance().getMaxQueryLength() && !execute()) {
 		return false;
 	}
 	length += rowLength;
