@@ -48,14 +48,16 @@
 			"name": "test",
 			"configurePreset": "test",
 			"targets": [
-				"tfs_tests"
+				"tfs_tests",
+				"tfs_integration_tests"
 			]
 		},
 		{
 			"name": "test-vcpkg",
 			"configurePreset": "test-vcpkg",
 			"targets": [
-				"tfs_tests"
+				"tfs_tests",
+				"tfs_integration_tests"
 			]
 		}
 	],
