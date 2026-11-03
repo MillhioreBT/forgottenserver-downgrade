@@ -67,7 +67,6 @@ BOOST_AUTO_TEST_CASE(getDirectionTo_points_at_the_target)
 	BOOST_TEST(getDirectionTo(from, {90, 100, 7}) == DIRECTION_WEST);
 	BOOST_TEST(getDirectionTo(from, {110, 100, 7}) == DIRECTION_EAST);
 
-	// mostly along one axis: the larger offset wins
 	BOOST_TEST(getDirectionTo(from, {103, 90, 7}) == DIRECTION_NORTH);
 	BOOST_TEST(getDirectionTo(from, {110, 97, 7}) == DIRECTION_EAST);
 }

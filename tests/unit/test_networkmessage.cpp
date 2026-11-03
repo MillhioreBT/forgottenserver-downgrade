@@ -7,14 +7,12 @@
 
 namespace {
 
-// Bytes written to the message body so far (the body starts after the reserved header space)
 std::vector<uint8_t> body(const NetworkMessage& msg)
 {
 	const uint8_t* start = msg.getBuffer() + NetworkMessage::INITIAL_BUFFER_POSITION;
 	return {start, start + msg.getLength()};
 }
 
-// Moves the read position back to the start of the body
 void rewind(NetworkMessage& msg) { BOOST_REQUIRE(msg.setBufferPosition(0)); }
 
 } // namespace
@@ -110,7 +108,7 @@ BOOST_AUTO_TEST_CASE(reading_past_the_end_returns_zero_and_flags_overrun)
 BOOST_AUTO_TEST_CASE(a_string_longer_than_it_claims_is_not_read)
 {
 	NetworkMessage msg;
-	msg.add<uint16_t>(100); // claims 100 bytes, but only 3 follow
+	msg.add<uint16_t>(100);
 	msg.addBytes("abc", 3);
 
 	rewind(msg);
