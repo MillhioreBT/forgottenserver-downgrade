@@ -1,0 +1,112 @@
+name: Build (Windows)
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - .github/workflows/windows-build.yml
+      - src/**
+      - vc17/**
+      - vcpkg.json
+
+  pull_request:
+    branches: [ main ]
+    paths:
+      - .github/workflows/windows-build.yml
+      - src/**
+      - vc17/**
+      - vcpkg.json
+
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  VCPKG_TRIPLET: x64-windows
+  # vcpkg binary cache: each built port is stored as a zip, so a cache restored from an older key only rebuilds
+  # the ports whose ABI changed (new vcpkg.json, new compiler in the runner image).
+  VCPKG_CACHE_DIR: ${{ github.workspace }}\vcpkg-binary-cache
+  VCPKG_BINARY_SOURCES: clear;files,${{ github.workspace }}\vcpkg-binary-cache,readwrite
+
+jobs:
+  build:
+    # Pinned: the image decides the MSVC toolset (vc17 uses v143). Bump it on purpose.
+    runs-on: windows-2022
+    timeout-minutes: 120
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: microsoft/setup-msbuild@v2
+
+      - name: Get the runner image version
+        id: image
+        shell: pwsh
+        run: |
+          "version=${env:ImageOS}-${env:ImageVersion}" >> $env:GITHUB_OUTPUT
+          New-Item -ItemType Directory -Force -Path $env:VCPKG_CACHE_DIR | Out-Null
+
+      - name: Restore vcpkg binary cache
+        id: cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.VCPKG_CACHE_DIR }}
+          key: vcpkg-${{ env.VCPKG_TRIPLET }}-${{ steps.image.outputs.version }}-${{ hashFiles('vcpkg.json') }}
+          restore-keys: |
+            vcpkg-${{ env.VCPKG_TRIPLET }}-${{ steps.image.outputs.version }}-
+            vcpkg-${{ env.VCPKG_TRIPLET }}-
+
+      # The vcpkg preinstalled in the image is used as is: the dependency versions come from the builtin-baseline in
+      # vcpkg.json, the same as the Linux Docker build.
+      - name: Install dependencies (vcpkg)
+        shell: pwsh
+        run: |
+          $vcpkg = Join-Path $env:VCPKG_INSTALLATION_ROOT 'vcpkg.exe'
+          & $vcpkg version
+          # a network error while downloading a port must not fail the build: retry, already built ports come back
+          # from the binary cache
+          for ($attempt = 1; $attempt -le 3; $attempt++) {
+            & $vcpkg install --triplet $env:VCPKG_TRIPLET --x-install-root="$env:GITHUB_WORKSPACE\vcpkg_installed"
+            if ($LASTEXITCODE -eq 0) { exit 0 }
+            Write-Host "vcpkg install failed (attempt $attempt/3), retrying in 30s..."
+            Start-Sleep -Seconds 30
+          }
+          exit 1
+
+      # Only the archives of the ports installed now are kept, so the cache does not grow with every compiler update.
+      - name: Prune vcpkg binary cache
+        if: github.event_name != 'pull_request' && steps.cache.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          $status = Join-Path $env:GITHUB_WORKSPACE 'vcpkg_installed\vcpkg\status'
+          if (-not (Test-Path $status)) { Write-Host "No vcpkg status file, nothing pruned"; exit 0 }
+          $used = Select-String -Path $status -Pattern '^Abi: (\w+)' | ForEach-Object { $_.Matches[0].Groups[1].Value }
+          $stale = Get-ChildItem $env:VCPKG_CACHE_DIR -Recurse -Filter *.zip | Where-Object { $used -notcontains $_.BaseName }
+          Write-Host "$($used.Count) ports in use, removing $(@($stale).Count) stale archives"
+          $stale | Remove-Item
+
+      # Saved from main only: pull requests restore it, and a cache saved from a pull request is only usable by it.
+      - name: Save vcpkg binary cache
+        if: github.event_name != 'pull_request' && steps.cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ env.VCPKG_CACHE_DIR }}
+          key: ${{ steps.cache.outputs.cache-primary-key }}
+
+      - name: Build (Release x64)
+        shell: pwsh
+        run: |
+          # MSBuild integration for the vc17 project; the dependencies are the ones installed in the previous step
+          & (Join-Path $env:VCPKG_INSTALLATION_ROOT 'vcpkg.exe') integrate install
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $installed = Join-Path $env:GITHUB_WORKSPACE 'vcpkg_installed'
+          msbuild vc17\theforgottenserver.sln /m /v:minimal `
+            /p:Configuration=Release /p:Platform=x64 `
+            /p:VcpkgEnableManifest=true /p:VcpkgManifestInstall=false `
+            "/p:VcpkgTriplet=$env:VCPKG_TRIPLET" "/p:VcpkgInstalledDir=$installed"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $exe = Get-ChildItem -Recurse -Filter 'theforgottenserver-x64.exe' | Select-Object -First 1
+          if (-not $exe) { Write-Error "theforgottenserver-x64.exe was not produced"; exit 1 }
+          Write-Host "Built $($exe.FullName) ($([math]::Round($exe.Length / 1MB, 1)) MB)"
