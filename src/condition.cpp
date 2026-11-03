@@ -1951,20 +1951,20 @@ int32_t ConditionLight::getParam(ConditionParam_t param) const
 bool ConditionLight::unserializeProp(ConditionAttr_t attr, PropStream& propStream)
 {
 	if (attr == CONDITIONATTR_LIGHTCOLOR) {
-		uint8_t value;
-		if (!propStream.read<uint8_t>(value)) {
+		uint32_t value;
+		if (!propStream.read<uint32_t>(value)) {
 			return false;
 		}
 
-		lightInfo.color = value;
+		lightInfo.color = static_cast<uint8_t>(value);
 		return true;
 	} else if (attr == CONDITIONATTR_LIGHTLEVEL) {
-		uint8_t value;
-		if (!propStream.read<uint8_t>(value)) {
+		uint32_t value;
+		if (!propStream.read<uint32_t>(value)) {
 			return false;
 		}
 
-		lightInfo.level = value;
+		lightInfo.level = static_cast<uint8_t>(value);
 		return true;
 	} else if (attr == CONDITIONATTR_LIGHTTICKS) {
 		return propStream.read<uint32_t>(internalLightTicks);
