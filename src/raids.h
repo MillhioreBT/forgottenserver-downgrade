@@ -180,7 +180,7 @@ public:
 	bool executeEvent() override;
 
 private:
-	std::string_view getScriptEventName() const { return "onRaid"; }
+	std::string_view getScriptEventName() const override { return "onRaid"; }
 };
 
 #endif
