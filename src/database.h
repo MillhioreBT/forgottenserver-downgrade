@@ -92,7 +92,7 @@ public:
 	 */
 	static const char* getClientVersion() { return mysql_get_client_info(); }
 
-	uint64_t getMaxPacketSize() const { return maxPacketSize; }
+	uint64_t getMaxQueryLength() const { return maxPacketSize - 4; }
 
 private:
 	/**
