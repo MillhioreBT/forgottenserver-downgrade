@@ -13,7 +13,7 @@
 
 extern Game g_game;
 
-Raids::Raids() { scriptInterface.initState(); }
+Raids::Raids() = default;
 
 Raids::~Raids()
 {
@@ -26,6 +26,10 @@ bool Raids::loadFromXml()
 {
 	if (isLoaded()) {
 		return true;
+	}
+
+	if (!scriptInterface.getLuaState() && !scriptInterface.initState()) {
+		return false;
 	}
 
 	pugi::xml_document doc;
