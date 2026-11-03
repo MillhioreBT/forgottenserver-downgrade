@@ -1,6 +1,3 @@
-# Unit tests: a single executable, tfs_tests, with one Boost.Test suite per tests/unit/test_<name>.cpp. Each file is
-# registered in CTest under its name (test_<name>) and runs only its own suite, so the suite name must match the file
-# name. Adding a test is adding a file: CONFIGURE_DEPENDS picks it up on the next build. See tests/README.md.
 file(GLOB TFS_TEST_SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/unit/test_*.cpp)
 
 add_executable(tfs_tests main.cpp ${TFS_TEST_SOURCES})

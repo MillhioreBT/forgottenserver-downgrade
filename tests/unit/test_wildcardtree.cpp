@@ -6,7 +6,6 @@
 
 namespace {
 
-// The game keeps the names of online players in a WildcardTreeNode, lowercase, for "name~" searches
 struct OnlinePlayers
 {
 	OnlinePlayers()
@@ -51,7 +50,6 @@ BOOST_AUTO_TEST_CASE(the_full_name_is_found)
 BOOST_AUTO_TEST_CASE(a_shared_prefix_is_ambiguous)
 {
 	BOOST_TEST(find("al").first == RETURNVALUE_NAMEISTOOAMBIGUOUS);
-	// "bob" is a whole name but also the start of "bobby"
 	BOOST_TEST(find("bob").first == RETURNVALUE_NAMEISTOOAMBIGUOUS);
 }
 

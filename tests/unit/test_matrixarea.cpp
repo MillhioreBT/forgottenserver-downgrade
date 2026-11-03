@@ -8,8 +8,6 @@ namespace {
 
 using Rows = std::vector<std::string>;
 
-// Renders an area as one string per row in createArea's notation, so expectations read like the input: '3' is the
-// center, '1' a cell in the area and '0' a cell outside it ('c' would be a center outside the area).
 Rows rows(const MatrixArea& area)
 {
 	auto&& [centerX, centerY] = area.getCenter();

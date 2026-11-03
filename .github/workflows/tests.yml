@@ -39,15 +39,12 @@ env:
 jobs:
   unit:
     name: Unit tests (Linux)
-    # Pinned: the apt package names below are the ones of Ubuntu 24.04. Bump it on purpose.
     runs-on: ubuntu-24.04
     timeout-minutes: 30
 
     steps:
       - uses: actions/checkout@v5
 
-      # Same dependencies as the vcpkg manifest, from apt: much faster than building them, and enough to test the code
-      # (the Docker, Windows and macOS workflows build with the vcpkg versions)
       - name: Install dependencies
         run: |
           sudo apt-get update -qq
@@ -70,7 +67,6 @@ jobs:
           cmake --build --preset test
           ccache --show-stats
 
-      # Saved from main only: pull requests restore it, and a cache saved from a pull request is only usable by it.
       - name: Save compiler cache
         if: github.event_name != 'pull_request'
         uses: actions/cache/save@v5
@@ -96,8 +92,6 @@ jobs:
               sys.exit(0)
 
           def count(output, what):
-              # Boost.Test's short report: "4 test cases out of 51 passed"; each CTest test runs only its own suite,
-              # so the cases of the other suites are reported as skipped
               match = re.search(rf"(\d+) test cases? out of (\d+) {what}", output)
               return (int(match.group(1)), int(match.group(2))) if match else (0, 0)
 
