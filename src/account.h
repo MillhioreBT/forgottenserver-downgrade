@@ -17,6 +17,14 @@ struct Account
 	uint64_t tibiaCoins = 0;
 
 	Account() = default;
+
+	uint16_t getPremiumDaysLeft(time_t now) const
+	{
+		if (premiumEndsAt <= now) {
+			return 0;
+		}
+		return static_cast<uint16_t>(std::min<time_t>((premiumEndsAt - now) / 86400, 0xFFFE));
+	}
 };
 
 #endif

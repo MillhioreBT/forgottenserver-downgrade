@@ -84,6 +84,21 @@ BOOST_AUTO_TEST_CASE(getDirectionTo_diagonals_only_when_extended)
 	BOOST_TEST(getDirectionTo(from, {95, 105, 7}, false) == DIRECTION_WEST);
 }
 
+BOOST_AUTO_TEST_CASE(getDirectionTo_without_extended_never_returns_a_diagonal)
+{
+	const Position from{100, 100, 7};
+	for (int dx = -10; dx <= 10; ++dx) {
+		for (int dy = -10; dy <= 10; ++dy) {
+			if (dx == 0 && dy == 0) {
+				continue;
+			}
+			const Position to(static_cast<uint16_t>(100 + dx), static_cast<uint16_t>(100 + dy), 7);
+			const Direction dir = getDirectionTo(from, to, false);
+			BOOST_TEST((dir & DIRECTION_DIAGONAL_MASK) == 0, "offset " << dx << ", " << dy << ": " << dir);
+		}
+	}
+}
+
 BOOST_AUTO_TEST_CASE(getNextPosition_and_getDirectionTo_agree)
 {
 	const Position from{100, 100, 7};
