@@ -880,22 +880,23 @@ std::pair<bool, uint32_t> ProtocolGame::isKnownCreature(uint32_t id)
 
 	if (knownCreatureSet.size() > 250) {
 		// Look for a creature to remove
-		for (const uint32_t& creatureId : knownCreatureSet) {
-			Creature* creature = g_game.getCreatureByID(creatureId);
-			if (!canSee(creature)) {
-				knownCreatureSet.erase(creatureId);
-				return std::make_pair(false, creatureId);
+		for (auto it = knownCreatureSet.begin(); it != knownCreatureSet.end(); ++it) {
+			if (!canSee(g_game.getCreatureByID(*it))) {
+				uint32_t removedId = *it;
+				knownCreatureSet.erase(it);
+				return std::make_pair(false, removedId);
 			}
 		}
 
 		// Bad situation. Let's just remove anyone.
-		auto creatureId = knownCreatureSet.begin();
-		if (*creatureId == id) {
-			++creatureId;
+		auto it = knownCreatureSet.begin();
+		if (*it == id) {
+			++it;
 		}
 
-		knownCreatureSet.erase(creatureId);
-		return std::make_pair(false, *creatureId);
+		uint32_t removedId = *it;
+		knownCreatureSet.erase(it);
+		return std::make_pair(false, removedId);
 	}
 	return {};
 }
