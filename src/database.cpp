@@ -247,8 +247,6 @@ DBInsert::DBInsert(std::string_view query) : query{query} { this->length = this-
 
 bool DBInsert::addRow(std::string_view row)
 {
-	// adds new row to buffer; "(", ")" and the "," separator count towards max_allowed_packet too, and a flush
-	// resets length to the bare query, so this row is added after it
 	const size_t rowLength = row.length() + 3;
 	if (length + rowLength > Database::getInstance().getMaxQueryLength() && !execute()) {
 		return false;
