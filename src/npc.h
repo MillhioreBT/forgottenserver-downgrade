@@ -200,8 +200,6 @@ private:
 	int32_t focusCreature;
 	int32_t masterRadius;
 
-	uint8_t speechBubble;
-
 	bool floorChange;
 	bool attackable;
 	bool ignoreHeight;
