@@ -1607,8 +1607,9 @@ void Game::addMoney(Cylinder* cylinder, uint64_t money, uint32_t flags /*= 0*/)
 			Item* remaindItem = Item::CreateItem(it.second, count);
 
 			ReturnValue ret = internalAddItem(cylinder, remaindItem, INDEX_WHEREEVER, flags);
-			if (ret != RETURNVALUE_NOERROR) {
-				internalAddItem(cylinder->getTile(), remaindItem, INDEX_WHEREEVER, FLAG_NOLIMIT);
+			if (ret != RETURNVALUE_NOERROR && internalAddItem(cylinder->getTile(), remaindItem, INDEX_WHEREEVER,
+			                                                  FLAG_NOLIMIT) != RETURNVALUE_NOERROR) {
+				delete remaindItem;
 			}
 
 			currencyCoins -= count;
@@ -5068,6 +5069,7 @@ void Game::parsePlayerNetworkMessage(uint32_t playerId, uint8_t recvByte, Networ
 {
 	Player* player = getPlayerByID(playerId);
 	if (!player) {
+		delete msg;
 		return;
 	}
 
