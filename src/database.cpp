@@ -50,14 +50,11 @@ static bool isLostConnectionError(const unsigned error)
 	       error == 1053 /*ER_SERVER_SHUTDOWN*/ || error == CR_CONNECTION_ERROR;
 }
 
-// a query that keeps failing right after reconnecting is the problem, not the connection
 static constexpr int MAX_QUERY_RETRIES = 3;
 
 static bool executeQuery(MYSQL*& handle, const std::string_view query, const uint64_t maxQueryLength,
                          const bool retryIfLostConnection)
 {
-	// the server drops the connection on a packet over max_allowed_packet and the client reports it as a lost
-	// connection, so sending it would only reconnect and resend it
 	if (query.length() > maxQueryLength) {
 		std::cout << "[Error - mysql_real_query] Query: " << query.substr(0, 256) << std::endl
 		          << "Message: query of " << query.length() << " bytes, max_allowed_packet allows " << maxQueryLength

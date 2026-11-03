@@ -92,12 +92,6 @@ public:
 	 */
 	static const char* getClientVersion() { return mysql_get_client_info(); }
 
-	/**
-	 * Longest query the server accepts: the packet has to stay below max_allowed_packet and carries the command byte
-	 * and, from MySQL 8 clients, two more bytes for the query attributes
-	 *
-	 * @return the maximum query length in bytes
-	 */
 	uint64_t getMaxQueryLength() const { return maxPacketSize - 4; }
 
 private:
