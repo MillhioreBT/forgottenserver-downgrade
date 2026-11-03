@@ -1836,7 +1836,7 @@ void ProtocolGame::sendPrivateMessage(const Player* speaker, SpeakClasses type, 
 		if (!speaker->isAccessPlayer() && !speaker->isAccountManager()) {
 			msg.add<uint16_t>(static_cast<uint16_t>(speaker->getLevel()));
 		} else {
-			msg.add<uint32_t>(0x00);
+			msg.add<uint16_t>(0x00);
 		}
 	} else {
 		msg.add<uint32_t>(0x00);
