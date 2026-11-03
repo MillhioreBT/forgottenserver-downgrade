@@ -52,6 +52,11 @@ int luaActionRegister(lua_State* L)
 {
 	// action:register()
 	Action** actionPtr = getRawUserdata<Action>(L, 1);
+	if (!actionPtr) {
+		reportErrorFunc(L, "register() must be called with a colon: object:register()");
+		pushBoolean(L, false);
+		return 1;
+	}
 	if (auto action = *actionPtr) {
 		if (!action->isScripted()) {
 			pushBoolean(L, false);

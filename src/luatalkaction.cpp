@@ -53,6 +53,11 @@ int luaTalkactionRegister(lua_State* L)
 {
 	// talkAction:register()
 	TalkAction** talkPtr = getRawUserdata<TalkAction>(L, 1);
+	if (!talkPtr) {
+		reportErrorFunc(L, "register() must be called with a colon: object:register()");
+		pushBoolean(L, false);
+		return 1;
+	}
 	if (auto talk = *talkPtr) {
 		if (!talk->isScripted()) {
 			pushBoolean(L, false);

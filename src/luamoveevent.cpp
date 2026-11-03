@@ -70,6 +70,11 @@ int luaMoveEventRegister(lua_State* L)
 {
 	// moveevent:register()
 	MoveEvent** moveeventPtr = getRawUserdata<MoveEvent>(L, 1);
+	if (!moveeventPtr) {
+		reportErrorFunc(L, "register() must be called with a colon: object:register()");
+		pushBoolean(L, false);
+		return 1;
+	}
 	if (auto moveevent = *moveeventPtr) {
 		if (!moveevent->isScripted()) {
 			pushBoolean(L, g_moveEvents->registerLuaFunction(moveevent));

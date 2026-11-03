@@ -62,6 +62,11 @@ int luaGlobalEventRegister(lua_State* L)
 {
 	// globalevent:register()
 	GlobalEvent** globaleventPtr = getRawUserdata<GlobalEvent>(L, 1);
+	if (!globaleventPtr) {
+		reportErrorFunc(L, "register() must be called with a colon: object:register()");
+		pushBoolean(L, false);
+		return 1;
+	}
 	if (auto globalevent = *globaleventPtr) {
 		if (!globalevent->isScripted()) {
 			pushBoolean(L, false);
