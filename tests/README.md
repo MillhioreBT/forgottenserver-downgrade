@@ -7,9 +7,10 @@ CTest, locally and in CI (`.github/workflows/tests.yml`). They build into two ex
 |---|---|---|---|
 | `tfs_tests` | `tests/unit/test_<name>.cpp` | `unit` | nothing |
 | `tfs_integration_tests` | `tests/integration/test_<name>.cpp` | `integration` | a MySQL/MariaDB database created from `schema.sql` |
+| `tfs_tests` (suite `lua`) | `tests/lua/test_<name>.lua` | `lua` | nothing |
 
-Each file is one suite and one CTest test, named after the file. Integration tests are reported as skipped when no
-database is configured, so `ctest` always works.
+Each file is one CTest test, named after the file (`lua_<name>` for Lua files). Integration tests are reported as
+skipped when no database is configured, so `ctest` always works.
 
 ## Running them
 
@@ -58,11 +59,12 @@ ctest --preset test
 ### Running part of them
 
 ```bash
-ctest --preset test -L unit                            # only the unit tests
+ctest --preset test -L unit                            # only the unit tests (or -L integration, -L lua)
 ctest --preset test -R networkmessage                  # suites whose name matches
 build/test/tests/tfs_tests --run_test=test_tools       # one suite, straight from the executable
 build/test/tests/tfs_tests --run_test=test_tools/ucfirst_and_ucwords
 build/test/tests/tfs_tests --list_content              # every suite and test case
+build/test/tests/tfs_tests --run_test=lua -- tests/lua/test_game.lua   # one Lua file
 ```
 
 ## Adding a test
@@ -107,8 +109,27 @@ BOOST_AUTO_TEST_SUITE_END()
 Everything here builds with the project's warnings as errors (`-Wall -Wextra -pedantic -Werror`) and is checked by
 clang-format, like `src/`.
 
+## Lua tests
+
+Lua tests exercise the Lua API the way scripts use it: each `tests/lua/test_<name>.lua` runs in a fresh copy of the
+engine's Lua environment, with every class and constant registered and `data/global.lua` (and so `data/lib`) loaded,
+from the repository root. No map, items, players or database are loaded.
+
+```lua
+test("getReverseDirection points back", function()
+	assertEqual(Game.getReverseDirection(DIRECTION_NORTH), DIRECTION_SOUTH)
+	assertTrue(Position(1, 2, 3) == Position(1, 2, 3))
+end)
+```
+
+`tests/lua/harness.lua` provides `test(name, body)`, `assertEqual(actual, expected)`, `assertTrue(value)` and
+`assertFalse(value)`; a failure reports the test name, the file and line, and both values. `tests/lua/runner.cpp`
+runs the files from the `lua` Boost.Test suite. Lua files follow `.lua-format`, like `data/`, and are checked by
+`.github/workflows/lua-check.yml`.
+
 ## What can be tested
 
 Both executables link `tfslib`, the whole server except `main.cpp`, so any function or class can be called. What
 needs more setup is code that depends on a running server: the loaded map and items, the Lua environment, the network,
 the dispatcher threads. Prefer extracting the logic into a function that does not depend on them, and test that.
+Lua code that does not need game objects can be tested from `tests/lua`.

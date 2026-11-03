@@ -8,6 +8,8 @@ on:
       - CMakeLists.txt
       - CMakePresets.json
       - cmake/**
+      - data/global.lua
+      - data/lib/**
       - schema.sql
       - src/**
       - tests/**
@@ -20,6 +22,8 @@ on:
       - CMakeLists.txt
       - CMakePresets.json
       - cmake/**
+      - data/global.lua
+      - data/lib/**
       - schema.sql
       - src/**
       - tests/**
@@ -40,7 +44,7 @@ env:
 
 jobs:
   tests:
-    name: Unit and integration tests (Linux)
+    name: Unit, integration and Lua tests (Linux)
     runs-on: ubuntu-24.04
     timeout-minutes: 30
 

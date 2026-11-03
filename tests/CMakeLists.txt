@@ -14,3 +14,14 @@ endfunction ()
 
 tfs_add_test_executable(tfs_tests unit)
 tfs_add_test_executable(tfs_integration_tests integration SKIP_RETURN_CODE 77 RESOURCE_LOCK database)
+
+target_sources(tfs_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/lua/runner.cpp)
+target_compile_definitions(tfs_tests PRIVATE TFS_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
+
+file(GLOB lua_tests CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/lua/test_*.lua)
+foreach (lua_test ${lua_tests})
+    get_filename_component(test_name ${lua_test} NAME_WE)
+    string(REGEX REPLACE "^test_" "lua_" test_name ${test_name})
+    add_test(NAME ${test_name} COMMAND tfs_tests --run_test=lua --report_level=short --color_output=no -- ${lua_test})
+    set_tests_properties(${test_name} PROPERTIES LABELS lua)
+endforeach ()
