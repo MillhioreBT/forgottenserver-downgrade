@@ -111,6 +111,10 @@ option(ENABLE_UNITY_BUILD "Enable unity build" ON)
 
 add_subdirectory(src)
 
+if (BUILD_TESTING)
+    add_subdirectory(tests)
+endif ()
+
 
 add_executable(tfs ${tfs_MAIN})
 target_link_libraries(tfs tfslib ZLIB::ZLIB OpenSSL::Crypto)
