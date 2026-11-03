@@ -445,14 +445,26 @@ void ConditionAttributes::addCondition(Creature* creature, const Condition* cond
 
 bool ConditionAttributes::unserializeProp(ConditionAttr_t attr, PropStream& propStream)
 {
+	auto readInto = [&propStream](auto& values, auto& index) {
+		int32_t value;
+		if (!propStream.read<int32_t>(value)) {
+			return false;
+		}
+		if (index >= 0 && static_cast<std::size_t>(index) < std::size(values)) {
+			values[index] = value;
+		}
+		++index;
+		return true;
+	};
+
 	if (attr == CONDITIONATTR_SKILLS) {
-		return propStream.read<int32_t>(skills[currentSkill++]);
+		return readInto(skills, currentSkill);
 	} else if (attr == CONDITIONATTR_SPECIALSKILLS) {
-		return propStream.read<int32_t>(specialSkills[currentSpecialSkill++]);
+		return readInto(specialSkills, currentSpecialSkill);
 	} else if (attr == CONDITIONATTR_STATS) {
-		return propStream.read<int32_t>(stats[currentStat++]);
+		return readInto(stats, currentStat);
 	} else if (attr == CONDITIONATTR_EXPERIENCERATE) {
-		return propStream.read<int32_t>(experienceRate[currentExperienceRate++]);
+		return readInto(experienceRate, currentExperienceRate);
 	} else if (attr == CONDITIONATTR_DISABLEDEFENSE) {
 		return propStream.read<bool>(disableDefense);
 	}
@@ -483,7 +495,7 @@ void ConditionAttributes::serialize(PropWriteStream& propWriteStream)
 
 	for (uint8_t i = static_cast<size_t>(ExperienceRateType::BASE);
 	     i <= static_cast<size_t>(ExperienceRateType::STAMINA); ++i) {
-		propWriteStream.write<uint8_t>(CONDITIONATTR_SPECIALSKILLS);
+		propWriteStream.write<uint8_t>(CONDITIONATTR_EXPERIENCERATE);
 		propWriteStream.write<int32_t>(experienceRate[i]);
 	}
 }

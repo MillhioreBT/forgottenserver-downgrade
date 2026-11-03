@@ -177,7 +177,7 @@ private:
 	int32_t currentSkill = 0;
 	int32_t currentSpecialSkill = 0;
 	int32_t currentStat = 0;
-	int32_t currentExperienceRate = 0;
+	int32_t currentExperienceRate = static_cast<int32_t>(ExperienceRateType::BASE);
 
 	bool disableDefense = false;
 
