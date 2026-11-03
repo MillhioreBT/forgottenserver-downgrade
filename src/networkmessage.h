@@ -42,7 +42,7 @@ public:
 		MAX_PROTOCOL_BODY_LENGTH = MAX_BODY_LENGTH - 10
 	};
 
-	NetworkMessage() = default;
+	NetworkMessage() {}
 
 	void reset() { info = {}; }
 
@@ -156,7 +156,7 @@ protected:
 	};
 
 	NetworkMessageInfo info = {};
-	std::array<uint8_t, NETWORKMESSAGE_MAXSIZE> buffer = {};
+	std::array<uint8_t, NETWORKMESSAGE_MAXSIZE> buffer;
 
 private:
 	bool canAdd(size_t size) const { return (size + info.position) < MAX_BODY_LENGTH; }
