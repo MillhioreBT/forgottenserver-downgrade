@@ -23,7 +23,6 @@ BOOST_AUTO_TEST_SUITE(test_tools)
 
 BOOST_AUTO_TEST_CASE(transformToSHA1_returns_the_raw_digest)
 {
-	// FIPS 180-2 test vectors
 	BOOST_TEST(toHex(transformToSHA1("abc")) == "a9993e364706816aba3e25717850c26c9cd0d89d");
 	BOOST_TEST(toHex(transformToSHA1("")) == "da39a3ee5e6b4b0d3255bfef95601890afd80709");
 	BOOST_TEST(transformToSHA1("abc").size() == 20u);
@@ -68,7 +67,6 @@ BOOST_AUTO_TEST_CASE(explodeString_splits_on_every_separator)
 
 BOOST_AUTO_TEST_CASE(explodeString_limit_caps_the_number_of_splits)
 {
-	// the limit counts splits, not pieces (unlike PHP's explode): the rest of the string stays in the last piece
 	BOOST_TEST(explodeString("a b c d", " ", 1) == (Views{"a", "b c d"}), boost::test_tools::per_element());
 	BOOST_TEST(explodeString("a b c d", " ", 2) == (Views{"a", "b", "c d"}), boost::test_tools::per_element());
 	BOOST_TEST(explodeString("a b", " ", 5) == (Views{"a", "b"}), boost::test_tools::per_element());

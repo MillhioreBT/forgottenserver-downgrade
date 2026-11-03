@@ -49,7 +49,6 @@ BOOST_AUTO_TEST_CASE(decrypt_matches_reference)
 
 BOOST_AUTO_TEST_CASE(decrypt_reverses_encrypt_over_several_blocks)
 {
-	// messages are encrypted in 8-byte blocks; use several so every block is covered
 	std::vector<uint8_t> data(64);
 	std::iota(data.begin(), data.end(), uint8_t{0});
 	const auto original = data;

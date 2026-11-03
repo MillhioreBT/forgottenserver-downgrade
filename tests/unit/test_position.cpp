@@ -67,7 +67,6 @@ BOOST_AUTO_TEST_CASE(getDirectionTo_points_at_the_target)
 	BOOST_TEST(getDirectionTo(from, {90, 100, 7}) == DIRECTION_WEST);
 	BOOST_TEST(getDirectionTo(from, {110, 100, 7}) == DIRECTION_EAST);
 
-	// mostly along one axis: the larger offset wins
 	BOOST_TEST(getDirectionTo(from, {103, 90, 7}) == DIRECTION_NORTH);
 	BOOST_TEST(getDirectionTo(from, {110, 97, 7}) == DIRECTION_EAST);
 }
@@ -85,8 +84,6 @@ BOOST_AUTO_TEST_CASE(getDirectionTo_diagonals_only_when_extended)
 	BOOST_TEST(getDirectionTo(from, {95, 105, 7}, false) == DIRECTION_WEST);
 }
 
-// Creatures only turn to the four main directions: player auto walk and monsters turning to their target rely on the
-// non-extended form never returning a diagonal (#56)
 BOOST_AUTO_TEST_CASE(getDirectionTo_without_extended_never_returns_a_diagonal)
 {
 	const Position from{100, 100, 7};
