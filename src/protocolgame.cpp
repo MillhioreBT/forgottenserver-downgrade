@@ -1835,7 +1835,6 @@ void ProtocolGame::sendPrivateMessage(const Player* speaker, SpeakClasses type, 
 		if (!speaker->isAccessPlayer() && !speaker->isAccountManager()) {
 			msg.add<uint16_t>(static_cast<uint16_t>(speaker->getLevel()));
 		} else {
-			// the level is a u16 after the name; a u32 here shifted the rest of the packet
 			msg.add<uint16_t>(0x00);
 		}
 	} else {
