@@ -605,28 +605,28 @@ int luaWeaponExtraElement(lua_State* L)
 	if (weapon) {
 		uint16_t id = weapon->getID();
 		ItemType& it = Item::items.getItemType(id);
-		it.abilities.get()->elementDamage = getInteger<uint16_t>(L, 2);
+		it.getAbilities().elementDamage = getInteger<uint16_t>(L, 2);
 
 		if (!getInteger<CombatType_t>(L, 3)) {
 			std::string element = getString(L, 3);
 			std::string tmpStrValue = boost::algorithm::to_lower_copy<std::string>(element);
 			if (tmpStrValue == "earth") {
-				it.abilities.get()->elementType = COMBAT_EARTHDAMAGE;
+				it.getAbilities().elementType = COMBAT_EARTHDAMAGE;
 			} else if (tmpStrValue == "ice") {
-				it.abilities.get()->elementType = COMBAT_ICEDAMAGE;
+				it.getAbilities().elementType = COMBAT_ICEDAMAGE;
 			} else if (tmpStrValue == "energy") {
-				it.abilities.get()->elementType = COMBAT_ENERGYDAMAGE;
+				it.getAbilities().elementType = COMBAT_ENERGYDAMAGE;
 			} else if (tmpStrValue == "fire") {
-				it.abilities.get()->elementType = COMBAT_FIREDAMAGE;
+				it.getAbilities().elementType = COMBAT_FIREDAMAGE;
 			} else if (tmpStrValue == "death") {
-				it.abilities.get()->elementType = COMBAT_DEATHDAMAGE;
+				it.getAbilities().elementType = COMBAT_DEATHDAMAGE;
 			} else if (tmpStrValue == "holy") {
-				it.abilities.get()->elementType = COMBAT_HOLYDAMAGE;
+				it.getAbilities().elementType = COMBAT_HOLYDAMAGE;
 			} else {
 				std::cout << "[Warning - weapon:extraElement] Type \"" << element << "\" does not exist." << std::endl;
 			}
 		} else {
-			it.abilities.get()->elementType = getInteger<CombatType_t>(L, 3);
+			it.getAbilities().elementType = getInteger<CombatType_t>(L, 3);
 		}
 		pushBoolean(L, true);
 	} else {
