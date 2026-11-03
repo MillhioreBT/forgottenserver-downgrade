@@ -1587,10 +1587,11 @@ void ProtocolGame::sendShop(const ShopInfoList& itemList)
 	NetworkMessage msg;
 	msg.addByte(0x7A);
 
-	uint16_t itemsToSend = std::min<size_t>(itemList.size(), std::numeric_limits<uint16_t>::max());
+	// the 8.60 count is a single byte
+	uint8_t itemsToSend = std::min<size_t>(itemList.size(), std::numeric_limits<uint8_t>::max());
 	msg.addByte(itemsToSend);
 
-	uint16_t i = 0;
+	uint8_t i = 0;
 	for (auto it = itemList.begin(); i < itemsToSend; ++it, ++i) {
 		AddShopItem(msg, *it);
 	}
