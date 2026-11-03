@@ -99,7 +99,7 @@ uint32_t Protocol::getIP(std::string_view s) const
 {
 	boost::system::error_code error;
 	if (auto ip = boost::asio::ip::make_address_v4(s, error); !error) {
-		return htonl(ip.to_ulong());
+		return htonl(ip.to_uint());
 	}
 
 	return 0;

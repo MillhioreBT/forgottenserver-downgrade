@@ -93,7 +93,7 @@ if(MSVC)
     add_compile_options(/utf-8)
 endif()
 
-set(BOOST_REQUIRED_COMPONENTS system iostreams locale)
+set(BOOST_REQUIRED_COMPONENTS iostreams locale)
 if (HTTP)
     list(APPEND BOOST_REQUIRED_COMPONENTS json)
 endif ()

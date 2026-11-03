@@ -201,7 +201,7 @@ add_library(tfslib ${tfs_SRC})
 include_directories(/usr/include/lua5.4)
 target_link_libraries(tfslib PRIVATE
 	Boost::iostreams
-	Boost::system
+	Boost::headers
 	fmt::fmt
 	pugixml::pugixml
 	${CMAKE_THREAD_LIBS_INIT}

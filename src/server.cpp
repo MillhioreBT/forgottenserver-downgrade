@@ -33,7 +33,7 @@ void ServiceManager::stop()
 
 	for (auto& servicePortIt : acceptors) {
 		try {
-			io_service.post([servicePort = servicePortIt.second]() { servicePort->onStopServer(); });
+			boost::asio::post(io_service, [servicePort = servicePortIt.second]() { servicePort->onStopServer(); });
 		} catch (boost::system::system_error& e) {
 			std::cout << "[ServiceManager::stop] Network Error: " << e.what() << std::endl;
 		}
@@ -41,7 +41,7 @@ void ServiceManager::stop()
 
 	acceptors.clear();
 
-	death_timer.expires_from_now(std::chrono::seconds(3));
+	death_timer.expires_after(std::chrono::seconds(3));
 	death_timer.async_wait([this](const boost::system::error_code&) { die(); });
 }
 
@@ -157,10 +157,9 @@ void ServicePort::open(uint16_t port)
 	try {
 		if (getBoolean(ConfigManager::BIND_ONLY_GLOBAL_ADDRESS)) {
 			acceptor.reset(new boost::asio::ip::tcp::acceptor(
-			    io_service,
-			    boost::asio::ip::tcp::endpoint(boost::asio::ip::address(boost::asio::ip::address_v4::from_string(
-			                                       std::string{getString(ConfigManager::IP)})),
-			                                   serverPort)));
+			    io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::address(boost::asio::ip::make_address_v4(
+			                                                   std::string{getString(ConfigManager::IP)})),
+			                                               serverPort)));
 		} else {
 			acceptor.reset(new boost::asio::ip::tcp::acceptor(
 			    io_service, boost::asio::ip::tcp::endpoint(
