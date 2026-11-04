@@ -36,4 +36,6 @@ private:
 	bool save = false;
 };
 
+const DepotChest* findDepotChest(const Cylinder* cylinder);
+
 #endif

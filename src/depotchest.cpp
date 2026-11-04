@@ -25,7 +25,7 @@ ReturnValue DepotChest::queryAdd(int32_t index, const Thing& thing, uint32_t cou
 			addCount = 1;
 		}
 
-		if (item->getTopParent() != this) {
+		if (findDepotChest(item->getParent()) != this) {
 			if (const Container* container = item->getContainer()) {
 				addCount = container->getItemHoldingCount() + 1;
 			} else {
@@ -33,12 +33,22 @@ ReturnValue DepotChest::queryAdd(int32_t index, const Thing& thing, uint32_t cou
 			}
 		}
 
-		if (getItemHoldingCount() + addCount > maxDepotItems) {
+		if (addCount != 0 && getItemHoldingCount() + addCount > maxDepotItems) {
 			return RETURNVALUE_DEPOTISFULL;
 		}
 	}
 
 	return Container::queryAdd(index, thing, count, flags, actor);
+}
+
+const DepotChest* findDepotChest(const Cylinder* cylinder)
+{
+	for (; cylinder; cylinder = cylinder->getParent()) {
+		if (const DepotChest* chest = dynamic_cast<const DepotChest*>(cylinder)) {
+			return chest;
+		}
+	}
+	return nullptr;
 }
 
 void DepotChest::postAddNotification(Thing* thing, const Cylinder* oldParent, int32_t index, cylinderlink_t)
