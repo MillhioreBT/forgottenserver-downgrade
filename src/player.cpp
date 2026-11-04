@@ -2405,17 +2405,19 @@ ReturnValue Player::queryAdd(int32_t index, const Thing& thing, uint32_t count, 
 		return ret;
 	}
 
-	// need an exchange with source? (destination item is swapped with currently moved item)
-	const Item* inventoryItem = getInventoryItem(static_cast<slots_t>(index));
-	if (inventoryItem && (!inventoryItem->isStackable() || inventoryItem->getID() != item->getID())) {
-		const Cylinder* cylinder = item->getTopParent();
-		if (cylinder && (dynamic_cast<const DepotChest*>(cylinder) || dynamic_cast<const Player*>(cylinder))) {
-			return RETURNVALUE_NEEDEXCHANGE;
-		}
+	return queryMoveOntoSlotItem(getInventoryItem(static_cast<slots_t>(index)), *item);
+}
 
-		return RETURNVALUE_NOTENOUGHROOM;
+ReturnValue Player::queryMoveOntoSlotItem(const Item* slotItem, const Item& item)
+{
+	if (!slotItem || (slotItem->isStackable() && slotItem->getID() == item.getID())) {
+		return RETURNVALUE_NOERROR;
 	}
-	return ret;
+
+	if (dynamic_cast<const Player*>(item.getTopParent()) || findDepotChest(item.getParent())) {
+		return RETURNVALUE_NEEDEXCHANGE;
+	}
+	return RETURNVALUE_NOTENOUGHROOM;
 }
 
 ReturnValue Player::queryMaxCount(int32_t index, const Thing& thing, uint32_t count, uint32_t& maxQueryCount,
