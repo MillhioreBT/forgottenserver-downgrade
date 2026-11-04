@@ -3,6 +3,7 @@
 #include "xtea.h"
 
 #include <boost/test/unit_test.hpp>
+#include <numeric>
 
 namespace {
 

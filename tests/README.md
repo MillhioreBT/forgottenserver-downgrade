@@ -29,6 +29,13 @@ cmake --preset test && cmake --build --preset test && ctest --preset test
 With vcpkg instead (any platform, `VCPKG_ROOT` set), use the `test-vcpkg` presets. The first build compiles the server
 code once (a few minutes); after that only what changed is rebuilt.
 
+On Windows, `tests/run-windows.ps1` enters the Visual Studio developer environment (MSVC x64) and runs the three
+`test-vcpkg` steps with your `VCPKG_ROOT`; the editor task `🧪 Tests (Visual Studio x64)` runs it:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tests\run-windows.ps1
+```
+
 ### With a database
 
 The integration tests add and delete rows, so give them a database of their own, never one with real data. With
