@@ -41,12 +41,12 @@ bool ConnectionManager::acceptIp(const Connection_ptr& connection, uint32_t ip)
 	std::lock_guard<std::mutex> lockClass(connectionManagerLock);
 
 	const auto limit = getInteger(ConfigManager::MAX_CONNECTIONS_PER_IP);
-	uint32_t& count = connectionsPerIp[ip];
-	if (limit > 0 && count >= static_cast<uint32_t>(limit)) {
+	const auto it = connectionsPerIp.find(ip);
+	if (limit > 0 && it != connectionsPerIp.end() && it->second >= static_cast<uint32_t>(limit)) {
 		return false;
 	}
 
-	++count;
+	++connectionsPerIp[ip];
 	connection->countedIp = ip;
 	return true;
 }
