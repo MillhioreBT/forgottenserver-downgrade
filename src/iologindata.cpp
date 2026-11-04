@@ -826,6 +826,13 @@ bool IOLoginData::savePlayer(Player* player)
 		}
 	}
 
+	for (const auto& it : player->depotChests) {
+		if (it.second->needsSave()) {
+			needsSave = true;
+			break;
+		}
+	}
+
 	if (needsSave) {
 		if (!db.executeQuery(
 		        fmt::format("DELETE FROM `player_depotlockeritems` WHERE `player_id` = {:d}", player->getGUID()))) {
