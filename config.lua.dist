@@ -53,6 +53,7 @@ statusTimeout = 5000
 replaceKickOnLogin = true
 maxPacketsPerSecond = 25
 -- NOTE: maxConnectionsPerIp caps the open connections of one IP (0 = no limit)
+-- Players sharing one IP (same household, LAN, carrier-grade NAT) share this limit, so raise it for shared networks
 maxConnectionsPerIp = 10
 
 -- Deaths
