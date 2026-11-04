@@ -53,6 +53,34 @@ BOOST_AUTO_TEST_CASE(a_released_connection_makes_room_for_another)
 	BOOST_TEST(manager.acceptIp(connect(), ip));
 }
 
+BOOST_AUTO_TEST_CASE(releasing_a_connection_twice_frees_only_one_slot)
+{
+	const Connection_ptr first = connect();
+	BOOST_TEST(manager.acceptIp(first, ip));
+	BOOST_TEST(manager.acceptIp(connect(), ip));
+
+	manager.releaseConnection(first);
+	manager.releaseConnection(first);
+
+	BOOST_TEST(manager.acceptIp(connect(), ip));
+	BOOST_TEST(!manager.acceptIp(connect(), ip));
+}
+
+BOOST_AUTO_TEST_CASE(a_refused_connection_does_not_take_a_slot)
+{
+	const Connection_ptr first = connect();
+	BOOST_TEST(manager.acceptIp(first, ip));
+	BOOST_TEST(manager.acceptIp(connect(), ip));
+
+	const Connection_ptr refused = connect();
+	BOOST_TEST(!manager.acceptIp(refused, ip));
+	manager.releaseConnection(refused);
+
+	manager.releaseConnection(first);
+	BOOST_TEST(manager.acceptIp(connect(), ip));
+	BOOST_TEST(!manager.acceptIp(connect(), ip));
+}
+
 BOOST_AUTO_TEST_CASE(the_limit_counts_each_ip_on_its_own)
 {
 	BOOST_TEST(manager.acceptIp(connect(), ip));
