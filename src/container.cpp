@@ -5,6 +5,7 @@
 
 #include "container.h"
 
+#include "depotchest.h"
 #include "game.h"
 #include "iomap.h"
 
@@ -241,6 +242,26 @@ ReturnValue Container::queryAdd(int32_t index, const Thing& thing, uint32_t coun
 		if (const HouseTile* houseTile = dynamic_cast<const HouseTile*>(topParent->getTile())) {
 			if (!topParent->getCreature() && !houseTile->getHouse()->isInvited(actor->getPlayer())) {
 				return RETURNVALUE_PLAYERISNOTINVITED;
+			}
+		}
+	}
+
+	if (!hasBitSet(FLAG_NOLIMIT, flags)) {
+		auto findDepotChest = [](const Cylinder* cylinder) -> const DepotChest* {
+			for (; cylinder; cylinder = cylinder->getParent()) {
+				if (const DepotChest* chest = dynamic_cast<const DepotChest*>(cylinder)) {
+					return chest;
+				}
+			}
+			return nullptr;
+		};
+
+		const DepotChest* chest = findDepotChest(getParent());
+		const bool splitsStack = item->isStackable() && item->getItemCount() != count;
+		if (chest && (splitsStack || findDepotChest(item->getParent()) != chest)) {
+			ReturnValue ret = chest->queryAdd(INDEX_WHEREEVER, *item, count, flags | FLAG_CHILDISOWNER, actor);
+			if (ret != RETURNVALUE_NOERROR) {
+				return ret;
 			}
 		}
 	}
