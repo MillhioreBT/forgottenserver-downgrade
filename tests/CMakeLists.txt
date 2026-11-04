@@ -3,6 +3,7 @@ function (tfs_add_test_executable target label)
 
     add_executable(${target} ${CMAKE_CURRENT_SOURCE_DIR}/${label}/main.cpp ${sources})
     target_include_directories(${target} PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
+    target_compile_definitions(${target} PRIVATE BOOST_TEST_INCLUDED=)
     target_link_libraries(${target} PRIVATE tfslib ZLIB::ZLIB OpenSSL::Crypto)
 
     foreach (source ${sources})
