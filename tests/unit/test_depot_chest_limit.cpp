@@ -62,4 +62,53 @@ BOOST_AUTO_TEST_CASE(splitting_a_stack_into_a_container_in_a_full_depot_chest_is
 	           static_cast<int>(RETURNVALUE_DEPOTISFULL));
 }
 
+BOOST_AUTO_TEST_CASE(items_can_be_rearranged_inside_a_full_depot_chest)
+{
+	BOOST_TEST(static_cast<int>(chest->queryAdd(INDEX_WHEREEVER, *coins, 10, 0)) ==
+	           static_cast<int>(RETURNVALUE_NOERROR));
+}
+
+BOOST_AUTO_TEST_CASE(splitting_a_stack_inside_a_full_depot_chest_is_refused)
+{
+	BOOST_TEST(static_cast<int>(chest->queryAdd(INDEX_WHEREEVER, *coins, 4, 0)) ==
+	           static_cast<int>(RETURNVALUE_DEPOTISFULL));
+}
+
+BOOST_AUTO_TEST_CASE(items_can_move_from_a_container_to_the_full_depot_chest_holding_it)
+{
+	Item* platinum = Item::CreateItem(ITEM_PLATINUM_COIN);
+	bag->internalAddThing(platinum);
+	chest->setMaxDepotItems(3);
+
+	BOOST_TEST(static_cast<int>(chest->queryAdd(INDEX_WHEREEVER, *platinum, 1, 0)) ==
+	           static_cast<int>(RETURNVALUE_NOERROR));
+}
+
+BOOST_AUTO_TEST_CASE(items_can_be_rearranged_inside_a_depot_chest_over_its_limit)
+{
+	chest->setMaxDepotItems(1);
+
+	BOOST_TEST(static_cast<int>(chest->queryAdd(INDEX_WHEREEVER, *coins, 10, 0)) ==
+	           static_cast<int>(RETURNVALUE_NOERROR));
+	BOOST_TEST(static_cast<int>(bag->queryAdd(INDEX_WHEREEVER, *coins, 10, 0)) ==
+	           static_cast<int>(RETURNVALUE_NOERROR));
+}
+
+BOOST_AUTO_TEST_CASE(nothing_new_enters_a_depot_chest_over_its_limit)
+{
+	chest->setMaxDepotItems(1);
+	const std::unique_ptr<Item> more{Item::CreateItem(ITEM_PLATINUM_COIN)};
+
+	BOOST_TEST(static_cast<int>(bag->queryAdd(INDEX_WHEREEVER, *more, 1, 0)) ==
+	           static_cast<int>(RETURNVALUE_DEPOTISFULL));
+}
+
+BOOST_AUTO_TEST_CASE(the_no_limit_flag_skips_the_depot_chest_limit)
+{
+	const std::unique_ptr<Item> more{Item::CreateItem(ITEM_PLATINUM_COIN)};
+
+	BOOST_TEST(static_cast<int>(bag->queryAdd(INDEX_WHEREEVER, *more, 1, FLAG_NOLIMIT)) ==
+	           static_cast<int>(RETURNVALUE_NOERROR));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
