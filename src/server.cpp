@@ -66,7 +66,7 @@ std::string ServicePort::get_protocol_names() const
 
 void ServicePort::accept()
 {
-	if (!acceptor) {
+	if (!acceptor || !acceptor->is_open()) {
 		return;
 	}
 
@@ -98,6 +98,19 @@ void ServicePort::onAccept(Connection_ptr connection, const boost::system::error
 		}
 
 		accept();
+		return;
+	}
+
+	ConnectionManager::getInstance().releaseConnection(connection);
+
+	if (error == boost::system::errc::too_many_files_open ||
+	    error == boost::system::errc::too_many_files_open_in_system || error == boost::system::errc::no_buffer_space ||
+	    error == boost::system::errc::not_enough_memory) {
+		g_scheduler.addEvent(createSchedulerTask(1000, [service = std::weak_ptr<ServicePort>(shared_from_this())]() {
+			if (auto servicePort = service.lock()) {
+				boost::asio::post(servicePort->io_service, [servicePort]() { servicePort->accept(); });
+			}
+		}));
 	} else if (error != boost::asio::error::operation_aborted) {
 		if (!pendingStart) {
 			close();
