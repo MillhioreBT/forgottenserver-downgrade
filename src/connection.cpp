@@ -25,7 +25,30 @@ void ConnectionManager::releaseConnection(const Connection_ptr& connection)
 {
 	std::lock_guard<std::mutex> lockClass(connectionManagerLock);
 
-	connections.erase(connection);
+	if (connections.erase(connection) == 0 || connection->countedIp == 0) {
+		return;
+	}
+
+	auto it = connectionsPerIp.find(connection->countedIp);
+	if (it != connectionsPerIp.end() && --it->second == 0) {
+		connectionsPerIp.erase(it);
+	}
+	connection->countedIp = 0;
+}
+
+bool ConnectionManager::acceptIp(const Connection_ptr& connection, uint32_t ip)
+{
+	std::lock_guard<std::mutex> lockClass(connectionManagerLock);
+
+	const auto limit = getInteger(ConfigManager::MAX_CONNECTIONS_PER_IP);
+	const auto it = connectionsPerIp.find(ip);
+	if (limit > 0 && it != connectionsPerIp.end() && it->second >= static_cast<uint32_t>(limit)) {
+		return false;
+	}
+
+	++connectionsPerIp[ip];
+	connection->countedIp = ip;
+	return true;
 }
 
 void ConnectionManager::closeAll()
@@ -41,6 +64,7 @@ void ConnectionManager::closeAll()
 		}
 	}
 	connections.clear();
+	connectionsPerIp.clear();
 }
 
 // Connection

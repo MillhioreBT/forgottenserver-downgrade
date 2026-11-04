@@ -37,10 +37,13 @@ public:
 	void releaseConnection(const Connection_ptr& connection);
 	void closeAll();
 
+	bool acceptIp(const Connection_ptr& connection, uint32_t ip);
+
 private:
 	ConnectionManager() = default;
 
 	std::unordered_set<Connection_ptr> connections;
+	std::unordered_map<uint32_t, uint32_t> connectionsPerIp;
 	std::mutex connectionManagerLock;
 };
 
@@ -108,6 +111,7 @@ private:
 	time_t timeConnected;
 	uint32_t packetsSent = 0;
 	uint32_t lastIp = 0;
+	uint32_t countedIp = 0;
 
 	bool closed = false;
 	bool receivedFirst = false;
