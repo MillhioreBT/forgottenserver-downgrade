@@ -1105,11 +1105,13 @@ void Events::eventPlayerOnNetworkMessage(Player* player, uint8_t recvByte, Netwo
 {
 	// Player:onNetworkMessage(recvByte, msg)
 	if (info.playerOnNetworkMessage == -1) {
+		delete msg;
 		return;
 	}
 
 	if (!scriptInterface.reserveScriptEnv()) {
 		std::cout << "[Error - Events::eventPlayerOnNetworkMessage] Call stack overflow" << std::endl;
+		delete msg;
 		return;
 	}
 
@@ -1126,6 +1128,8 @@ void Events::eventPlayerOnNetworkMessage(Player* player, uint8_t recvByte, Netwo
 
 	Lua::pushUserdata<NetworkMessage>(L, msg);
 	Lua::setMetatable(L, -1, "NetworkMessage");
+
+	lua_gc(L, LUA_GCSTEP, static_cast<int>(sizeof(NetworkMessage) / 1024));
 
 	scriptInterface.callVoidFunction(3);
 }
