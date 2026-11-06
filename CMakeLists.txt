@@ -37,9 +37,12 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 
 # Solo warnings estrictos para nuestros sources, no para dependencias
+option(WARNINGS_AS_ERRORS "Treat compiler warnings as errors" ON)
 if (NOT WIN32)
-    add_compile_options(-Wall -Wextra -Wnon-virtual-dtor -pedantic -Werror -pipe -fvisibility=hidden)
-    add_compile_options(-Wno-error=old-style-cast)
+    add_compile_options(-Wall -Wextra -Wnon-virtual-dtor -pedantic -pipe -fvisibility=hidden)
+    if (WARNINGS_AS_ERRORS)
+        add_compile_options(-Werror -Wno-error=old-style-cast)
+    endif ()
 endif ()
 
 option(SANITIZE "Build with AddressSanitizer and UndefinedBehaviorSanitizer" OFF)
@@ -115,17 +118,6 @@ endif()
 # Option to disable unity builds
 option(ENABLE_UNITY_BUILD "Enable unity build" ON)
 
-add_subdirectory(src)
-
-if (BUILD_TESTING)
-    add_subdirectory(tests)
-endif ()
-
-
-add_executable(tfs ${tfs_MAIN})
-target_link_libraries(tfs tfslib ZLIB::ZLIB OpenSSL::Crypto)
-target_include_directories(tfs PUBLIC)
-
 ### INTERPROCEDURAL_OPTIMIZATION ###
 include(CheckIPOSupported)
 check_ipo_supported(RESULT result OUTPUT error)
@@ -137,6 +129,17 @@ else ()
     message(STATUS "IPO is not supported: ${error}")
 endif ()
 ### END INTERPROCEDURAL_OPTIMIZATION ###
+
+add_subdirectory(src)
+
+if (BUILD_TESTING)
+    add_subdirectory(tests)
+endif ()
+
+
+add_executable(tfs ${tfs_MAIN})
+target_link_libraries(tfs tfslib ZLIB::ZLIB OpenSSL::Crypto)
+target_include_directories(tfs PUBLIC)
 
 ### Git Version ###
 # Define the two required variables before including
