@@ -16,6 +16,7 @@
 #include <iomanip>
 
 extern Game g_game;
+extern Ban g_bans;
 
 void ProtocolLogin::disconnectClient(std::string_view message)
 {
@@ -28,8 +29,26 @@ void ProtocolLogin::disconnectClient(std::string_view message)
 
 void ProtocolLogin::getCharacterList(std::string_view accountName, std::string_view password)
 {
+	const uint32_t ip = getIP();
+	if (g_bans.isLoginBlocked(ip)) {
+		disconnectClient("Too many failed login attempts. Please wait a few minutes.");
+		return;
+	}
+
+	BanInfo banInfo;
+	if (IOBan::isIpBanned(ip, banInfo)) {
+		if (banInfo.reason.empty()) {
+			banInfo.reason = "(none)";
+		}
+
+		disconnectClient(fmt::format("Your IP has been banned until {:s} by {:s}.\n\nReason specified:\n{:s}",
+		                             formatDateShort(banInfo.expiresAt), banInfo.bannedBy, banInfo.reason));
+		return;
+	}
+
 	Account account;
 	if (!IOLoginData::loginserverAuthentication(accountName, password, account)) {
+		g_bans.onLoginFailed(ip);
 		disconnectClient("Account name or password is not correct.");
 		return;
 	}
@@ -121,19 +140,8 @@ void ProtocolLogin::onRecvFirstMessage(NetworkMessage& msg)
 		return;
 	}
 
-	BanInfo banInfo;
 	auto connection = getConnection();
 	if (!connection) {
-		return;
-	}
-
-	if (IOBan::isIpBanned(connection->getIP(), banInfo)) {
-		if (banInfo.reason.empty()) {
-			banInfo.reason = "(none)";
-		}
-
-		disconnectClient(fmt::format("Your IP has been banned until {:s} by {:s}.\n\nReason specified:\n{:s}",
-		                             formatDateShort(banInfo.expiresAt), banInfo.bannedBy, banInfo.reason));
 		return;
 	}
 

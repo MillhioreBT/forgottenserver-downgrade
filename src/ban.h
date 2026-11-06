@@ -26,13 +26,27 @@ struct ConnectBlock
 
 using IpConnectMap = std::map<uint32_t, ConnectBlock>;
 
+struct LoginFailures
+{
+	int64_t windowStart = 0;
+	int64_t blockedUntil = 0;
+	uint32_t count = 0;
+};
+
 class Ban
 {
 public:
 	bool acceptConnection(const uint32_t clientIP);
 
+	bool isLoginBlocked(const uint32_t clientIP);
+	void onLoginFailed(const uint32_t clientIP);
+
 private:
+	static constexpr int64_t LOGIN_FAILURE_WINDOW = 5 * 60 * 1000;
+	static constexpr int64_t LOGIN_BLOCK_TIME = 5 * 60 * 1000;
+
 	IpConnectMap ipConnectMap;
+	std::map<uint32_t, LoginFailures> loginFailures;
 	std::recursive_mutex lock;
 };
 

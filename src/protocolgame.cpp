@@ -16,6 +16,7 @@
 
 extern CreatureEvents* g_creatureEvents;
 extern Chat* g_chat;
+extern Ban g_bans;
 
 namespace {
 
@@ -396,31 +397,52 @@ void ProtocolGame::onRecvFirstMessage(NetworkMessage& msg)
 		return;
 	}
 
-	BanInfo banInfo;
-	if (IOBan::isIpBanned(getIP(), banInfo)) {
-		if (banInfo.reason.empty()) {
-			banInfo.reason = "(none)";
+	g_dispatcher.addTask([=, thisPtr = getThis(), accountName = std::string{accountName},
+	                      password = std::string{password}, characterName = std::string{characterName}]() {
+		if (thisPtr->isConnectionExpired()) {
+			return;
 		}
 
-		disconnectClient(fmt::format("Your IP has been banned until {:s} by {:s}.\n\nReason specified:\n{:s}",
-		                             formatDateShort(banInfo.expiresAt), banInfo.bannedBy, banInfo.reason));
-		return;
-	}
+		if (g_game.getGameState() == GAME_STATE_STARTUP || g_game.getGameState() == GAME_STATE_MAINTAIN ||
+		    g_game.getGameState() == GAME_STATE_SHUTDOWN) {
+			thisPtr->disconnectClient("Gameworld is under maintenance. Please re-connect in a while.");
+			return;
+		}
 
-	auto [accountId, characterId] = IOLoginData::gameworldAuthentication(accountName, password, characterName);
-	if (accountManager && characterName == ACCOUNT_MANAGER_PLAYER_NAME) {
+		const uint32_t ip = thisPtr->getIP();
+		if (g_bans.isLoginBlocked(ip)) {
+			thisPtr->disconnectClient("Too many failed login attempts. Please wait a few minutes.");
+			return;
+		}
+
+		BanInfo banInfo;
+		if (IOBan::isIpBanned(ip, banInfo)) {
+			if (banInfo.reason.empty()) {
+				banInfo.reason = "(none)";
+			}
+
+			thisPtr->disconnectClient(
+			    fmt::format("Your IP has been banned until {:s} by {:s}.\n\nReason specified:\n{:s}",
+			                formatDateShort(banInfo.expiresAt), banInfo.bannedBy, banInfo.reason));
+			return;
+		}
+
+		auto [accountId, characterId] = IOLoginData::gameworldAuthentication(accountName, password, characterName);
+		if (accountManager && characterName == ACCOUNT_MANAGER_PLAYER_NAME) {
+			if (accountId == 0) {
+				std::tie(accountId, characterId) =
+				    IOLoginData::getAccountIdByAccountName(accountName, password, characterName);
+			}
+		}
+
 		if (accountId == 0) {
-			std::tie(accountId, characterId) =
-			    IOLoginData::getAccountIdByAccountName(accountName, password, characterName);
+			g_bans.onLoginFailed(ip);
+			thisPtr->disconnectClient("Account name or password is not correct.");
+			return;
 		}
-	}
 
-	if (accountId == 0) {
-		disconnectClient("Account name or password is not correct.");
-		return;
-	}
-
-	g_dispatcher.addTask([=, thisPtr = getThis()]() { thisPtr->login(characterId, accountId, operatingSystem); });
+		thisPtr->login(characterId, accountId, operatingSystem);
+	});
 }
 
 void ProtocolGame::onConnect()

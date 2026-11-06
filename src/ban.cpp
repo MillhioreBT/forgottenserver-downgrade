@@ -5,6 +5,7 @@
 
 #include "ban.h"
 
+#include "configmanager.h"
 #include "connection.h"
 #include "database.h"
 #include "databasetasks.h"
@@ -42,6 +43,40 @@ bool Ban::acceptConnection(const uint32_t clientIP)
 		connectBlock.count = 1;
 	}
 	return true;
+}
+
+bool Ban::isLoginBlocked(const uint32_t clientIP)
+{
+	std::lock_guard<std::recursive_mutex> lockClass(lock);
+
+	auto it = loginFailures.find(clientIP);
+	return it != loginFailures.end() && it->second.blockedUntil > OTSYS_TIME();
+}
+
+void Ban::onLoginFailed(const uint32_t clientIP)
+{
+	std::lock_guard<std::recursive_mutex> lockClass(lock);
+
+	const int64_t currentTime = OTSYS_TIME();
+	if (loginFailures.size() > 4096) {
+		std::erase_if(loginFailures, [currentTime](const auto& entry) {
+			return entry.second.blockedUntil <= currentTime &&
+			       entry.second.windowStart + LOGIN_FAILURE_WINDOW <= currentTime;
+		});
+	}
+
+	LoginFailures& failures = loginFailures[clientIP];
+	if (failures.windowStart + LOGIN_FAILURE_WINDOW <= currentTime) {
+		failures.windowStart = currentTime;
+		failures.count = 0;
+	}
+
+	const auto limit = getInteger(ConfigManager::MAX_LOGIN_FAILURES);
+	if (limit > 0 && ++failures.count >= static_cast<uint32_t>(limit)) {
+		failures.blockedUntil = currentTime + LOGIN_BLOCK_TIME;
+		failures.windowStart = currentTime;
+		failures.count = 0;
+	}
 }
 
 bool IOBan::isAccountBanned(uint32_t accountId, BanInfo& banInfo)
