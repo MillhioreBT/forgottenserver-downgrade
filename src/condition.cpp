@@ -439,6 +439,7 @@ void ConditionAttributes::addCondition(Creature* creature, const Condition* cond
 			updateSkills(player);
 			updatePercentStats(player);
 			updateStats(player);
+			updateExperienceRate(player);
 		}
 	}
 }
@@ -598,8 +599,8 @@ void ConditionAttributes::updateExperienceRate(Player* player) const
 {
 	for (uint8_t i = static_cast<size_t>(ExperienceRateType::BASE);
 	     i <= static_cast<size_t>(ExperienceRateType::STAMINA); ++i) {
-		if (experienceRate[i] != 1.0) {
-			player->setExperienceRate(static_cast<ExperienceRateType>(i), experienceRate[i]);
+		if (experienceRate[i] != 0) {
+			player->addExperienceRate(static_cast<ExperienceRateType>(i), experienceRate[i]);
 		}
 	}
 }
@@ -649,8 +650,8 @@ void ConditionAttributes::endCondition(Creature* creature)
 
 		for (uint8_t i = static_cast<size_t>(ExperienceRateType::BASE);
 		     i <= static_cast<size_t>(ExperienceRateType::STAMINA); ++i) {
-			if (experienceRate[i] != 1.0) {
-				player->setExperienceRate(static_cast<ExperienceRateType>(i), -experienceRate[i]);
+			if (experienceRate[i] != 0) {
+				player->addExperienceRate(static_cast<ExperienceRateType>(i), -experienceRate[i]);
 			}
 		}
 	}
