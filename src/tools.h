@@ -81,7 +81,7 @@ const std::vector<Direction>& getShuffleDirections();
 
 namespace tfs {
 
-#if __has_cpp_attribute(__cpp_lib_to_underlying)
+#if defined(__cpp_lib_to_underlying)
 
 inline constexpr auto to_underlying(auto e) noexcept { return std::to_underlying(e); }
 
