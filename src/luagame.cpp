@@ -351,7 +351,12 @@ int luaGameCreateItem(lua_State* L)
 			return 1;
 		}
 
-		g_game.internalAddItem(tile, item, INDEX_WHEREEVER, FLAG_NOLIMIT);
+		if (g_game.internalAddItem(tile, item, INDEX_WHEREEVER, FLAG_NOLIMIT | FLAG_IGNOREAUTOSTACK) !=
+		    RETURNVALUE_NOERROR) {
+			delete item;
+			lua_pushnil(L);
+			return 1;
+		}
 	} else {
 		LuaScriptInterface::getScriptEnv()->addTempItem(item);
 		item->setParent(VirtualCylinder::virtualCylinder);
@@ -392,7 +397,11 @@ int luaGameCreateContainer(lua_State* L)
 			return 1;
 		}
 
-		g_game.internalAddItem(tile, container, INDEX_WHEREEVER, FLAG_NOLIMIT);
+		if (g_game.internalAddItem(tile, container, INDEX_WHEREEVER, FLAG_NOLIMIT) != RETURNVALUE_NOERROR) {
+			delete container;
+			lua_pushnil(L);
+			return 1;
+		}
 	} else {
 		LuaScriptInterface::getScriptEnv()->addTempItem(container);
 		container->setParent(VirtualCylinder::virtualCylinder);

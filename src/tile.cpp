@@ -790,7 +790,7 @@ Tile* Tile::queryDestination(int32_t&, const Thing&, Item** destItem, uint32_t& 
 		flags |= FLAG_NOLIMIT; // Will ignore that there is blocking items/creatures
 	}
 
-	if (destTile) {
+	if (destTile && !hasBitSet(FLAG_IGNOREAUTOSTACK, flags)) {
 		Thing* destThing = destTile->getTopDownItem();
 		if (destThing) {
 			*destItem = destThing->getItem();
