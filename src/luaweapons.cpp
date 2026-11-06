@@ -88,6 +88,11 @@ int luaWeaponRegister(lua_State* L)
 {
 	// weapon:register()
 	Weapon** weaponPtr = getRawUserdata<Weapon>(L, 1);
+	if (!weaponPtr) {
+		reportErrorFunc(L, "register() must be called with a colon: object:register()");
+		pushBoolean(L, false);
+		return 1;
+	}
 	if (auto weapon = *weaponPtr) {
 		if (weapon->weaponType == WEAPON_DISTANCE || weapon->weaponType == WEAPON_AMMO) {
 			weapon = getUserdata<WeaponDistance>(L, 1);

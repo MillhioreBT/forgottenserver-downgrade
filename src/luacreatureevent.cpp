@@ -79,6 +79,11 @@ int luaCreatureEventRegister(lua_State* L)
 {
 	// creatureevent:register()
 	CreatureEvent** creaturePtr = getRawUserdata<CreatureEvent>(L, 1);
+	if (!creaturePtr) {
+		reportErrorFunc(L, "register() must be called with a colon: object:register()");
+		pushBoolean(L, false);
+		return 1;
+	}
 	if (auto creature = *creaturePtr) {
 		if (!creature->isScripted()) {
 			pushBoolean(L, false);

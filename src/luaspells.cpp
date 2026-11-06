@@ -116,6 +116,11 @@ int luaSpellRegister(lua_State* L)
 {
 	// spell:register()
 	Spell** spellPtr = getRawUserdata<Spell>(L, 1);
+	if (!spellPtr) {
+		reportErrorFunc(L, "register() must be called with a colon: object:register()");
+		pushBoolean(L, false);
+		return 1;
+	}
 	if (auto spell = *spellPtr) {
 		if (spell->spellType == SPELL_INSTANT) {
 			InstantSpell* instant = dynamic_cast<InstantSpell*>(getUserdata<Spell>(L, 1));
