@@ -11,7 +11,7 @@
 class OutputMessage : public NetworkMessage
 {
 public:
-	OutputMessage() = default;
+	OutputMessage() {}
 
 	// non-copyable
 	OutputMessage(const OutputMessage&) = delete;
