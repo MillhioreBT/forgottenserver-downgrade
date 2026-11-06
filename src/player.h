@@ -977,6 +977,7 @@ public:
 	static uint32_t playerAutoID;
 
 	static uint16_t getBasisPointLevel(uint64_t count, uint64_t nextLevelCount);
+	static ReturnValue queryMoveOntoSlotItem(const Item* slotItem, const Item& item);
 
 private:
 	std::forward_list<Condition*> getMuteConditions() const;
