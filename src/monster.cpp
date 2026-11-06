@@ -1907,7 +1907,7 @@ void Monster::drainHealth(Creature* attacker, int32_t damage)
 {
 	Creature::drainHealth(attacker, damage);
 
-	if (damage > 0 && randomStepping) {
+	if (damage > 0 && randomStepping && !ignoreFieldDamage) {
 		ignoreFieldDamage = true;
 		updateMapCache();
 	}
