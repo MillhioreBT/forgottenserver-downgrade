@@ -267,7 +267,12 @@ bool GlobalEvent::configureEvent(const pugi::xml_node& node)
 		}
 
 		time_t current_time = time(nullptr);
-		struct tm timeinfo = fmt::localtime(current_time);
+		struct tm timeinfo{};
+#ifdef _WIN32
+		localtime_s(&timeinfo, &current_time);
+#else
+		localtime_r(&current_time, &timeinfo);
+#endif
 		timeinfo.tm_hour = hour;
 		timeinfo.tm_min = min;
 		timeinfo.tm_sec = sec;

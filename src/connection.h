@@ -33,7 +33,7 @@ public:
 		return instance;
 	}
 
-	Connection_ptr createConnection(boost::asio::io_service& io_service, ConstServicePort_ptr servicePort);
+	Connection_ptr createConnection(boost::asio::io_context& io_service, ConstServicePort_ptr servicePort);
 	void releaseConnection(const Connection_ptr& connection);
 	void closeAll();
 
@@ -59,7 +59,7 @@ public:
 		FORCE_CLOSE = true
 	};
 
-	Connection(boost::asio::io_service& io_service, ConstServicePort_ptr service_port) :
+	Connection(boost::asio::io_context& io_service, ConstServicePort_ptr service_port) :
 	    readTimer(io_service),
 	    writeTimer(io_service),
 	    service_port(std::move(service_port)),
