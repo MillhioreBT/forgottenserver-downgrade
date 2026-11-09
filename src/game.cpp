@@ -148,10 +148,15 @@ void Game::saveGameState()
 
 	for (const auto& it : players) {
 		it.second->loginPosition = it.second->getPosition();
-		IOLoginData::savePlayer(it.second);
+		if (!IOLoginData::savePlayer(it.second)) {
+			std::cout << "[Error - Game::saveGameState] Failed to save player " << it.second->getName() << '.'
+			          << std::endl;
+		}
 	}
 
-	Map::save();
+	if (!Map::save()) {
+		std::cout << "[Error - Game::saveGameState] Failed to save houses." << std::endl;
+	}
 
 	g_databaseTasks.flush();
 
