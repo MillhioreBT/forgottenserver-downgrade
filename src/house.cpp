@@ -401,7 +401,8 @@ void AccessList::parseList(std::string_view list)
 			if (at_pos == 0) {
 				addGuild(line.substr(1));
 			} else {
-				addGuildRank(line.substr(0, at_pos - 1), line.substr(at_pos + 1));
+				addGuildRank(boost::algorithm::trim_copy(line.substr(0, at_pos)),
+				             boost::algorithm::trim_copy(line.substr(at_pos + 1)));
 			}
 		} else if (line == "*") {
 			allowEveryone = true;
@@ -459,9 +460,12 @@ void AccessList::addGuild(std::string_view name)
 void AccessList::addGuildRank(std::string_view name, std::string_view rankName)
 {
 	const Guild* guild = getGuildByName(name);
-	if (guild) {
-		GuildRank_ptr rank = guild->getRankByName(rankName);
-		if (rank) {
+	if (!guild) {
+		return;
+	}
+
+	for (const GuildRank_ptr& rank : guild->getRanks()) {
+		if (caseInsensitiveEqual(rank->name, rankName)) {
 			guildRankList.insert(rank->id);
 		}
 	}
