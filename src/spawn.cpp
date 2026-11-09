@@ -433,8 +433,13 @@ void Spawn::removeMonster(Monster* monster)
 {
 	for (auto it = spawnedMap.begin(), end = spawnedMap.end(); it != end; ++it) {
 		if (it->second == monster) {
+			if (it->first != 0) {
+				spawnMap[it->first].lastSpawn = OTSYS_TIME();
+			}
+
 			monster->decrementReferenceCounter();
 			spawnedMap.erase(it);
+			startSpawnCheck();
 			break;
 		}
 	}
