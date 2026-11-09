@@ -1436,7 +1436,8 @@ int64_t Creature::getStepDuration() const
 	int64_t stepDuration = std::ceil(duration / 50) * 50;
 
 	const Monster* monster = getMonster();
-	if (monster && monster->isTargetNearby() && !monster->isFleeing() && !monster->getMaster()) {
+	if (monster && monster->keepsDistance() && monster->isTargetNearby() && !monster->isFleeing() &&
+	    !monster->getMaster()) {
 		stepDuration *= 3;
 	}
 
