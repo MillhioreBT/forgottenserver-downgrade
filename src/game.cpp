@@ -3489,7 +3489,8 @@ void Game::playerSay(uint32_t playerId, uint16_t channelId, SpeakClasses type, s
 
 	uint32_t muteTime = player->isMuted();
 	if (muteTime > 0) {
-		player->sendTextMessage(MESSAGE_STATUS_SMALL, fmt::format("You are still muted for {:d} seconds.", muteTime));
+		player->sendTextMessage(MESSAGE_STATUS_SMALL, fmt::format("You are still muted for {:d} second{:s}.", muteTime,
+		                                                          muteTime != 1 ? "s" : ""));
 		return;
 	}
 
