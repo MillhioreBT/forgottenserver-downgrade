@@ -1309,8 +1309,14 @@ bool Monster::getDistanceStep(const Position& targetPos, Direction& direction, b
 	int32_t distance = std::max(dx, dy);
 
 	if (!flee && (distance > mType->info.targetDistance || !g_game.isSightClear(creaturePos, targetPos, true))) {
+		if (stepDuration > 0) {
+			stepDuration--;
+		}
 		return false; // let the A* calculate it
 	} else if (!flee && distance == mType->info.targetDistance) {
+		if (stepDuration > 0 && distance > 1) {
+			stepDuration--;
+		}
 		return true; // we don't really care here, since it's what we wanted to reach (a dance-step will take of dancing
 		             // in that position)
 	}

@@ -121,6 +121,7 @@ public:
 
 	bool getDistanceStep(const Position& targetPos, Direction& direction, bool flee = false);
 	bool isTargetNearby() const { return stepDuration >= 1; }
+	bool keepsDistance() const { return mType->info.targetDistance > 1; }
 	bool isIgnoringFieldDamage() const { return ignoreFieldDamage; }
 
 	BlockType_t blockHit(Creature* attacker, CombatType_t combatType, int32_t& damage, bool checkDefense = false,
