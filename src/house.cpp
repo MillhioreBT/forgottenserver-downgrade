@@ -9,9 +9,28 @@
 #include "configmanager.h"
 #include "game.h"
 #include "iologindata.h"
+#include "iomapserialize.h"
 #include "pugicast.h"
 
 extern Game g_game;
+
+namespace {
+
+bool saveDepotWithHouseItems(const House* house, Player& player)
+{
+	for (uint32_t tries = 0; tries < 3; ++tries) {
+		if (IOLoginData::savePlayer(&player)) {
+			IOMapSerialize::saveHouse(house);
+			return true;
+		}
+	}
+
+	std::cout << "[Error - House] Failed to save the depot of player " << player.getName() << ", the items of house "
+	          << house->getName() << " are lost." << std::endl;
+	return false;
+}
+
+} // namespace
 
 House::House(uint32_t houseId) : id(houseId) {}
 
@@ -191,16 +210,16 @@ bool House::transferToDepot() const
 	Player* player = g_game.getPlayerByGUID(owner);
 	if (player) {
 		transferToDepot(player);
-	} else {
-		Player tmpPlayer(nullptr);
-		if (!IOLoginData::loadPlayerById(&tmpPlayer, owner)) {
-			return false;
-		}
-
-		transferToDepot(&tmpPlayer);
-		IOLoginData::savePlayer(&tmpPlayer);
+		return saveDepotWithHouseItems(this, *player);
 	}
-	return true;
+
+	Player tmpPlayer(nullptr);
+	if (!IOLoginData::loadPlayerById(&tmpPlayer, owner)) {
+		return false;
+	}
+
+	transferToDepot(&tmpPlayer);
+	return saveDepotWithHouseItems(this, tmpPlayer);
 }
 
 bool House::transferToDepot(Player* player) const
@@ -694,6 +713,8 @@ void Houses::payHouses(RentPeriod_t rentPeriod) const
 				house->setPayRentWarnings(house->getPayRentWarnings() + 1);
 			} else {
 				house->setOwner(0, true, &player);
+				saveDepotWithHouseItems(house, player);
+				continue;
 			}
 		}
 
