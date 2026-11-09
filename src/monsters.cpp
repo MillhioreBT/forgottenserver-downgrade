@@ -343,6 +343,7 @@ bool Monsters::deserializeSpell(const pugi::xml_node& node, spellBlock_t& sb, co
 
 			if ((attr = node.attribute("speedchange"))) {
 				minSpeedChange = pugi::cast<int32_t>(attr.value());
+				maxSpeedChange = minSpeedChange;
 			} else if ((attr = node.attribute("minspeedchange"))) {
 				minSpeedChange = pugi::cast<int32_t>(attr.value());
 
