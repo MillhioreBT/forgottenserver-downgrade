@@ -8,6 +8,18 @@
 #include "item.h"
 #include "player.h"
 
+namespace {
+
+ReturnValue getReturnValue(lua_State* L)
+{
+	if (lua_isboolean(L, -1)) {
+		return Lua::getBoolean(L, -1) ? RETURNVALUE_NOERROR : RETURNVALUE_NOTPOSSIBLE;
+	}
+	return Lua::getInteger<ReturnValue>(L, -1);
+}
+
+} // namespace
+
 Events::Events() : scriptInterface("Event Interface") { scriptInterface.initState(); }
 
 bool Events::load()
@@ -224,7 +236,7 @@ ReturnValue Events::eventCreatureOnAreaCombat(Creature* creature, Tile* tile, bo
 		returnValue = RETURNVALUE_NOTPOSSIBLE;
 		LuaScriptInterface::reportError(nullptr, Lua::popString(L));
 	} else {
-		returnValue = Lua::getInteger<ReturnValue>(L, -1);
+		returnValue = getReturnValue(L);
 		lua_pop(L, 1);
 	}
 
@@ -265,7 +277,7 @@ ReturnValue Events::eventCreatureOnTargetCombat(Creature* creature, Creature* ta
 		returnValue = RETURNVALUE_NOTPOSSIBLE;
 		LuaScriptInterface::reportError(nullptr, Lua::popString(L));
 	} else {
-		returnValue = Lua::getInteger<ReturnValue>(L, -1);
+		returnValue = getReturnValue(L);
 		lua_pop(L, 1);
 	}
 
@@ -730,7 +742,7 @@ ReturnValue Events::eventPlayerOnMoveItem(Player* player, Item* item, uint16_t c
 		returnValue = RETURNVALUE_NOTPOSSIBLE;
 		LuaScriptInterface::reportError(nullptr, Lua::popString(L));
 	} else {
-		returnValue = Lua::getInteger<ReturnValue>(L, -1);
+		returnValue = getReturnValue(L);
 		lua_pop(L, 1);
 	}
 
