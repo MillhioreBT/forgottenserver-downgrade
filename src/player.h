@@ -1060,6 +1060,7 @@ private:
 	uint64_t bankBalance = 0;
 	int64_t lastFailedFollow = 0;
 	int64_t skullTicks = 0;
+	uint32_t skullTicksMs = 0;
 	int64_t lastWalkthroughAttempt = 0;
 	int64_t lastToggleMount = 0;
 	int64_t lastPing;
