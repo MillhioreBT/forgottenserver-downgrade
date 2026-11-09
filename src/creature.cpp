@@ -10,6 +10,7 @@
 #include "game.h"
 #include "monster.h"
 #include "scheduler.h"
+#include "spawn.h"
 
 extern CreatureEvents* g_creatureEvents;
 extern Events* g_events;
@@ -1177,6 +1178,11 @@ bool Creature::setMaster(Creature* newMaster)
 	if (newMaster) {
 		incrementReferenceCounter();
 		newMaster->summons.push_back(this);
+
+		if (Monster* monster = getMonster(); monster && monster->getSpawn()) {
+			monster->getSpawn()->removeMonster(monster);
+			monster->setSpawn(nullptr);
+		}
 	}
 
 	Creature* oldMaster = master;
