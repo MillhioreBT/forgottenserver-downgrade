@@ -437,8 +437,25 @@ bool Actions::useItemEx(Player* player, const Position& fromPos, const Position&
 		                     player->getItemTypeCount(item->getID(), subType != item->getItemCount() ? subType : -1));
 	}
 
-	if (action->executeUse(player, item, fromPos, action->getTarget(player, creature, toPos, toStackPos), toPos,
-	                       isHotkey)) {
+	Thing* target = action->getTarget(player, creature, toPos, toStackPos);
+
+	if (getBoolean(ConfigManager::ONLY_INVITED_CAN_MOVE_HOUSE_ITEMS)) {
+		auto isUninvitedHouseTile = [player](const Tile* tile) {
+			const HouseTile* houseTile = dynamic_cast<const HouseTile*>(tile);
+			return houseTile && houseTile->getHouse() && !houseTile->getHouse()->isInvited(player);
+		};
+
+		const Tile* toTile = toPos.x != 0xFFFF ? g_game.map.getTile(toPos) : nullptr;
+		const bool aimsAtCreature =
+		    (target && target->getCreature()) || (toTile && toTile->getTopVisibleCreature(player));
+		if ((!item->getTopParent()->getCreature() && isUninvitedHouseTile(item->getTile())) ||
+		    (toTile && !aimsAtCreature && isUninvitedHouseTile(toTile))) {
+			player->sendCancelMessage(RETURNVALUE_PLAYERISNOTINVITED);
+			return false;
+		}
+	}
+
+	if (action->executeUse(player, item, fromPos, target, toPos, isHotkey)) {
 		return true;
 	}
 
