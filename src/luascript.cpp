@@ -2512,9 +2512,9 @@ int LuaScriptInterface::luaDoAreaCombat(lua_State* L)
 		CombatParams params;
 		params.combatType = combatType;
 		params.impactEffect = Lua::getInteger<uint8_t>(L, 7);
-		params.blockedByArmor = Lua::getBoolean(L, 8, false);
-		params.blockedByShield = Lua::getBoolean(L, 9, false);
-		params.ignoreResistances = Lua::getBoolean(L, 10, false);
+		params.blockedByArmor = Lua::getBoolean(L, 9, false);
+		params.blockedByShield = Lua::getBoolean(L, 10, false);
+		params.ignoreResistances = Lua::getBoolean(L, 11, false);
 
 		CombatDamage damage;
 		damage.origin = Lua::getInteger<CombatOrigin>(L, 8, ORIGIN_SPELL);
