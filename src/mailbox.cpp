@@ -34,10 +34,16 @@ Cylinder* Mailbox::queryDestination(int32_t&, const Thing&, Item**, uint32_t&) {
 
 void Mailbox::addThing(Thing* thing) { return addThing(0, thing); }
 
+namespace {
+
+bool returningParcel = false;
+
+} // namespace
+
 void Mailbox::addThing(int32_t, Thing* thing)
 {
 	Item* item = thing->getItem();
-	if (item && Mailbox::canSend(item)) {
+	if (item && !returningParcel && Mailbox::canSend(item)) {
 		sendItem(item);
 	}
 }
@@ -100,9 +106,19 @@ bool Mailbox::sendItem(Item* item) const
 		if (DepotLocker* depotLocker = tmpPlayer.getDepotLocker(depotId)) {
 			if (g_game.internalMoveItem(item->getParent(), depotLocker, INDEX_WHEREEVER, item, item->getItemCount(),
 			                            nullptr) == RETURNVALUE_NOERROR) {
-				g_game.transformItem(item, item->getID() + 1);
-				IOLoginData::savePlayer(&tmpPlayer);
-				return true;
+				Item* stamped = g_game.transformItem(item, item->getID() + 1);
+				if (IOLoginData::savePlayer(&tmpPlayer)) {
+					return true;
+				}
+
+				Item* parcel = stamped ? g_game.transformItem(stamped, stamped->getID() - 1) : nullptr;
+				Tile* tile = g_game.map.getTile(getPosition());
+				if (parcel && tile) {
+					returningParcel = true;
+					g_game.internalMoveItem(parcel->getParent(), tile, INDEX_WHEREEVER, parcel, parcel->getItemCount(),
+					                        nullptr, FLAG_NOLIMIT);
+					returningParcel = false;
+				}
 			}
 		}
 	}
