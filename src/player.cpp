@@ -1377,7 +1377,9 @@ void Player::onThink(uint32_t interval)
 	}
 
 	if (g_game.getWorldType() != WORLD_TYPE_PVP_ENFORCED) {
-		checkSkullTicks(interval / 1000);
+		skullTicksMs += interval;
+		checkSkullTicks(skullTicksMs / 1000);
+		skullTicksMs %= 1000;
 	}
 }
 
