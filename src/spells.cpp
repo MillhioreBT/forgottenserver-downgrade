@@ -852,6 +852,7 @@ bool InstantSpell::playerCastInstant(Player* player, std::string& param)
 	} else if (hasParam) {
 		if (getHasPlayerNameParam()) {
 			Player* playerTarget = nullptr;
+			g_game.getPlayerByNameWildcard(param, playerTarget);
 			if (playerTarget && (!playerTarget->isAccessPlayer() || player->isAccessPlayer())) {
 				param = playerTarget->getName();
 			}
