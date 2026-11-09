@@ -18,6 +18,7 @@ tfs_add_test_executable(tfs_integration_tests integration SKIP_RETURN_CODE 77 RE
 
 target_sources(tfs_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/lua/runner.cpp)
 target_compile_definitions(tfs_tests PRIVATE TFS_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
+target_compile_definitions(tfs_integration_tests PRIVATE TFS_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
 
 file(GLOB lua_tests CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/lua/test_*.lua)
 foreach (lua_test ${lua_tests})
